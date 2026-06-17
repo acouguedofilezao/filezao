@@ -124,3 +124,9 @@
 - Relatório de saídas: altura dinâmica (sem cortar descrições longas)
 - Relatório de gado: adicionado data, fornecedor, status e cheque por compra
 - Fontes: Locatro removida de todo o sistema exceto título do header
+
+## v17.3 — 17/06/2026
+- Menu lateral (sidebar) substituiu navbar horizontal — igual ao OnBeef
+- Botão ◀▶ para esconder/mostrar o menu lateral
+- No mobile: sidebar vira overlay e fecha automaticamente ao navegar
+- Seções do menu agrupadas: Menu (Painel/Entradas/Saídas/Gado/Cheques) e Financeiro (Fechamento/Relatórios)
