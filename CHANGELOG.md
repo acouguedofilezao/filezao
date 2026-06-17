@@ -149,3 +149,17 @@
 - Tabelas: células com mais espaço (padding 8px → 10px)
 - Badges, labels, métricas e dash cards proporcionalmente maiores
 - Mobile: breakpoints ajustados para não sobrepor elementos no celular
+
+## v17.7 — 17/06/2026
+- Correção: métricas do painel (Total Entradas/Saídas/Saldo) em coluna única no celular
+- Correção: grid de lançamentos/gado do painel vira coluna única no celular
+- Correção: dash-grid (Dinheiro/Pix/Cartão) em coluna única abaixo de 480px
+- Correção: metric-grid, form-row e abate-grid forçados em 1 coluna no mobile
+- Correção: fechamento (lado a lado) vira coluna no celular
+
+## v17.8 — 17/06/2026
+- Mobile: botão toggle lateral removido, substituído por ícone hamburguer (☰) no header
+- Mobile: sidebar começa fechada por padrão (sem sobrepor conteúdo)
+- Mobile: overlay escuro aparece atrás da sidebar quando aberta, clique fecha
+- Mobile: sidebar usa transform (desliza suavemente) em vez de width
+- Desktop: toggle lateral mantido igual
