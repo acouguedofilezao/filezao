@@ -114,3 +114,13 @@
 - Relatório diário: formato corrigido para WhatsApp (data + descrição + valor por linha)
 - Blocos dos relatórios com bordas coloridas e altura fixa sem scroll
 - Botão Copiar dentro do cabeçalho colorido de cada bloco
+
+## v17.2 — 17/06/2026
+- Header repaginado com gradiente preto/vermelho e linhas sutis
+- Logo do Filezão embutida no header (fundo preto removido, brilho vermelho)
+- Título FILEZÃO em fonte Locatro (só o header, resto permanece Inter)
+- Divisor vermelho entre logo e texto
+- Navbar mais refinada com fundo escuro e transições suaves
+- Relatório de saídas: altura dinâmica (sem cortar descrições longas)
+- Relatório de gado: adicionado data, fornecedor, status e cheque por compra
+- Fontes: Locatro removida de todo o sistema exceto título do header
