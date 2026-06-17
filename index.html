@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema Filezão</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-@font-face{font-family:'Locatro';src:url('https://fonts.cdnfonts.com/s/105433/Locatro.woff') format('woff')}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#F7F7F7;color:#1a1a1a;font-size:14px}
-.loc{font-family:'Locatro','Georgia',serif}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;color:#1a1a1a;font-size:14px}
+.loc{font-family:'Inter',system-ui,sans-serif;font-weight:800;letter-spacing:-.5px}
 .header{background:#000;border-bottom:3px solid #FE0000;padding:12px 20px;display:flex;align-items:center;gap:14px}
 .header-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:1.5px}
 .header-sub{font-size:10px;color:#FE0000;text-transform:uppercase;letter-spacing:2px;margin-top:1px}
@@ -21,7 +23,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-s
 .section{display:none;padding:16px}.section.active{display:block}
 .card{background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:14px 16px;margin-bottom:12px}
 .card-title{font-size:11px;font-weight:700;color:#000;margin-bottom:14px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:1px}
-.card-title.loc{font-family:'Locatro','Georgia',serif;letter-spacing:1.2px}
+.card-title.loc{font-weight:700;letter-spacing:.3px}
 .card-title i{color:#FE0000;font-size:15px}
 .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
 .metric{background:#fff;border:1px solid #E8E8E8;border-radius:8px;padding:12px 14px;border-left:4px solid #FE0000}
@@ -56,7 +58,7 @@ tr:hover td{background:#fafafa}
 .b-pendente{background:#f5f5f5;color:#777}
 .dh{font-size:11px;font-weight:700;color:#FE0000;padding:8px 0 3px;border-bottom:1px solid #eee;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
 .empty{color:#999;font-size:13px;padding:2rem 0;text-align:center}
-.reg{display:inline-block;background:#fff0f0;color:#6D0909;font-family:'Locatro','Georgia',serif;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700;border:1px solid #FE0000}
+.reg{display:inline-block;background:#fff0f0;color:#6D0909;font-family:'Inter',monospace;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700;border:1px solid #FE0000}
 .srch{width:100%;height:36px;padding:0 10px 0 34px;border:1px solid #ddd;border-radius:7px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;color:#1a1a1a;font-size:13px;margin-bottom:10px}
 .srch:focus{outline:none;border-color:#FE0000}
 .pag{display:flex;align-items:center;gap:3px;margin-top:8px;flex-wrap:wrap}
@@ -116,6 +118,36 @@ tr:hover td{background:#fafafa}
 .abate-detail{margin-top:12px;font-size:12px;text-align:left}
 .abate-detail-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.06);color:#555}
 .abate-detail-row:last-child{border-bottom:none;font-weight:700;color:#1a1a1a}
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .header{padding:10px 14px}
+  .header-title{font-size:18px}
+  .section{padding:10px}
+  .card{padding:12px}
+  .form-row{grid-template-columns:1fr!important}
+  table{font-size:12px}
+  th,td{padding:6px 5px}
+  .dash-grid{grid-template-columns:1fr 1fr}
+  .metric-value{font-size:16px}
+  .abate-grid{grid-template-columns:1fr}
+  .modal{padding:16px;margin:8px}
+  .modal-bg{padding:8px}
+  .btn{font-size:12px;padding:7px 12px}
+  .nav-btn{padding:9px 12px;font-size:12px}
+  /* Grid duas colunas do painel vira 1 coluna no mobile */
+  #sec-dashboard > div[style*="grid-template-columns:1fr 1fr"]{
+    display:block!important
+  }
+  /* Tabelas com scroll horizontal */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* Rel abate grid */
+  .rel-sel-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:400px){
+  .dash-grid{grid-template-columns:1fr}
+  .header-title{font-size:16px}
+  th,td{padding:5px 4px;font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -282,10 +314,21 @@ tr:hover td{background:#fafafa}
 
 <!-- RELATÓRIOS -->
 <div id="sec-relatorio" class="section">
-  <!-- Relatório 1: Abate por período -->
-  <div class="rel-card">
-    <div class="rel-title loc"><i class="ti ti-pig"></i> Relatório de Abate — Boi e Porco</div>
-    <div class="form-row" style="align-items:flex-end">
+
+  <!-- Seletor de relatório -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title loc"><i class="ti ti-chart-bar"></i> Relatórios</div>
+    <div class="ftab" id="ftab-rel" style="margin-bottom:0">
+      <button class="ftab-btn active" onclick="setRel('abate',this)">🐄 Abate Boi/Porco</button>
+      <button class="ftab-btn" onclick="setRel('diario',this)">📋 Diário (WhatsApp)</button>
+      <button class="ftab-btn" onclick="setRel('gado',this)">🐖 Compras de Gado</button>
+    </div>
+  </div>
+
+  <!-- REL 1: Abate -->
+  <div id="rel-abate" class="rel-card">
+    <div class="rel-title loc"><i class="ti ti-pig"></i> Abate de Boi e Porco por período</div>
+    <div class="form-row rel-sel-grid" style="align-items:flex-end">
       <div class="form-group"><label>Data início</label><input type="date" id="rel-de"></div>
       <div class="form-group"><label>Data fim</label><input type="date" id="rel-ate"></div>
       <div class="form-group" style="justify-content:flex-end;padding-top:20px">
@@ -294,6 +337,33 @@ tr:hover td{background:#fafafa}
     </div>
     <div id="rel-abate-result" style="margin-top:8px"></div>
   </div>
+
+  <!-- REL 2: Diário WhatsApp -->
+  <div id="rel-diario" class="rel-card" style="display:none">
+    <div class="rel-title loc"><i class="ti ti-brand-whatsapp"></i> Relatório Diário — WhatsApp</div>
+    <div class="form-row rel-sel-grid" style="align-items:flex-end">
+      <div class="form-group"><label>Data início</label><input type="date" id="reld-de"></div>
+      <div class="form-group"><label>Data fim</label><input type="date" id="reld-ate"></div>
+      <div class="form-group" style="justify-content:flex-end;padding-top:20px">
+        <button class="btn btn-primary" onclick="renderRelDiario()"><i class="ti ti-search"></i> Gerar</button>
+      </div>
+    </div>
+    <div id="rel-diario-result" style="margin-top:12px"></div>
+  </div>
+
+  <!-- REL 3: Compras de Gado -->
+  <div id="rel-gado" class="rel-card" style="display:none">
+    <div class="rel-title loc"><i class="ti ti-pig"></i> Relatório de Compras de Gado</div>
+    <div class="form-row rel-sel-grid" style="align-items:flex-end">
+      <div class="form-group"><label>Data início</label><input type="date" id="relg-de"></div>
+      <div class="form-group"><label>Data fim</label><input type="date" id="relg-ate"></div>
+      <div class="form-group" style="justify-content:flex-end;padding-top:20px">
+        <button class="btn btn-primary" onclick="renderRelGado()"><i class="ti ti-search"></i> Gerar</button>
+      </div>
+    </div>
+    <div id="rel-gado-result" style="margin-top:12px"></div>
+  </div>
+
 </div>
 
 <!-- MODAL PAGAMENTO GADO -->
@@ -555,7 +625,7 @@ function renderEnt(){
   const tot=fl.length,sl=fl.slice((PG.e-1)*PER,PG.e*PER);
   const el=document.getElementById('l-ent');
   if(!sl.length){el.innerHTML='<p class="empty">Nenhuma entrada encontrada.</p>';document.getElementById('pg-ent').innerHTML='';return}
-  let h=`<div style="overflow-x:auto"><table><thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th></th></tr></thead><tbody>`;
+  let h=`<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th></th></tr></thead><tbody>`;
   sl.forEach(e=>{
     const cls=e.tipo==='DINHEIRO'?'tc-din':e.tipo==='PIX'?'tc-pix':'tc-car';
     h+=`<tr><td>${fd(e.data)}</td><td><span class="tipo-chip ${cls}">${e.tipo}</span></td><td style="font-weight:700">${fmt(e.valor)}</td>
@@ -599,7 +669,7 @@ function renderSai(){
   const tot=fl.length,sl=fl.slice((PG.s-1)*PER,PG.s*PER);
   const el=document.getElementById('l-sai');
   if(!sl.length){el.innerHTML='<p class="empty">Nenhuma saída encontrada.</p>';document.getElementById('pg-sai').innerHTML='';return}
-  let h=`<div style="overflow-x:auto"><table><thead><tr><th>Data</th><th>Descrição</th><th>Forma</th><th>Valor</th><th></th></tr></thead><tbody>`;
+  let h=`<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Descrição</th><th>Forma</th><th>Valor</th><th></th></tr></thead><tbody>`;
   sl.forEach(s=>{
     h+=`<tr><td>${fd(s.data)}</td><td style="font-size:13px">${s.descricao}</td><td>${formaBadge(s.formaPgto)}</td>
     <td style="font-weight:700">${fmt(s.valor)}</td>
@@ -679,7 +749,18 @@ function confirmarPag(){
     linhas.push({forma:tp,valor:r2(vl)});
   }
   if(Math.abs(r2(tot-g.total))>0.01)return alert('Total lançado ('+fmt(tot)+') ≠ valor do gado ('+fmt(g.total)+').');
-  chqs.forEach(chq=>{C.push({id:uid(),data:chq.data,numero:chq.numero,valor:chq.valor,vencimento:chq.vencimento,credor:g.fornecedor,compensado:false,dataCompensacao:null,gadoReg:g.registro});});
+  chqs.forEach(chq=>{
+    // Verificar se já existe cheque com mesmo número — se sim, adicionar ref
+    var existIdx=C.findIndex(function(c){return c.numero===chq.numero;});
+    if(existIdx>=0){
+      var refs=C[existIdx].gadoReg?C[existIdx].gadoReg.split(','):[]; 
+      if(refs.indexOf(g.registro)<0)refs.push(g.registro);
+      C[existIdx].gadoReg=refs.join(',');
+      C[existIdx].valor=r2(C[existIdx].valor+chq.valor);
+    } else {
+      C.push({id:uid(),data:chq.data,numero:chq.numero,valor:chq.valor,vencimento:chq.vencimento,credor:g.fornecedor,compensado:false,dataCompensacao:null,gadoReg:g.registro});
+    }
+  });
   if(chqs.length)save('fz_cheques',C);
   const fu=[...new Set(linhas.map(l=>l.forma))];
   g.status='PAGO';g.pagamento=fu.length===1?fu[0]:'MISTO';g.formasPgto=linhas;g.cheques=chqs.map(c=>c.numero);g.cheque=chqs.length?chqs.map(c=>c.numero).join(', '):null;g.dataPagamento=td();
@@ -696,7 +777,7 @@ function renderGad(){
   const tot=fl.length,sl=fl.slice((PG.g-1)*PER,PG.g*PER);
   const el=document.getElementById('l-gad');
   if(!sl.length){el.innerHTML='<p class="empty">Nenhuma compra encontrada.</p>';document.getElementById('pg-gad').innerHTML='';return}
-  let h=`<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Data</th><th>Qtd</th><th>Tipo</th><th>Kg</th><th>R$/kg</th><th>Total</th><th>Fornecedor</th><th>Pagamento</th><th>Status</th><th></th></tr></thead><tbody>`;
+  let h=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Data</th><th>Qtd</th><th>Tipo</th><th>Kg</th><th>R$/kg</th><th>Total</th><th>Fornecedor</th><th>Pagamento</th><th>Status</th><th></th></tr></thead><tbody>`;
   sl.forEach(g=>{
     const bc=g.status==='PENDENTE'?'b-pendente':'b-pago';
     const pagBtn=g.status==='PENDENTE'?`<button class="btn-pay" onclick="abrirPag('${g.id}')">Pagar</button>`:'';
@@ -740,12 +821,21 @@ function addChq(){
 }
 function renderChq(){
   const q=(document.getElementById('c-sr').value||'').toLowerCase();const now=td();
-  let fl=[...C].sort((a,b)=>a.compensado-b.compensado||a.vencimento.localeCompare(b.vencimento));
+  let fl=[...C].sort((a,b)=>{
+    // Pendentes primeiro
+    if(a.compensado!==b.compensado)return a.compensado?1:-1;
+    // Pendentes: vencimento mais próximo primeiro
+    if(!a.compensado)return (a.vencimento||'').localeCompare(b.vencimento||'');
+    // Compensados: mais recente (data compensação) primeiro
+    var dcA=a.dataCompensacao||a.data||'';
+    var dcB=b.dataCompensacao||b.data||'';
+    return dcB.localeCompare(dcA);
+  });
   if(q)fl=fl.filter(c=>c.credor.toLowerCase().includes(q)||String(c.numero).includes(q)||fd(c.data).includes(q));
   const tot=fl.length,sl=fl.slice((PG.c-1)*PER,PG.c*PER);
   const el=document.getElementById('l-chq');
   if(!sl.length){el.innerHTML='<p class="empty">Nenhum cheque encontrado.</p>';document.getElementById('pg-chq').innerHTML='';return}
-  let h=`<div style="overflow-x:auto"><table><thead><tr><th>Emissão</th><th>Nº</th><th>Valor</th><th>Vencimento</th><th>Credor</th><th>Ref. Gado</th><th>Situação</th><th>Data Comp.</th><th></th></tr></thead><tbody>`;
+  let h=`<div class="tbl-wrap"><table><thead><tr><th>Emissão</th><th>Nº</th><th>Valor</th><th>Vencimento</th><th>Credor</th><th>Ref. Gado</th><th>Situação</th><th>Data Comp.</th><th></th></tr></thead><tbody>`;
   sl.forEach(c=>{
     const a7=!c.compensado&&c.vencimento<=addDays(now,7);
     const compAcao=c.compensado?`<button class="btn btn-ghost btn-sm" onclick="desfazerComp('${c.id}')">Desfazer</button>`:`<button class="btn btn-primary btn-sm" onclick="abrirCompensacao('${c.id}')"><i class="ti ti-check"></i> Compensar</button>`;
@@ -755,7 +845,7 @@ function renderChq(){
       <td style="font-weight:700">${fmt(c.valor)}</td>
       <td class="${a7?'valert':''}">${fd(c.vencimento)}${a7?' ⚠':''}</td>
       <td>${c.credor}</td>
-      <td style="font-size:11px;color:#888">${c.gadoReg?'#'+c.gadoReg:'—'}</td>
+      <td style="font-size:11px;color:#888">${c.gadoReg?c.gadoReg.split(',').map(r=>'<span class=\"reg\" style=\"margin:1px\">#'+r.trim()+'</span>').join(' '):'—'}</td>
       <td><span class="badge ${c.compensado?'b-pago':'b-cheque'}">${c.compensado?'Compensado':'Pendente'}</span></td>
       <td>${dtComp}</td>
       <td>${compAcao}</td></tr>`;
@@ -774,13 +864,13 @@ function renderFech(){
   const tS=r2(sM.reduce(function(s,e){return s+e.valor;},0));
   const tG=r2(gM.reduce(function(s,g){return s+g.total;},0));
   const liq=r2(tE-tS);
-  const aE_=liq>0?r2(liq-2500):0;
+  const aE_=liq>0?Math.floor(liq-2500):0;
   const cD_=liq>0?r2(aE_*0.015):0;
-  const aD_=r2(aE_-cD_);
+  const aD_=liq>0?r2(aE_-cD_):0;
   const cA_=liq>0?r2(aD_*0.01625):0;
-  const aA_=r2(aD_-cA_);
+  const aA_=liq>0?r2(aD_-cA_):0;
   const cAn_=liq>0?r2(aA_*0.00875):0;
-  const aAn_=r2(aA_-cAn_);
+  const aAn_=liq>0?r2(aA_-cAn_):0;
   const saldoAposComissoes=liq>0?aAn_:liq;
   const sobra=r2(saldoAposComissoes-tG);
   const nms=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -857,6 +947,177 @@ function renderFech(){
   document.getElementById('fech-r').innerHTML=html;
 }
 
+/* ── RELATÓRIOS ── */
+var LB='\n';
+function cpRelId(btn){
+  var id=btn.getAttribute('data-cp');
+  var ta=document.getElementById(id);
+  if(!ta)return;
+  ta.select();try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
+  var orig=btn.textContent;btn.textContent='Copiado!';
+  setTimeout(function(){btn.textContent=orig;},2000);
+}
+function cpRel(id,btn){
+  var t=document.getElementById(id)||document.getElementById(id+'-area');
+  if(!t)return;
+  t.select();
+  try{document.execCommand('copy');}catch(e){
+    navigator.clipboard&&navigator.clipboard.writeText(t.value);
+  }
+  var orig=btn.textContent;
+  btn.textContent='Copiado!';
+  setTimeout(function(){btn.textContent=orig;},2000);
+}
+function setRel(tipo,btn){
+  document.querySelectorAll('#ftab-rel .ftab-btn').forEach(b=>b.classList.remove('active'));
+  if(btn&&btn.classList)btn.classList.add('active');
+  document.getElementById('rel-abate').style.display=tipo==='abate'?'block':'none';
+  document.getElementById('rel-diario').style.display=tipo==='diario'?'block':'none';
+  document.getElementById('rel-gado').style.display=tipo==='gado'?'block':'none';
+}
+
+function renderRelDiario(){
+  var de=document.getElementById('reld-de').value;
+  var ate=document.getElementById('reld-ate').value;
+  if(!de||!ate)return alert('Selecione o periodo.');
+
+  var eD=E.filter(function(e){return e.data>=de&&e.data<=ate;});
+  var sD=S.filter(function(s){return s.data>=de&&s.data<=ate;});
+  var gD=G.filter(function(g){return g.data>=de&&g.data<=ate;});
+
+  var tE=r2(eD.reduce(function(s,e){return s+e.valor;},0));
+  var tS=r2(sD.reduce(function(s,e){return s+e.valor;},0));
+  var L='\n';
+
+  // ── BLOCO 1: SAÍDAS ──────────────────────────────
+  var sSort=[...sD].sort(function(a,b){return a.data.localeCompare(b.data)||a.descricao.localeCompare(b.descricao);});
+  var txt1='';
+  // Calcular larguras para alinhar colunas
+  var maxDesc=4; // "DATA"
+  sSort.forEach(function(s){if(s.descricao.length>maxDesc)maxDesc=s.descricao.length;});
+  maxDesc=Math.min(maxDesc,30);
+  function padR(s,n){s=String(s);while(s.length<n)s+=' ';return s.slice(0,n);}
+  function padL(s,n){s=String(s);while(s.length<n)s=' '+s;return s;}
+  sSort.forEach(function(s){
+    var desc=s.descricao.slice(0,28);
+    txt1+=fd(s.data)+'  '+padR(desc,28)+'  '+fmt(s.valor)+L;
+  });
+  txt1+=L+'Total saidas: '+fmt(tS);
+
+  // ── BLOCO 2: ENTRADAS POR DIA ──────────────────
+  var diasE={};
+  eD.forEach(function(e){
+    if(!diasE[e.data])diasE[e.data]=0;
+    diasE[e.data]=r2(diasE[e.data]+e.valor);
+  });
+  var datasE=Object.keys(diasE).sort();
+  var txt2='';
+  datasE.forEach(function(d){
+    txt2+=fd(d)+'     '+fmt(diasE[d])+L;
+  });
+  txt2+=L+'Total entradas: '+fmt(tE);
+
+  // ── BLOCO 3: GADO ──────────────────────────────
+  var gSort=[...gD].sort(function(a,b){return a.data.localeCompare(b.data);});
+  var txt3='';
+  gSort.forEach(function(g){
+    var tipo=padR(g.tipo,6);
+    var kg=String(Number(g.kg).toFixed(2));
+    var preco='R$ '+Number(g.preco).toFixed(2);
+    var total=fmt(g.total);
+    txt3+=tipo+'  '+kg+'  '+preco+'  '+total+L;
+  });
+  if(!gSort.length)txt3='Nenhuma compra no periodo.'+L;
+  var totGado=r2(gD.reduce(function(s,g){return s+Number(g.total);},0));
+  txt3+=L+'Total gado: '+fmt(totGado);
+
+  // ── RENDER HTML ────────────────────────────────
+  var el=document.getElementById('rel-diario-result');
+  function blocoHtml(titulo,id,txt,cor){
+    return '<div style="margin-bottom:16px">'+
+      '<div style="background:'+cor+';color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">'+
+        '<span>'+titulo+'</span>'+
+        '<button class="btn btn-ghost btn-sm" data-cp="'+id+'" style="color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px" onclick="cpRelId(this)">Copiar</button>'+
+      '</div>'+
+      '<textarea id="'+id+'" readonly style="width:100%;height:180px;font-family:monospace;font-size:11px;padding:10px;border:1px solid #ddd;border:none;border-radius:0 0 8px 8px;background:#1a1a1a;color:#fff;resize:vertical;cursor:pointer" onclick="this.select()">'+txt+'</textarea>'+
+    '</div>';
+  }
+
+  var html='<div style="background:#f0faf4;border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid #c3e6cb">';
+  html+='<div style="display:flex;gap:16px;flex-wrap:wrap">';
+  html+='<div><div style="font-size:11px;color:#555">Total entradas</div><div style="font-size:17px;font-weight:800;color:#1a7a3c">'+fmt(tE)+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555">Total saidas</div><div style="font-size:17px;font-weight:800;color:#FE0000">'+fmt(tS)+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555">Saldo</div><div style="font-size:17px;font-weight:800;color:'+(r2(tE-tS)>=0?'#1a7a3c':'#FE0000')+'">'+fmt(r2(tE-tS))+'</div></div>';
+  html+='</div></div>';
+  html+='<div style="font-size:12px;color:#555;margin-bottom:10px;font-weight:500">Copie cada bloco separadamente e cole no WhatsApp:</div>';
+  html+=blocoHtml('1. SAIDA','blk-saida',txt1,'#FE0000');
+  html+=blocoHtml('2. ENTRADAS POR DIA','blk-entrada',txt2,'#1a7a3c');
+  html+=blocoHtml('3. GADO','blk-gado',txt3,'#1a56b0');
+
+  el.innerHTML=html;
+  // Attach copy events
+  el.querySelectorAll('button[data-cp]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=this.getAttribute('data-cp');
+      var ta=document.getElementById(id);
+      if(ta){ta.select();try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
+        var orig=this.textContent;this.textContent='Copiado!';
+        var self=this;setTimeout(function(){self.textContent=orig;},2000);
+      }
+    });
+  });
+}
+function renderRelGado(){
+  var de=document.getElementById('relg-de').value;
+  var ate=document.getElementById('relg-ate').value;
+  if(!de||!ate)return alert('Selecione o periodo.');
+  var gF=G.filter(function(g){return g.data>=de&&g.data<=ate;});
+  if(!gF.length){document.getElementById('rel-gado-result').innerHTML='<p class="empty">Nenhuma compra no periodo.</p>';return;}
+
+  var periodoLabel=de===ate?fd(de):(fd(de)+' a '+fd(ate));
+  var totalKg=r2(gF.reduce(function(s,g){return s+Number(g.kg);},0));
+  var totalVal=r2(gF.reduce(function(s,g){return s+Number(g.total);},0));
+  var pendentes=gF.filter(function(g){return g.status==='PENDENTE';});
+  var totPend=r2(pendentes.reduce(function(s,g){return s+Number(g.total);},0));
+  var L='\n';
+
+  // Formato igual à planilha: TIPO | KG | R$/KG | TOTAL
+  function padR(s,n){s=String(s);while(s.length<n)s+=' ';return s.slice(0,n);}
+  var gSort=[...gF].sort(function(a,b){return a.data.localeCompare(b.data);});
+  var txt='';
+  gSort.forEach(function(g){
+    var tipo=padR(g.tipo,6);
+    var kg=String(Number(g.kg).toFixed(2));
+    var preco='R$ '+Number(g.preco).toFixed(2);
+    var total=fmt(g.total);
+    txt+=tipo+'  '+kg+'  '+preco+'  '+total;
+    if(g.status==='PENDENTE')txt+='  [A PAGAR]';
+    txt+=L;
+  });
+  txt+=L;
+  txt+='Total: '+gF.length+' compra(s) | '+totalKg.toFixed(2)+'kg | '+fmt(totalVal)+L;
+  if(pendentes.length)txt+='A pagar: '+fmt(totPend)+' ('+pendentes.length+' em aberto)';
+
+  var el=document.getElementById('rel-gado-result');
+  var html='<div style="background:#fff8f0;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #fed7aa">';
+  html+='<div style="display:flex;gap:16px;flex-wrap:wrap">';
+  html+='<div><div style="font-size:11px;color:#555">Compras</div><div style="font-size:17px;font-weight:800">'+gF.length+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555">Total kg</div><div style="font-size:17px;font-weight:800">'+totalKg.toFixed(1)+'kg</div></div>';
+  html+='<div><div style="font-size:11px;color:#555">Total gasto</div><div style="font-size:17px;font-weight:800;color:#FE0000">'+fmt(totalVal)+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555">Em aberto</div><div style="font-size:17px;font-weight:800;color:#e65100">'+fmt(totPend)+'</div></div>';
+  html+='</div></div>';
+  html+='<div style="background:#1a56b0;color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">';
+  html+='<span>GADO — '+periodoLabel+'</span>';
+  html+='<button class="btn btn-ghost btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px" id="btn-cp-gado">Copiar</button>';
+  html+='</div>';
+  html+='<textarea id="txt-gado-blk" readonly style="width:100%;height:280px;font-family:monospace;font-size:11px;padding:10px;border:none;border-radius:0 0 8px 8px;background:#1a1a1a;color:#fff;resize:vertical;cursor:pointer" onclick="this.select()">'+txt+'</textarea>';
+  el.innerHTML=html;
+  document.getElementById('btn-cp-gado').addEventListener('click',function(){
+    var ta=document.getElementById('txt-gado-blk');
+    ta.select();try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
+    this.textContent='Copiado!';var self=this;setTimeout(function(){self.textContent='Copiar';},2000);
+  });
+}
 /* ── RELATÓRIO DE ABATE ── */
 function renderRelAbate(){
   const de=document.getElementById('rel-de').value;
@@ -1069,6 +1330,16 @@ async function init(){
   document.getElementById('f-ms').value=String(m).padStart(2,'0');
   document.getElementById('rel-de').value=today.slice(0,7)+'-01';
   document.getElementById('rel-ate').value=today;
+  // Relatório diário — padrão hoje
+  var reldDe=document.getElementById('reld-de');
+  var reldAte=document.getElementById('reld-ate');
+  if(reldDe)reldDe.value=today;
+  if(reldAte)reldAte.value=today;
+  // Relatório gado — padrão esta semana
+  var relgDe=document.getElementById('relg-de');
+  var relgAte=document.getElementById('relg-ate');
+  if(relgDe){var sem=new Date(today+'T00:00:00');sem.setDate(sem.getDate()-sem.getDay());relgDe.value=sem.toISOString().slice(0,10);}
+  if(relgAte)relgAte.value=today;
   setupInputs();
   proxReg();
   // Forçar data no botão Hoje e renderizar
