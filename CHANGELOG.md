@@ -140,3 +140,12 @@
 ## v17.5 — 17/06/2026
 - Ícone do app atualizado: logo do boi em transparência + cifrão branco + borda vermelha
 - Fundo preto puro (sem cinza) no ícone da tela inicial do iPhone
+
+## v17.6 — 17/06/2026
+- Tamanho geral das caixas aumentado em todo o sistema
+- Inputs: 36px → 42px de altura, fonte 13 → 14px
+- Botões: padding maior, fonte 13 → 14px
+- Cards: padding 14px → 18px, bordas 10px → 12px
+- Tabelas: células com mais espaço (padding 8px → 10px)
+- Badges, labels, métricas e dash cards proporcionalmente maiores
+- Mobile: breakpoints ajustados para não sobrepor elementos no celular
