@@ -136,3 +136,7 @@
 - Status "Pronto — X entradas" movido para o rodapé da sidebar (oculta com o menu)
 - Ícone da logo adicionado para tela inicial do iPhone (apple-touch-icon 180x180)
 - Meta tags para PWA no iPhone (barra de status preta, título Filezão)
+
+## v17.5 — 17/06/2026
+- Ícone do app atualizado: logo do boi em transparência + cifrão branco + borda vermelha
+- Fundo preto puro (sem cinza) no ícone da tela inicial do iPhone
