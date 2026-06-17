@@ -1025,12 +1025,15 @@ function renderRelDiario(){
   var el=document.getElementById('rel-diario-result');
 
   function blocoHtml(titulo,id,txt,cor){
+    // altura dinâmica: 28px por linha, mínimo 120, máximo 400
+    var linhas=txt.split('\n').length;
+    var altura=Math.min(Math.max(linhas*24+20,120),400);
     return '<div style="margin-bottom:16px">'+
       '<div style="background:'+cor+';color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">'+
         '<span>'+titulo+'</span>'+
         '<button style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600" data-tid="'+id+'" onclick="cpRelId(this)">Copiar</button>'+
       '</div>'+
-      '<textarea id="'+id+'" readonly style="width:100%;height:160px;font-family:monospace;font-size:12px;line-height:1.6;padding:10px 12px;border:2px solid '+cor+';border-top:none;border-radius:0 0 10px 10px;background:#fff;color:#1a1a1a;resize:none;cursor:pointer" onclick="this.select()">'+txt.replace(/</g,'&lt;')+'</textarea>'+
+      '<textarea id="'+id+'" readonly style="width:100%;height:'+altura+'px;font-family:monospace;font-size:12px;line-height:1.8;padding:10px 12px;border:2px solid '+cor+';border-top:none;border-radius:0 0 10px 10px;background:#fff;color:#1a1a1a;resize:vertical;cursor:pointer" onclick="this.select()">'+txt+'</textarea>'+
     '</div>';
   }
 
@@ -1076,13 +1079,18 @@ function renderRelGado(){
 
   var gSort=[...gF].sort(function(a,b){return a.data.localeCompare(b.data);});
   var txt='';
-  gSort.forEach(function(g){
-    txt+=g.tipo+'  '+Number(g.kg).toFixed(2)+'  R$ '+Number(g.preco).toFixed(2)+'  '+fmt(g.total);
-    if(g.cheque)txt+='  Cheq #'+g.cheque;
-    if(g.status==='PENDENTE')txt+='  [A PAGAR]';
+  gSort.forEach(function(g,i){
+    if(i>0)txt+=L;
+    txt+=fd(g.data)+'  #'+g.registro+L;
+    txt+=g.qtd+'x '+g.tipo+'  '+Number(g.kg).toFixed(2)+'kg  R$/kg: '+Number(g.preco).toFixed(2)+L;
+    txt+='Fornecedor: '+g.fornecedor+L;
+    txt+='Total: '+fmt(g.total);
+    if(g.cheque)txt+='  Cheque #'+g.cheque;
+    txt+='  '+(g.status==='PAGO'?'PAGO':'A PAGAR');
     txt+=L;
   });
-  txt+=L+'Total: '+gF.length+' compra(s) | '+totalKg.toFixed(2)+'kg | '+fmt(totalVal)+L;
+  txt+=L+'================================'+L;
+  txt+='Total: '+gF.length+' compra(s) | '+totalKg.toFixed(2)+'kg | '+fmt(totalVal)+L;
   if(pendentes.length)txt+='A pagar: '+fmt(totPend)+' ('+pendentes.length+' em aberto)';
 
   var el=document.getElementById('rel-gado-result');
@@ -1096,7 +1104,9 @@ function renderRelGado(){
   html+='<span>GADO — '+periodoLabel+'</span>';
   html+='<button id="btn-cp-gado" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">Copiar</button>';
   html+='</div>';
-  html+='<textarea id="txt-gado-blk" readonly style="width:100%;height:260px;font-family:monospace;font-size:12px;line-height:1.6;padding:10px 12px;border:2px solid #1a56b0;border-top:none;border-radius:0 0 10px 10px;background:#fff;color:#1a1a1a;resize:none;cursor:pointer" onclick="this.select()">'+txt+'</textarea>';
+  var gadoLinhas=txt.split('\n').length;
+  var gadoAltura=Math.min(Math.max(gadoLinhas*22+20,180),500);
+  html+='<textarea id="txt-gado-blk" readonly style="width:100%;height:'+gadoAltura+'px;font-family:monospace;font-size:12px;line-height:1.8;padding:10px 12px;border:2px solid #1a56b0;border-top:none;border-radius:0 0 10px 10px;background:#fff;color:#1a1a1a;resize:vertical;cursor:pointer" onclick="this.select()">'+txt+'</textarea>';
   el.innerHTML=html;
   document.getElementById('btn-cp-gado').addEventListener('click',function(){
     var ta=document.getElementById('txt-gado-blk');
