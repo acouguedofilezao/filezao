@@ -51,6 +51,8 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;c
   .sidebar{position:fixed;top:91px;left:0;height:calc(100vh - 91px);z-index:200;box-shadow:4px 0 20px rgba(0,0,0,0.5);transform:translateX(0);transition:transform .25s}
   .sidebar.collapsed{transform:translateX(-100%)}
   .main-content{width:100%!important;margin-left:0!important}
+  .sidebar-toggle{display:none!important}
+  .hamburger{display:flex!important}
 }
 /* section moved to sidebar layout */
 .card{background:#fff;border:1px solid #E8E8E8;border-radius:12px;padding:18px 20px;margin-bottom:14px}
@@ -165,6 +167,8 @@ tr:hover td{background:#fafafa}
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .rel-sel-grid{grid-template-columns:1fr!important}
   .metric-grid{grid-template-columns:1fr!important}
+  .sidebar-toggle{display:none!important;visibility:hidden!important;pointer-events:none!important}
+  .hamburger{display:flex!important}
 }
 @media(max-width:480px){
   .header-title{font-size:20px}
@@ -1428,6 +1432,13 @@ async function init(){
   setupInputs();
   proxReg();
   // Forçar data no botão Hoje e renderizar
+  // Mobile: esconder toggle e colapsar sidebar
+  if(window.innerWidth<=768){
+    var sbEl=document.getElementById('sidebar');
+    if(sbEl)sbEl.classList.add('collapsed');
+    var tgEl=document.getElementById('sidebar-toggle');
+    if(tgEl){tgEl.style.display='none';tgEl.style.visibility='hidden';}
+  }
   // Marcar botão Hoje como ativo
   const btnsD=document.querySelectorAll('#sec-dashboard .btn');
   btnsD.forEach((b,i)=>{if(i===0){b.classList.remove('btn-ghost');b.classList.add('btn-primary');}else{b.classList.remove('btn-primary');b.classList.add('btn-ghost');}});
