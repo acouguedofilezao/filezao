@@ -130,3 +130,9 @@
 - Botão ◀▶ para esconder/mostrar o menu lateral
 - No mobile: sidebar vira overlay e fecha automaticamente ao navegar
 - Seções do menu agrupadas: Menu (Painel/Entradas/Saídas/Gado/Cheques) e Financeiro (Fechamento/Relatórios)
+
+## v17.4 — 17/06/2026
+- Botão de toggle do menu aumentado (28x64px, mais fácil de clicar no celular)
+- Status "Pronto — X entradas" movido para o rodapé da sidebar (oculta com o menu)
+- Ícone da logo adicionado para tela inicial do iPhone (apple-touch-icon 180x180)
+- Meta tags para PWA no iPhone (barra de status preta, título Filezão)
