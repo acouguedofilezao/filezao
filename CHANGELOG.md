@@ -163,3 +163,15 @@
 - Mobile: overlay escuro aparece atrás da sidebar quando aberta, clique fecha
 - Mobile: sidebar usa transform (desliza suavemente) em vez de width
 - Desktop: toggle lateral mantido igual
+
+## v17.9 — 17/06/2026
+- Correção definitiva: botão toggle lateral completamente oculto no celular (display:none + visibility:hidden + pointer-events:none + JS)
+- Sidebar começa fechada no celular via JS no init()
+- Hamburguer (☰) no header funciona como único controle do menu no mobile
+
+## v17.9 — 17/06/2026
+- Hamburguer movido para o lado ESQUERDO do header (antes da logo)
+- Mobile: todas as caixas em coluna única (sem sobreposição)
+- Mobile: painel convertido para display:block (sem grid)
+- Mobile: dash-grid (Dinheiro/Pix/Cartão) em coluna única
+- Hamburguer aparece a partir de 900px (tablets também)
