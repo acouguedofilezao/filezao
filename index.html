@@ -11,7 +11,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;color:#1a1a1a;font-size:14px}
-.loc{font-family:'Inter',system-ui,sans-serif;font-weight:800;letter-spacing:-.5px}
+.loc{font-weight:800;letter-spacing:-.3px}
 .header{background:#000;border-bottom:3px solid #FE0000;padding:12px 20px;display:flex;align-items:center;gap:14px}
 .header-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:1.5px}
 .header-sub{font-size:10px;color:#FE0000;text-transform:uppercase;letter-spacing:2px;margin-top:1px}
@@ -23,7 +23,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;c
 .section{display:none;padding:16px}.section.active{display:block}
 .card{background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:14px 16px;margin-bottom:12px}
 .card-title{font-size:11px;font-weight:700;color:#000;margin-bottom:14px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:1px}
-.card-title.loc{font-weight:700;letter-spacing:.3px}
+.card-title{font-weight:700;letter-spacing:.3px}
 .card-title i{color:#FE0000;font-size:15px}
 .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
 .metric{background:#fff;border:1px solid #E8E8E8;border-radius:8px;padding:12px 14px;border-left:4px solid #FE0000}
@@ -883,7 +883,7 @@ function renderFech(){
 
   // Card principal
   html+='<div class="card" style="border-top:4px solid #FE0000">';
-  html+='<div style="font-family:\'Locatro\',\'Georgia\',serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#000;margin-bottom:16px;display:flex;align-items:center;gap:8px">';
+  html+='<div style="font-weight:800;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#000;margin-bottom:16px;display:flex;align-items:center;gap:8px">';
   html+='<i class="ti ti-chart-bar" style="color:#FE0000"></i> Resumo — '+mn+'</div>';
 
   // Entradas e saídas lado a lado
@@ -918,7 +918,7 @@ function renderFech(){
         '<div style="font-size:16px;font-weight:700">'+fmt(val)+'</div></div>';
     }
     html+='<div class="card">';
-    html+='<div style="font-family:\'Locatro\',\'Georgia\',serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#000;margin-bottom:4px;display:flex;align-items:center;gap:8px">';
+    html+='<div style="font-weight:800;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#000;margin-bottom:4px;display:flex;align-items:center;gap:8px">';
     html+='<i class="ti ti-users" style="color:#FE0000"></i> Comissões</div>';
     html+='<div style="font-size:12px;color:#888;margin-bottom:14px">Base após energia (R$ 2.500,00): <strong style="color:#1a1a1a">'+fmt(aE_)+'</strong></div>';
     html+=rowC('Diogo','1,5%',aE_,cD_);
@@ -987,24 +987,18 @@ function renderRelDiario(){
 
   var tE=r2(eD.reduce(function(s,e){return s+e.valor;},0));
   var tS=r2(sD.reduce(function(s,e){return s+e.valor;},0));
+  var saldo=r2(tE-tS);
   var L='\n';
 
-  // ── BLOCO 1: SAÍDAS ──────────────────────────────
+  // ── BLOCO 1: SAÍDAS (formato WhatsApp) ──
   var sSort=[...sD].sort(function(a,b){return a.data.localeCompare(b.data)||a.descricao.localeCompare(b.descricao);});
   var txt1='';
-  // Calcular larguras para alinhar colunas
-  var maxDesc=4; // "DATA"
-  sSort.forEach(function(s){if(s.descricao.length>maxDesc)maxDesc=s.descricao.length;});
-  maxDesc=Math.min(maxDesc,30);
-  function padR(s,n){s=String(s);while(s.length<n)s+=' ';return s.slice(0,n);}
-  function padL(s,n){s=String(s);while(s.length<n)s=' '+s;return s;}
   sSort.forEach(function(s){
-    var desc=s.descricao.slice(0,28);
-    txt1+=fd(s.data)+'  '+padR(desc,28)+'  '+fmt(s.valor)+L;
+    txt1+=fd(s.data)+'  '+s.descricao+'  '+fmt(s.valor)+L;
   });
   txt1+=L+'Total saidas: '+fmt(tS);
 
-  // ── BLOCO 2: ENTRADAS POR DIA ──────────────────
+  // ── BLOCO 2: ENTRADAS POR DIA ──
   var diasE={};
   eD.forEach(function(e){
     if(!diasE[e.data])diasE[e.data]=0;
@@ -1017,52 +1011,51 @@ function renderRelDiario(){
   });
   txt2+=L+'Total entradas: '+fmt(tE);
 
-  // ── BLOCO 3: GADO ──────────────────────────────
+  // ── BLOCO 3: GADO ──
   var gSort=[...gD].sort(function(a,b){return a.data.localeCompare(b.data);});
   var txt3='';
   gSort.forEach(function(g){
-    var tipo=padR(g.tipo,6);
-    var kg=String(Number(g.kg).toFixed(2));
-    var preco='R$ '+Number(g.preco).toFixed(2);
-    var total=fmt(g.total);
-    txt3+=tipo+'  '+kg+'  '+preco+'  '+total+L;
+    txt3+=g.tipo+'  '+Number(g.kg).toFixed(2)+'  R$ '+Number(g.preco).toFixed(2)+'  '+fmt(g.total)+L;
   });
   if(!gSort.length)txt3='Nenhuma compra no periodo.'+L;
   var totGado=r2(gD.reduce(function(s,g){return s+Number(g.total);},0));
   txt3+=L+'Total gado: '+fmt(totGado);
 
-  // ── RENDER HTML ────────────────────────────────
+  // ── HTML ──
   var el=document.getElementById('rel-diario-result');
+
   function blocoHtml(titulo,id,txt,cor){
     return '<div style="margin-bottom:16px">'+
-      '<div style="background:'+cor+';color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="background:'+cor+';color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">'+
         '<span>'+titulo+'</span>'+
-        '<button class="btn btn-ghost btn-sm" data-cp="'+id+'" style="color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px" onclick="cpRelId(this)">Copiar</button>'+
+        '<button style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600" data-tid="'+id+'" onclick="cpRelId(this)">Copiar</button>'+
       '</div>'+
-      '<textarea id="'+id+'" readonly style="width:100%;height:180px;font-family:monospace;font-size:11px;padding:10px;border:1px solid #ddd;border:none;border-radius:0 0 8px 8px;background:#1a1a1a;color:#fff;resize:vertical;cursor:pointer" onclick="this.select()">'+txt+'</textarea>'+
+      '<textarea id="'+id+'" readonly style="width:100%;height:160px;font-family:monospace;font-size:12px;line-height:1.6;padding:10px 12px;border:2px solid '+cor+';border-top:none;border-radius:0 0 10px 10px;background:#fff;color:#1a1a1a;resize:none;cursor:pointer" onclick="this.select()">'+txt.replace(/</g,'&lt;')+'</textarea>'+
     '</div>';
   }
 
-  var html='<div style="background:#f0faf4;border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid #c3e6cb">';
-  html+='<div style="display:flex;gap:16px;flex-wrap:wrap">';
-  html+='<div><div style="font-size:11px;color:#555">Total entradas</div><div style="font-size:17px;font-weight:800;color:#1a7a3c">'+fmt(tE)+'</div></div>';
-  html+='<div><div style="font-size:11px;color:#555">Total saidas</div><div style="font-size:17px;font-weight:800;color:#FE0000">'+fmt(tS)+'</div></div>';
-  html+='<div><div style="font-size:11px;color:#555">Saldo</div><div style="font-size:17px;font-weight:800;color:'+(r2(tE-tS)>=0?'#1a7a3c':'#FE0000')+'">'+fmt(r2(tE-tS))+'</div></div>';
-  html+='</div></div>';
-  html+='<div style="font-size:12px;color:#555;margin-bottom:10px;font-weight:500">Copie cada bloco separadamente e cole no WhatsApp:</div>';
+  var html='<div style="background:#f0faf4;border-radius:10px;padding:12px 14px;margin-bottom:16px;border:1px solid #c3e6cb;display:flex;gap:20px;flex-wrap:wrap">';
+  html+='<div><div style="font-size:11px;color:#555;margin-bottom:2px">Total entradas</div><div style="font-size:20px;font-weight:800;color:#1a7a3c">'+fmt(tE)+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555;margin-bottom:2px">Total saidas</div><div style="font-size:20px;font-weight:800;color:#FE0000">'+fmt(tS)+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555;margin-bottom:2px">Saldo</div><div style="font-size:20px;font-weight:800;color:'+(saldo>=0?'#1a7a3c':'#FE0000')+'">'+fmt(saldo)+'</div></div>';
+  html+='</div>';
+  html+='<p style="font-size:12px;color:#666;margin-bottom:12px">Copie cada bloco e cole no WhatsApp separadamente:</p>';
   html+=blocoHtml('1. SAIDA','blk-saida',txt1,'#FE0000');
   html+=blocoHtml('2. ENTRADAS POR DIA','blk-entrada',txt2,'#1a7a3c');
   html+=blocoHtml('3. GADO','blk-gado',txt3,'#1a56b0');
 
   el.innerHTML=html;
-  // Attach copy events
-  el.querySelectorAll('button[data-cp]').forEach(function(btn){
+  el.querySelectorAll('button[data-tid]').forEach(function(btn){
     btn.addEventListener('click',function(){
-      var id=this.getAttribute('data-cp');
+      var id=this.getAttribute('data-tid');
       var ta=document.getElementById(id);
-      if(ta){ta.select();try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
-        var orig=this.textContent;this.textContent='Copiado!';
-        var self=this;setTimeout(function(){self.textContent=orig;},2000);
+      if(ta){
+        ta.select();
+        try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
+        var orig=this.textContent;
+        this.textContent='Copiado!';
+        var self=this;
+        setTimeout(function(){self.textContent=orig;},2000);
       }
     });
   });
@@ -1081,41 +1074,36 @@ function renderRelGado(){
   var totPend=r2(pendentes.reduce(function(s,g){return s+Number(g.total);},0));
   var L='\n';
 
-  // Formato igual à planilha: TIPO | KG | R$/KG | TOTAL
-  function padR(s,n){s=String(s);while(s.length<n)s+=' ';return s.slice(0,n);}
   var gSort=[...gF].sort(function(a,b){return a.data.localeCompare(b.data);});
   var txt='';
   gSort.forEach(function(g){
-    var tipo=padR(g.tipo,6);
-    var kg=String(Number(g.kg).toFixed(2));
-    var preco='R$ '+Number(g.preco).toFixed(2);
-    var total=fmt(g.total);
-    txt+=tipo+'  '+kg+'  '+preco+'  '+total;
+    txt+=g.tipo+'  '+Number(g.kg).toFixed(2)+'  R$ '+Number(g.preco).toFixed(2)+'  '+fmt(g.total);
+    if(g.cheque)txt+='  Cheq #'+g.cheque;
     if(g.status==='PENDENTE')txt+='  [A PAGAR]';
     txt+=L;
   });
-  txt+=L;
-  txt+='Total: '+gF.length+' compra(s) | '+totalKg.toFixed(2)+'kg | '+fmt(totalVal)+L;
+  txt+=L+'Total: '+gF.length+' compra(s) | '+totalKg.toFixed(2)+'kg | '+fmt(totalVal)+L;
   if(pendentes.length)txt+='A pagar: '+fmt(totPend)+' ('+pendentes.length+' em aberto)';
 
   var el=document.getElementById('rel-gado-result');
-  var html='<div style="background:#fff8f0;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #fed7aa">';
-  html+='<div style="display:flex;gap:16px;flex-wrap:wrap">';
-  html+='<div><div style="font-size:11px;color:#555">Compras</div><div style="font-size:17px;font-weight:800">'+gF.length+'</div></div>';
-  html+='<div><div style="font-size:11px;color:#555">Total kg</div><div style="font-size:17px;font-weight:800">'+totalKg.toFixed(1)+'kg</div></div>';
-  html+='<div><div style="font-size:11px;color:#555">Total gasto</div><div style="font-size:17px;font-weight:800;color:#FE0000">'+fmt(totalVal)+'</div></div>';
-  html+='<div><div style="font-size:11px;color:#555">Em aberto</div><div style="font-size:17px;font-weight:800;color:#e65100">'+fmt(totPend)+'</div></div>';
-  html+='</div></div>';
-  html+='<div style="background:#1a56b0;color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">';
-  html+='<span>GADO — '+periodoLabel+'</span>';
-  html+='<button class="btn btn-ghost btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px" id="btn-cp-gado">Copiar</button>';
+  var html='<div style="background:#fff8f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;border:1px solid #fed7aa;display:flex;gap:20px;flex-wrap:wrap">';
+  html+='<div><div style="font-size:11px;color:#555;margin-bottom:2px">Compras</div><div style="font-size:20px;font-weight:800">'+gF.length+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555;margin-bottom:2px">Total kg</div><div style="font-size:20px;font-weight:800">'+totalKg.toFixed(1)+'</div></div>';
+  html+='<div><div style="font-size:11px;color:#555;margin-bottom:2px">Total gasto</div><div style="font-size:20px;font-weight:800;color:#FE0000">'+fmt(totalVal)+'</div></div>';
+  if(pendentes.length)html+='<div><div style="font-size:11px;color:#555;margin-bottom:2px">A pagar</div><div style="font-size:20px;font-weight:800;color:#e65100">'+fmt(totPend)+'</div></div>';
   html+='</div>';
-  html+='<textarea id="txt-gado-blk" readonly style="width:100%;height:280px;font-family:monospace;font-size:11px;padding:10px;border:none;border-radius:0 0 8px 8px;background:#1a1a1a;color:#fff;resize:vertical;cursor:pointer" onclick="this.select()">'+txt+'</textarea>';
+  html+='<div style="background:#1a56b0;color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center">';
+  html+='<span>GADO — '+periodoLabel+'</span>';
+  html+='<button id="btn-cp-gado" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">Copiar</button>';
+  html+='</div>';
+  html+='<textarea id="txt-gado-blk" readonly style="width:100%;height:260px;font-family:monospace;font-size:12px;line-height:1.6;padding:10px 12px;border:2px solid #1a56b0;border-top:none;border-radius:0 0 10px 10px;background:#fff;color:#1a1a1a;resize:none;cursor:pointer" onclick="this.select()">'+txt+'</textarea>';
   el.innerHTML=html;
   document.getElementById('btn-cp-gado').addEventListener('click',function(){
     var ta=document.getElementById('txt-gado-blk');
-    ta.select();try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
-    this.textContent='Copiado!';var self=this;setTimeout(function(){self.textContent='Copiar';},2000);
+    ta.select();
+    try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
+    this.textContent='Copiado!';
+    var self=this;setTimeout(function(){self.textContent='Copiar';},2000);
   });
 }
 /* ── RELATÓRIO DE ABATE ── */
