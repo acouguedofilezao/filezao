@@ -221,6 +221,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <button class="nav-btn" onclick="showSec('relatorio',this)"><i class="ti ti-chart-bar"></i><span>Relatórios</span></button>
     <div class="nav-section">Compras</div>
     <button class="nav-btn" onclick="showSec('cotacoes',this)"><i class="ti ti-shopping-cart"></i><span>Cotações</span></button>
+    <button class="nav-btn" onclick="showSec('estoque',this)"><i class="ti ti-clipboard-list"></i><span>Estoque</span></button>
     <div class="nav-section">Ferramentas</div>
     <button class="nav-btn" onclick="showSec('importar',this)"><i class="ti ti-file-import"></i><span>Importar dados</span></button>
     <button class="nav-btn" onclick="showSec('backup',this)"><i class="ti ti-shield-check"></i><span>Backup</span></button>
@@ -341,6 +342,27 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
   <div class="card" id="cot-result" style="display:none">
     <div class="card-title loc"><i class="ti ti-checklist"></i> Resultado</div>
     <div id="cot-out"></div>
+  </div>
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-history"></i> Histórico de cotações</div>
+    <p style="font-size:12px;color:#888;margin:-2px 0 12px">Cotações salvas ficam guardadas neste aparelho — útil pra conferir quando a nota fiscal chegar com preço diferente. (Também entram no Backup.)</p>
+    <div id="cot-hist-list"></div>
+  </div>
+</div>
+
+<!-- ESTOQUE -->
+<div id="sec-estoque" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-clipboard-list"></i> Estoque &amp; sugestão de compra</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Cole a lista de estoque do Magela (um item por linha, com a quantidade). O sistema entende <strong>caixa, pacote e kg</strong>, ignora os "tem muito", compara com o seu estoque mínimo e sugere o que comprar — já trazendo o <strong>fornecedor mais barato da sua última cotação</strong>.</p>
+    <textarea id="est-txt" placeholder="Ex:&#10;Peito 5cx&#10;Coxinha da asa 19pacote&#10;Tulipa 3cx&#10;Coxa desossada tem muito&#10;Bacom manta 3cx" style="width:100%;min-height:160px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
+    <div style="margin-top:10px">
+      <button class="btn btn-primary" onclick="estAnalisar()"><i class="ti ti-calculator"></i> Analisar e sugerir compra</button>
+    </div>
+  </div>
+  <div class="card" id="est-result" style="display:none">
+    <div class="card-title loc"><i class="ti ti-shopping-cart-plus"></i> Sugestão de compra</div>
+    <div id="est-out"></div>
   </div>
 </div>
 
@@ -581,6 +603,7 @@ const SB_KEY='sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5';
 const SB_HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};
 
 function sync(st,msg){document.getElementById('sdot').className='dot'+(st==='s'?' saving':st==='e'?' err':'');document.getElementById('stxt').textContent=msg;}
+function updStatus(){sync('','Pronto — '+(E.length+S.length+G.length+C.length)+' lançamentos');}
 
 // Supabase helpers
 async function sbGet(table,params){
@@ -658,7 +681,7 @@ function save(k,d){
       else if(k==='fz_saidas') await sbUpsert('saidas',d.map(saiToDB));
       else if(k==='fz_gado') await sbUpsert('gado',d.map(gadoToDB));
       else if(k==='fz_cheques') await sbUpsert('cheques',d.map(chqToDB));
-      sync('','Salvo ✓');
+      sync('','Salvo ✓');setTimeout(updStatus,1200);
     }catch(err){sync('e','Erro: '+err.message);console.error(err);}
   },800);
 }
@@ -892,7 +915,7 @@ function impLaunch(){
 }
 
 function impBackup(){
-  var data={app:'filezao',versao:1,gerado:new Date().toISOString(),entradas:E,saidas:S,gado:G,cheques:C};
+  var data={app:'filezao',versao:1,gerado:new Date().toISOString(),entradas:E,saidas:S,gado:G,cheques:C,cotacoes:cotLogGet()};
   var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='backup-filezao-'+td()+'.json';
@@ -911,6 +934,7 @@ async function impRestore(input){
     if(data.saidas&&data.saidas.length)await sbUpsert('saidas',data.saidas.map(saiToDB));
     if(data.gado&&data.gado.length)await sbUpsert('gado',data.gado.map(gadoToDB));
     if(data.cheques&&data.cheques.length)await sbUpsert('cheques',data.cheques.map(chqToDB));
+    if(data.cotacoes&&data.cotacoes.length){var cur=cotLogGet(),ids={};cur.forEach(function(x){ids[x.id]=1;});data.cotacoes.forEach(function(x){if(!ids[x.id])cur.push(x);});cur.sort(function(a,b){return b.id-a.id;});cotLogSet(cur);}
     alert('Backup restaurado! A página vai recarregar pra atualizar tudo.');
     location.reload();
   }catch(err){alert('Erro ao restaurar: '+err.message);}
@@ -923,6 +947,7 @@ function cotNum(t){t=String(t).trim();if(t.indexOf(',')>-1)return parseFloat(t.r
 function cotKey(s){return s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();}
 function cotParseLine(l){
   l=l.trim();if(!l)return null;
+  l=l.replace(/^\[?\s*\d{1,2}:\d{2}[^\]]*\]?\s*[-–]?\s*[^:]{0,40}:\s*/,'').trim();if(!l)return null;
   var re=/\d[\d.,]*/g,m,last=null;while((m=re.exec(l))){last=m;}
   if(!last)return null;
   var after=l.slice(last.index+last[0].length).replace(/[\s.,:;rR$\/\\\-]|kg|KG|un|UN/g,'');
@@ -949,49 +974,136 @@ function cotRender(){
        '<textarea class="cot-txt" placeholder="Cole aqui a mensagem do fornecedor (um item por linha)..." style="width:100%;min-height:120px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box">'+cotEsc(f.txt||'')+'</textarea>'+
        '</div>';
   });
-  c.innerHTML=h;
+  c.innerHTML=h;cotHist();
 }
 function cotAdd(){cotSync();COT.forn.push({nome:'',txt:''});cotRender();}
 function cotDel(i){cotSync();COT.forn.splice(i,1);if(!COT.forn.length)COT.forn=[{nome:'',txt:''}];cotRender();}
 function cotLimpar(){COT.forn=[{nome:'',txt:''},{nome:'',txt:''},{nome:'',txt:''}];COT.res=null;cotRender();document.getElementById('cot-result').style.display='none';}
+var COT_GRANEL=[/TULIPA/,/MEIO DA ASA/,/BACON/,/DESOSSAD/]; // cortes que NÃO são comprados em 1kg
+var COT_CUSTO={ // seu custo registrado no retaguarda (referência)
+  'ASA DE FRANGO':13.90,'COXINHA DA ASA':12.98,'COXA SOBRECOXA':7.39,
+  'COXA COM SOBRECOXA DESOSSADA':14.80,'FILE DO PEITO DE FRANGO':14.50,
+  'MEIO DA ASA DE FRANGO':19.80,'CORACAO DE FRANGO':26.90,'PESCOCO DE PERU':20.80,
+  'MOELA DE FRANGO':13.98,'BACON':23.02};
+function cotPkg(nome){
+  var up=cotKey(nome),pkg='';
+  if(/\bGRANEL\b/.test(up))pkg='granel';
+  else if(/\b1\s?KGS?\b/.test(up)||/\bPACOTE\b/.test(up)||/\bPCT\b/.test(up)||/\bEMBALAD/.test(up))pkg='1kg';
+  var base=nome.replace(/\b(a\s+granel|granel|1\s?kgs?|pacote|embalad[oa]s?|pct)\b/ig,'').replace(/\s{2,}/g,' ').replace(/[\s\-:·]+$/,'').trim();
+  if(!base)base=nome.trim();
+  return {base:base,pkg:pkg};
+}
+function cotPrefPkg(base){var up=cotKey(base);for(var i=0;i<COT_GRANEL.length;i++)if(COT_GRANEL[i].test(up))return'granel';return'1kg';}
+function cotCanon(nome){
+  var up=cotKey(nome);
+  if(/DESOSS/.test(up))return'Coxa com sobrecoxa desossada';
+  if(/COXA E SOBRE|COXA SOBRE/.test(up))return'Coxa sobrecoxa';
+  if(/^SOBRE ?COXA$/.test(up))return'Sobrecoxa';
+  if(/COXINHA/.test(up))return'Coxinha da asa';
+  if(/TULIPA/.test(up))return'Meio da asa de frango';
+  if(/\bASINHA\b|^ASA\b/.test(up))return'Asa de frango';
+  if(/FILE.*PEITO|PEITO.*FILE/.test(up))return'Filé do peito de frango';
+  if(/CORACAO|CORACA|CORA.*FGO/.test(up))return'Coração de frango';
+  if(/PESCOCO.*PERU/.test(up))return'Pescoço de peru';
+  if(/MOELA/.test(up))return'Moela de frango';
+  if(/BACON/.test(up))return'Bacon';
+  return nome.trim();
+}
 function cotComparar(){
   cotSync();
   var nomes=COT.forn.map(function(f,i){return (f.nome||'').trim()||('Fornecedor '+(i+1));});
   var map={},order=[];
   COT.forn.forEach(function(f,fi){
     cotParse(f.txt).forEach(function(it){
-      var k=cotKey(it.nome);if(!k)return;
-      if(!map[k]){map[k]={nome:it.nome,precos:{}};order.push(k);}
-      if(map[k].precos[fi]==null||it.preco<map[k].precos[fi])map[k].precos[fi]=it.preco;
+      var pk=cotPkg(it.nome),canon=cotCanon(pk.base),k=cotKey(canon);if(!k)return;
+      if(!map[k]){map[k]={nome:canon,byF:{}};order.push(k);}
+      var bf=map[k].byF;if(!bf[fi])bf[fi]={};var slot=pk.pkg||'_';
+      if(bf[fi][slot]==null||it.preco<bf[fi][slot])bf[fi][slot]=it.preco;
     });
   });
-  COT.res={nomes:nomes,map:map,order:order};
+  var rows=order.map(function(k){
+    var g=map[k],pref=cotPrefPkg(g.nome),ord=[pref,'_',(pref==='1kg'?'granel':'1kg')];
+    var cells=nomes.map(function(_,fi){
+      var bf=g.byF[fi];if(!bf)return null;
+      for(var j=0;j<ord.length;j++){if(bf[ord[j]]!=null)return {preco:bf[ord[j]],pkg:(ord[j]==='_'?'':ord[j])};}
+      var ks=Object.keys(bf);return ks.length?{preco:bf[ks[0]],pkg:(ks[0]==='_'?'':ks[0])}:null;
+    });
+    var min=Infinity,minFi=-1;cells.forEach(function(c,fi){if(c&&c.preco<min){min=c.preco;minFi=fi;}});
+    return {nome:g.nome,pref:pref,cells:cells,minFi:minFi,min:min};
+  }).filter(function(r){return r.minFi>=0;});
+  rows.sort(function(a,b){return a.nome.localeCompare(b.nome);});
+  COT.res={nomes:nomes,rows:rows};
   cotResultRender();
+}
+function cotTabela(nomes,rows,ro){
+  var h='<div class="tbl-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Seu custo</th>';
+  nomes.forEach(function(n){h+='<th style="text-align:right">'+cotEsc(n)+'</th>';});
+  h+='<th>Melhor</th></tr></thead><tbody>';var lista=[];
+  rows.forEach(function(row){
+    var custo=COT_CUSTO[cotKey(row.nome)];
+    h+='<tr><td style="font-weight:600">'+cotEsc(row.nome)+(row.pref?' <span style="font-size:10px;color:#aaa;font-weight:500">· '+row.pref+'</span>':'')+'</td>';
+    h+='<td style="text-align:right;color:#888">'+(custo!=null?fmt(custo):'—')+'</td>';
+    nomes.forEach(function(_,fi){
+      var c=row.cells[fi];
+      if(!c){h+='<td style="text-align:right;color:#ccc">—</td>';}
+      else{var best=(fi===row.minFi),tag=(c.pkg&&c.pkg!==row.pref)?' <span style="font-size:10px;color:#b45309">('+c.pkg+')</span>':'';h+='<td style="text-align:right'+(best?';background:#dcfce7;color:#166534;font-weight:700':'')+'">'+fmt(c.preco)+tag+'</td>';}
+    });
+    var nota='';
+    if(custo!=null){var df=row.min-custo;
+      if(df<-0.005)nota=' <span style="font-size:11px;color:#166534">\u2193 '+fmt(-df)+' abaixo</span>';
+      else if(df>0.005)nota=' <span style="font-size:11px;color:#b45309">\u2191 '+fmt(df)+' acima</span>';
+      else nota=' <span style="font-size:11px;color:#888">= seu custo</span>';
+    }
+    h+='<td><span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(nomes[row.minFi])+'</span> <strong>'+fmt(row.min)+'</strong>'+nota+'</td></tr>';
+    lista.push(row.nome+' — '+nomes[row.minFi]+' '+fmt(row.min));
+  });
+  h+='</tbody></table></div>';
+  if(!ro){
+    h+='<div style="margin-top:16px;border-top:1px solid #eee;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
+       '<div style="font-size:13px;color:#555">'+rows.length+' item(ns) comparado(s)</div>'+
+       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="cotCopiar()"><i class="ti ti-copy"></i> Copiar lista</button>'+
+       '<button class="btn btn-primary" onclick="cotSalvar()"><i class="ti ti-device-floppy"></i> Salvar cotação</button></div></div>';
+    h+='<pre id="cot-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
+  }
+  return h;
 }
 function cotResultRender(){
   var R=COT.res,box=document.getElementById('cot-result'),out=document.getElementById('cot-out');
-  if(!R||!R.order.length){out.innerHTML='<p style="color:#888;font-size:14px">Nenhum item reconhecido. Confira se cada linha tem o item e o preço (ex: <em>Picanha 39,90</em>).</p>';box.style.display='block';return;}
-  var keys=R.order.slice().sort(function(a,b){return R.map[a].nome.localeCompare(R.map[b].nome);});
-  var h='<div class="tbl-wrap"><table><thead><tr><th>Item</th>';
-  R.nomes.forEach(function(n){h+='<th style="text-align:right">'+cotEsc(n)+'</th>';});
-  h+='<th>Melhor</th></tr></thead><tbody>';var lista=[];
-  keys.forEach(function(k){
-    var row=R.map[k],min=Infinity,minFi=-1;
-    R.nomes.forEach(function(_,fi){var p=row.precos[fi];if(p!=null&&p<min){min=p;minFi=fi;}});
-    h+='<tr><td style="font-weight:600">'+cotEsc(row.nome)+'</td>';
-    R.nomes.forEach(function(_,fi){var p=row.precos[fi];
-      if(p==null){h+='<td style="text-align:right;color:#ccc">—</td>';}
-      else{var best=(fi===minFi);h+='<td style="text-align:right'+(best?';background:#dcfce7;color:#166534;font-weight:700':'')+'">'+fmt(p)+'</td>';}
-    });
-    h+='<td><span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(R.nomes[minFi])+'</span> <strong>'+fmt(min)+'</strong></td></tr>';
-    lista.push(row.nome+' — '+R.nomes[minFi]+' '+fmt(min));
+  if(!R||!R.rows.length){out.innerHTML='<p style="color:#888;font-size:14px">Nenhum item reconhecido. Confira se cada linha tem o item e o preço (ex: <em>Picanha 39,90</em>).</p>';box.style.display='block';return;}
+  out.innerHTML=cotTabela(R.nomes,R.rows,false);box.style.display='block';
+}
+function cotLogGet(){try{return JSON.parse(localStorage.getItem('fz_cotlog')||'[]');}catch(e){return [];}}
+function cotLogSet(a){try{localStorage.setItem('fz_cotlog',JSON.stringify(a));}catch(e){}}
+function cotSalvar(){
+  if(!COT.res||!COT.res.rows.length){alert('Compare uma cotação antes de salvar.');return;}
+  var log=cotLogGet();
+  log.unshift({id:Date.now(),ts:new Date().toISOString(),nomes:COT.res.nomes,rows:COT.res.rows});
+  if(log.length>300)log=log.slice(0,300);
+  cotLogSet(log);cotHist();alert('Cotação salva no histórico.');
+}
+function cotFmtTs(ts){var d=new Date(ts);function p(n){return String(n).padStart(2,'0');}return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function cotHist(){
+  var c=document.getElementById('cot-hist-list');if(!c)return;
+  var log=cotLogGet();
+  if(!log.length){c.innerHTML='<p style="color:#999;font-size:13px;margin:0">Nenhuma cotação salva ainda. Compare e clique em <strong>Salvar cotação</strong>.</p>';return;}
+  var h='';
+  log.forEach(function(e){
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px">'+
+       '<div style="font-size:13px"><strong>'+cotFmtTs(e.ts)+'</strong> <span style="color:#888">· '+e.rows.length+' itens · '+e.nomes.length+' fornecedor(es)</span></div>'+
+       '<div style="display:flex;gap:6px"><button class="btn" style="background:#fff;border:1px solid #ddd;color:#444;padding:6px 10px" onclick="cotVer('+e.id+')">Ver</button>'+
+       '<button class="btn" style="background:#fff;border:1px solid #eee;color:#b91c1c;padding:6px 10px" onclick="cotDelLog('+e.id+')"><i class="ti ti-trash"></i></button></div></div>';
   });
-  h+='</tbody></table></div>';
-  h+='<div style="margin-top:16px;border-top:1px solid #eee;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
-     '<div style="font-size:13px;color:#555">'+keys.length+' item(ns) comparado(s)</div>'+
-     '<button class="btn btn-primary" onclick="cotCopiar()"><i class="ti ti-copy"></i> Copiar lista de compra</button></div>';
-  h+='<pre id="cot-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
-  out.innerHTML=h;box.style.display='block';
+  c.innerHTML=h;
+}
+function cotVer(id){
+  var e=cotLogGet().filter(function(x){return x.id===id;})[0];if(!e)return;
+  var out=document.getElementById('cot-out'),box=document.getElementById('cot-result');
+  out.innerHTML='<div style="font-size:13px;color:#555;margin-bottom:10px"><i class="ti ti-history"></i> Cotação salva em <strong>'+cotFmtTs(e.ts)+'</strong></div>'+cotTabela(e.nomes,e.rows,true);
+  box.style.display='block';box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function cotDelLog(id){
+  if(!confirm('Excluir esta cotação do histórico?'))return;
+  cotLogSet(cotLogGet().filter(function(x){return x.id!==id;}));cotHist();
 }
 function cotCopiar(){
   var el=document.getElementById('cot-lista');if(!el)return;
@@ -1000,6 +1112,124 @@ function cotCopiar(){
   else cotCopiaFb(txt);
 }
 function cotCopiaFb(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');alert('Lista copiada!');}catch(e){alert('Copie manualmente:\n\n'+txt);}document.body.removeChild(ta);}
+
+/* ── ESTOQUE & SUGESTÃO DE COMPRA ── */
+var EST_CFG={
+  'COXA SOBRECOXA':{unit:'cx',cxKg:20,min:5,buy:5},
+  'FILE DO PEITO DE FRANGO':{unit:'cx',cxKg:20,min:5,buy:5},
+  'ASA DE FRANGO':{unit:'cx',cxKg:20,min:2,buy:'fill'},
+  'COXINHA DA ASA':{unit:'cx',cxKg:20,min:2,buy:'fill'},
+  'MEIO DA ASA DE FRANGO':{unit:'cx',cxKg:20,min:3,buy:5},
+  'COXA COM SOBRECOXA DESOSSADA':{unit:'kg',cxKg:20,min:40,buy:40},
+  'MOELA DE FRANGO':{unit:'kg',cxKg:20,min:5,buy:20},
+  'PESCOCO DE PERU':{unit:'cx',cxKg:20,min:2,buy:3},
+  'LING TOSCANA CIA CARNE':{unit:'kg',cxKg:20,min:20,buy:40},
+  'CALABRESA':{unit:'cx',cxKg:20,min:2,buy:3},
+  'BACON':{unit:'cx',cxKg:20,min:2,buy:3},
+  'BACON EM CUBOS':{unit:'cx',cxKg:20,min:2,buy:2},
+  'EMPANADO':{unit:'cx',cxKg:5,min:1,buy:1},
+  'SALSICHA':{unit:'cx',cxKg:5,min:1,buy:1},
+  'PAO DE ALHO FRIGOLEMOS':{unit:'un',cxKg:1,min:6,buy:'1cx'}
+};
+function estCanon(nome){
+  var up=cotKey(nome);
+  if(/DESOS/.test(up))return'Coxa com sobrecoxa desossada';
+  if(/(BACON|BACOM).*CUBO|CUBO.*(BACON|BACOM)/.test(up))return'Bacon em cubos';
+  if(/BACON|BACOM/.test(up))return'Bacon';
+  if(/CALABRESA/.test(up))return'Calabresa';
+  if(/TOSCANA|CIA CARNE/.test(up))return'Ling. toscana cia carne';
+  if(/SALSICHA|SALCHICHA/.test(up))return'Salsicha';
+  if(/EMPANADO/.test(up))return'Empanado';
+  if(/PAO DE ALHO/.test(up))return'Pão de alho Frigolemos';
+  if(/COXINHA/.test(up))return'Coxinha da asa';
+  if(/TULIPA|MEIO DA ASA/.test(up))return'Meio da asa de frango';
+  if(/PESCOCO.*PERU/.test(up))return'Pescoço de peru';
+  if(/MOELA/.test(up))return'Moela de frango';
+  if(/FILE.*PEITO|^PEITO$/.test(up))return'Filé do peito de frango';
+  if(/COXA.*SOBRE|^COXA$/.test(up))return'Coxa sobrecoxa';
+  if(/\bASINHA\b|^ASA$/.test(up))return'Asa de frango';
+  return nome.trim();
+}
+function estParseLine(l){
+  l=l.trim();if(!l)return null;
+  var up=cotKey(l),plenty=/MUITO/.test(up),qty=null,unit='',work=l;
+  if(plenty){work=l.replace(/tem\s+muito|muito|tem/ig,'');}
+  else{
+    var re=/(\d+(?:[.,]\d+)?)\s*(caixas?|cx|pacotes?|pcts?|pct|kgs?|un)?/gi,mm,last=null;
+    while((mm=re.exec(l))){if(/\d/.test(mm[0]))last=mm;}
+    if(last){
+      qty=parseFloat(last[1].replace(',','.'));
+      var u=(last[2]||'').toLowerCase();
+      if(/caixa|cx/.test(u))unit='cx';else if(/pacote|pct/.test(u))unit='pct';else if(/kg/.test(u))unit='kg';else if(/un/.test(u))unit='un';else unit='';
+      work=l.slice(0,last.index);
+    }
+  }
+  var nome=work.replace(/[\s\-:]+$/,'').trim();if(!nome)return null;
+  var canon=estCanon(nome);
+  return {raw:nome,nome:canon,key:cotKey(canon),qty:qty,unit:unit,plenty:plenty};
+}
+function estVal(qty,unit,cfg){
+  if(cfg.unit==='un')return unit==='cx'?qty*20:qty;
+  var kg;
+  if(unit==='kg'||unit==='pct')kg=qty;else if(unit==='cx')kg=qty*cfg.cxKg;else kg=(cfg.unit==='kg'?qty:qty*cfg.cxKg);
+  return cfg.unit==='kg'?kg:kg/cfg.cxKg;
+}
+function estUL(u){return u==='cx'?'cx':(u==='kg'?'kg':'un');}
+function estEstoque(val,cfg){var v=cfg.unit==='cx'?(Math.round(val*2)/2):Math.round(val);return v+' '+estUL(cfg.unit);}
+function estPrecos(){
+  var src=null;
+  if(COT.res&&COT.res.rows&&COT.res.rows.length)src=COT.res;else{var lg=cotLogGet();if(lg.length)src=lg[0];}
+  var mp={};
+  if(src&&src.rows)src.rows.forEach(function(r){if(r.minFi>=0)mp[cotKey(r.nome)]={forn:src.nomes[r.minFi],preco:r.min};});
+  return mp;
+}
+function estAnalisar(){
+  var txt=document.getElementById('est-txt').value||'';
+  var precos=estPrecos(),comprar=[],ok=[],muito=[],semregra=[];
+  txt.split(/\r?\n/).forEach(function(l){
+    var it=estParseLine(l);if(!it)return;
+    if(it.plenty){muito.push(it.nome);return;}
+    var cfg=EST_CFG[it.key];
+    if(!cfg||it.qty==null){semregra.push(it.raw);return;}
+    var val=estVal(it.qty,it.unit,cfg);
+    if(val<cfg.min-1e-6){
+      var lbl;
+      if(cfg.buy==='fill'){var n=Math.max(1,Math.round(cfg.min-val));lbl=n+' caixa'+(n>1?'s':'');}
+      else if(cfg.buy==='1cx')lbl='1 caixa';
+      else lbl=cfg.buy+' '+(cfg.unit==='kg'?'kg':(cfg.unit==='un'?'un':'caixa'+(cfg.buy>1?'s':'')));
+      var pr=precos[it.key];
+      comprar.push({nome:it.nome,est:estEstoque(val,cfg),min:cfg.min+' '+estUL(cfg.unit),comprar:lbl,forn:pr?pr.forn:null,preco:pr?pr.preco:null});
+    }else ok.push(it.nome+' ('+estEstoque(val,cfg)+')');
+  });
+  estResultRender(comprar,ok,muito,semregra);
+}
+function estResultRender(comprar,ok,muito,semregra){
+  var box=document.getElementById('est-result'),out=document.getElementById('est-out'),h='';
+  if(comprar.length){
+    h+='<div class="tbl-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Em estoque</th><th style="text-align:right">Mínimo</th><th>Comprar</th><th>Onde (cotação)</th></tr></thead><tbody>';
+    var lista=[];
+    comprar.forEach(function(c){
+      var onde=c.forn?('<span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(c.forn)+'</span> <strong>'+fmt(c.preco)+'</strong>'):'<span style="color:#999;font-size:12px">fora da cotação de frango</span>';
+      h+='<tr><td style="font-weight:600">'+cotEsc(c.nome)+'</td><td style="text-align:right;color:#b91c1c">'+c.est+'</td><td style="text-align:right;color:#888">'+c.min+'</td><td style="font-weight:700">'+c.comprar+'</td><td>'+onde+'</td></tr>';
+      lista.push(c.nome+' — comprar '+c.comprar+(c.forn?(' — '+c.forn+' '+fmt(c.preco)):''));
+    });
+    h+='</tbody></table></div>';
+    h+='<div style="margin-top:14px;display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="estCopiar()"><i class="ti ti-copy"></i> Copiar lista de compra</button></div>';
+    h+='<pre id="est-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
+  }else{
+    h+='<p style="color:#166534;font-size:14px"><i class="ti ti-circle-check"></i> Nada a comprar pelos parâmetros atuais.</p>';
+  }
+  if(ok.length)h+='<div style="margin-top:14px;font-size:12px;color:#888"><strong>Estoque ok:</strong> '+ok.map(cotEsc).join(' · ')+'</div>';
+  if(muito.length)h+='<div style="margin-top:6px;font-size:12px;color:#888"><strong>Tem muito (ignorado):</strong> '+muito.map(cotEsc).join(' · ')+'</div>';
+  if(semregra.length)h+='<div style="margin-top:6px;font-size:12px;color:#b45309"><strong>Sem parâmetro definido:</strong> '+semregra.map(cotEsc).join(' · ')+' — me diga o mínimo desses se quiser incluir.</div>';
+  out.innerHTML=h;box.style.display='block';
+}
+function estCopiar(){
+  var el=document.getElementById('est-lista');if(!el)return;
+  var txt='\uD83D\uDED2 COMPRAR\n'+el.textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){alert('Lista copiada!');},function(){cotCopiaFb(txt);});
+  else cotCopiaFb(txt);
+}
 
 /* ── ENTRADAS ── */
 function addEnt(){
@@ -1714,7 +1944,7 @@ async function init(){
     ]);
     if(re && re.length>0){
       E=re.map(entFromDB);S=rs.map(saiFromDB);G=rg.map(gadoFromDB);C=rc.map(chqFromDB);
-      sync('','Pronto — '+E.length+' entradas');
+      updStatus();
     } else {
       // Banco vazio: importa dados da planilha em lotes
       sync('s','Importando planilha...');
