@@ -18,6 +18,11 @@
 
   main{flex:1 1 auto;overflow:hidden;padding:1.6vh 2vw;position:relative}
   #stage{height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.4vh 1.4vw;transition:opacity .35s ease}
+  .qrcard{grid-column:3;grid-row:2;background:#fff;border:.4vh solid #FE0000;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2vh;padding:1.4vh;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+  .qrcard .qrimg{height:22vh;width:auto;max-width:88%;display:block;border-radius:6px}
+  .qrcard .qrtxt{text-align:center;line-height:1.12}
+  .qrcard .qrtxt b{display:block;font-size:2.4vh;font-weight:900;color:#FE0000;text-transform:uppercase;letter-spacing:.5px}
+  .qrcard .qrtxt span{display:block;font-size:1.7vh;font-weight:600;color:#333;margin-top:.4vh}
 
   .card{background:#161616;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;border:1px solid #262626;box-shadow:0 4px 14px rgba(0,0,0,.4)}
   .card .photo{flex:1 1 auto;position:relative;background:#1d1d1d;overflow:hidden;display:flex;align-items:center;justify-content:center}
@@ -62,7 +67,7 @@
 const SB_URL='https://vfrgqtuvbflkexapdzho.supabase.co';
 const SB_KEY='sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5';
 const HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
-const PER_PAGE=6;
+const PER_PAGE=5;
 const ROTACAO_MS=12000;   // troca de tela a cada 12s
 const REFRESH_MS=60000;   // rebusca os dados a cada 1min
 
@@ -112,11 +117,15 @@ function renderDots(){
   var h='';for(var i=0;i<PAGES.length;i++)h+='<div class="d'+(i===cur?' on':'')+'"></div>';
   el.innerHTML=h;
 }
+var QR_URL='https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=6&color=1a1a1a&bgcolor=ffffff&data=https%3A%2F%2Fcasa-de-carnes-filezao.onbeef.app.br%2F';
+function qrCardHTML(){
+  return '<div class="qrcard"><img class="qrimg" src="'+QR_URL+'" alt="QR code do site" onerror="this.remove()"><div class="qrtxt"><b>Acesse nosso site</b><span>e confira todos os nossos produtos</span></div></div>';
+}
 function showPage(){
   var stage=document.getElementById('stage');
   var pg=PAGES[cur]||[];
   stage.style.display='grid';
-  stage.innerHTML=pg.map(cardHTML).join('');
+  stage.innerHTML=pg.map(cardHTML).join('')+qrCardHTML();
   renderDots();
   var d=new Date();document.getElementById('upd').textContent=z(d.getHours())+':'+z(d.getMinutes());
 }
