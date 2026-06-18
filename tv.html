@@ -22,17 +22,17 @@
   header .mnext{font-size:3.1vh}
   header .mbtn.off{animation:pulse 1.6s ease-in-out infinite}
   @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-  header .minfo{display:flex;flex-direction:column;line-height:1.1;color:#fff;max-width:22vw}
+  header .minfo{display:flex;flex-direction:column;line-height:1.1;color:#fff;width:17vw;flex:0 0 auto}
   header .minfo small{font-size:1.5vh;opacity:.8;font-weight:700;text-transform:uppercase;letter-spacing:1px}
   header .minfo b{font-size:2.4vh;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   main{flex:1 1 auto;overflow:hidden;padding:1.6vh 2vw;position:relative}
   #stage{height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.4vh 1.4vw;transition:opacity .35s ease}
-  .qrcard{background:#fff;border:.4vh solid #FE0000;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7vh;padding:1.1vh;box-shadow:0 4px 14px rgba(0,0,0,.45)}
-  .qrcard .qrimg{height:29vh;width:auto;max-width:95%;display:block;border-radius:4px}
-  .qrcard .qrtxt{text-align:center;line-height:1.1}
-  .qrcard .qrtxt b{display:block;font-size:2.2vh;font-weight:900;color:#FE0000;text-transform:uppercase;letter-spacing:.5px}
-  .qrcard .qrtxt span{display:block;font-size:1.5vh;font-weight:600;color:#333;margin-top:.2vh}
+  .qrcard{background:transparent;border:none;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;padding:0;box-shadow:none}
+  .qrcard .qrimg{height:30vh;width:auto;max-width:96%;display:block;border-radius:8px}
+  .qrcard .qrtxt{text-align:center;line-height:1.12}
+  .qrcard .qrtxt b{display:block;font-size:2.3vh;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.5px;text-shadow:0 2px 5px rgba(0,0,0,.55)}
+  .qrcard .qrtxt span{display:block;font-size:1.6vh;font-weight:600;color:#eee;margin-top:.3vh;text-shadow:0 1px 4px rgba(0,0,0,.55)}
 
   .card{background:#161616;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;border:1px solid #262626;box-shadow:0 4px 14px rgba(0,0,0,.4)}
   .card .photo{flex:1 1 auto;position:relative;background:#1d1d1d;overflow:hidden;display:flex;align-items:center;justify-content:center}
@@ -187,7 +187,7 @@ var RADIO_FALLBACK=[
   {nome:'Seven Inch Soul (soul/funk)', url:'https://ice1.somafm.com/7soul-128-mp3'}
 ];
 var RADIOS=[];
-var mplayer=new Audio(); mplayer.preload='none'; mplayer.volume=0.9;
+var mplayer=new Audio(); mplayer.preload='none'; var MVOL=1; (function(){var v=parseFloat(lsGet('vol'));if(!isNaN(v)&&v>=0&&v<=1)MVOL=v;})(); mplayer.volume=MVOL;
 var mcur=0, mplaying=false, mWantPlay=false, mTries=0, mFail=null;
 function lsSet(k,v){try{localStorage.setItem('filezao_'+k,v);}catch(e){}}
 function lsGet(k){try{return localStorage.getItem('filezao_'+k);}catch(e){return null;}}
@@ -198,6 +198,7 @@ function loadStation(i){if(!RADIOS.length)return;mClearFail();mcur=((i%RADIOS.le
 function mSkip(){mTries++;if(mTries>RADIOS.length){mplaying=false;mClearFail();var s=document.getElementById('mstation');if(s)s.textContent='Nenhuma rádio disponível';mUpd();return;}loadStation(mcur+1);if(mWantPlay)mPlay();}
 function mPlay(){
   mClearFail();
+  mplayer.volume=MVOL;
   var p=mplayer.play();
   if(p&&p.then){p.then(function(){mplaying=true;mTries=0;mUpd();}).catch(function(err){mplaying=false;mUpd();if(err&&err.name!=='NotAllowedError'&&mWantPlay)mSkip();});}
   if(mWantPlay){mFail=setTimeout(function(){if(mplayer.paused||mplayer.readyState<3)mSkip();},9000);}
