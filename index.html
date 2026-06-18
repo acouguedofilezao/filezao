@@ -226,8 +226,11 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <button class="nav-btn" onclick="showSec('cotacoes',this)"><i class="ti ti-shopping-cart"></i><span>Cotações</span></button>
     <button class="nav-btn" onclick="showSec('estoque',this)"><i class="ti ti-clipboard-list"></i><span>Estoque</span></button>
     <div class="nav-section">Ferramentas</div>
-    <button class="nav-btn" onclick="showSec('importar',this)"><i class="ti ti-file-import"></i><span>Importar dados</span></button>
+    <button class="nav-btn" onclick="showSec('importar',this)"><i class="ti ti-file-import"></i><span>Importar dados financeiros</span></button>
+    <button class="nav-btn" onclick="showSec('importar-prod',this)"><i class="ti ti-package-import"></i><span>Importar produtos</span></button>
     <button class="nav-btn" onclick="showSec('backup',this)"><i class="ti ti-shield-check"></i><span>Backup</span></button>
+    <div class="nav-section">TV</div>
+    <button class="nav-btn" onclick="showSec('tv',this)"><i class="ti ti-device-tv"></i><span>Seleção TV</span></button>
   </div>
   <!-- Status de conexão no fundo da sidebar -->
   <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);margin-top:auto">
@@ -318,6 +321,28 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
 </div>
 
 <!-- BACKUP / RESTAURAÇÃO -->
+<div id="sec-importar-prod" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-package-import"></i> Importar produtos da balança</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Carregue o arquivo de cadastro que sai da <strong>retaguarda da balança</strong> (o CADTXT.TXT). O sistema lê código, nome, unidade e preço e te mostra o que vai mudar: <strong>produtos novos</strong> entram, <strong>preço e unidade</strong> atualizam, e o que <strong>sumiu do arquivo sai</strong>. Você confere e confirma antes de aplicar.</p>
+    <div class="form-group"><label>Arquivo da balança (.txt)</label><input type="file" id="impprod-file" accept=".txt,.TXT" data-nocaps onchange="prodImpFile(this)"></div>
+  </div>
+  <div id="impprod-prev" style="display:none"></div>
+</div>
+
+<div id="sec-tv" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-device-tv"></i> Seleção de produtos pra TV</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 12px;line-height:1.5">Marque os produtos que você quer mostrar na televisão. Dá pra editar o <strong>nome que aparece na TV</strong> (o da balança vem cortado em 22 letras, aqui você deixa bonito). A tela da TV lê essa seleção e atualiza sozinha.</p>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <input id="tvsel-busca" type="search" placeholder="Buscar produto..." oninput="tvSelRender()" style="flex:1 1 200px;border:1px solid #ddd;border-radius:6px;padding:9px 11px;font-size:13px">
+      <a class="btn btn-primary" href="tv.html" target="_blank" style="text-decoration:none"><i class="ti ti-external-link"></i> Abrir tela da TV</a>
+    </div>
+    <div id="tvsel-count" style="font-size:12px;color:#0369a1;font-weight:600;margin-bottom:8px"></div>
+    <div id="tvsel-list"></div>
+  </div>
+</div>
+
 <div id="sec-backup" class="section">
   <div class="card">
     <div class="card-title loc"><i class="ti ti-shield-check"></i> Backup e segurança</div>
@@ -601,7 +626,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
 
 <script>
 const PER=50,PG={e:1,s:1,g:1,c:1};
-let E=[],S=[],G=[],C=[],pagId=null,pgLC=0,gadoFiltro='todos';
+let E=[],S=[],G=[],C=[],PROD=[],pagId=null,pgLC=0,gadoFiltro='todos';
 
 const fmt=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtKg=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' kg';
@@ -732,6 +757,103 @@ function save(k,d){
 }
 function load(k){return null;} // não usa mais localStorage
 
+/* ===================== PRODUTOS / TV ===================== */
+function prodToDB(p){return {id:p.codigo,nome:p.nome,nometv:p.nomeTV||p.nome,unidade:p.unidade,preco:p.preco,exibir:!!p.exibir,ordem:p.ordem||0,foto:p.foto||null,ts:new Date().toISOString()};}
+function prodFromDB(r){return {codigo:String(r.id),nome:r.nome||'',nomeTV:r.nometv||r.nome||'',unidade:r.unidade||'KG',preco:Number(r.preco)||0,exibir:!!r.exibir,ordem:Number(r.ordem)||0,foto:r.foto||''};}
+// Parser do arquivo de cadastro da balança (posição fixa, 39 chars):
+// [0:6]=código  [6]=P(peso/KG) ou U(unidade/UN)  [7:29]=nome(22)  [29:36]=preço centavos  [36:39]=validade
+function prodParseBalanca(txt){
+  var out=[],lines=(txt||'').split(/\r?\n/);
+  lines.forEach(function(l){
+    if(l.length<36||!/^\d{6}/.test(l))return;
+    var cod=String(parseInt(l.slice(0,6),10));
+    var flag=l.charAt(6).toUpperCase();
+    var nome=l.slice(7,29).replace(/\s+$/,'').replace(/\s+/g,' ').trim().toUpperCase();
+    var cent=parseInt(l.slice(29,36),10);if(isNaN(cent))cent=0;
+    if(!nome)return;
+    out.push({codigo:cod,unidade:(flag==='U'?'UN':'KG'),nome:nome,preco:r2(cent/100)});
+  });
+  return out;
+}
+var PRODIMP=null;
+function prodDiff(novos){
+  var byCod={};PROD.forEach(function(p){byCod[p.codigo]=p;});
+  var add=[],upd=[],rem=[],fc={};
+  novos.forEach(function(n){fc[n.codigo]=1;var cur=byCod[n.codigo];
+    if(!cur){add.push(n);return;}
+    var chg=[];
+    if(r2(cur.preco)!==r2(n.preco))chg.push('preço '+fmt(cur.preco)+' \u2192 '+fmt(n.preco));
+    if(cur.unidade!==n.unidade)chg.push('unidade '+cur.unidade+' \u2192 '+n.unidade);
+    if(cur.nome!==n.nome)chg.push('nome');
+    if(chg.length)upd.push({n:n,cur:cur,chg:chg});
+  });
+  PROD.forEach(function(p){if(!fc[p.codigo])rem.push(p);});
+  return {add:add,upd:upd,rem:rem};
+}
+function prodImpFile(input){
+  var f=input.files&&input.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    var novos=prodParseBalanca(rd.result);
+    if(!novos.length){fzToast('Não encontrei produtos nesse arquivo','e');return;}
+    var d=prodDiff(novos);PRODIMP={novos:novos,diff:d};prodImpPreview(d,novos.length);
+  };
+  rd.readAsText(f,'ISO-8859-1');
+}
+function prodImpPreview(d,total){
+  var box=document.getElementById('impprod-prev');if(!box)return;
+  function cardN(lbl,n,bg,bd,cor){return '<div style="flex:1 1 110px;background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:10px"><div style="font-size:11px;color:#555">'+lbl+'</div><div style="font-size:22px;font-weight:800;color:'+cor+'">'+n+'</div></div>';}
+  function lista(tit,arr,cor,fn){if(!arr.length)return '';return '<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:'+cor+';margin-bottom:4px">'+tit+'</div><div style="font-size:12px;color:#444;line-height:1.8;max-height:170px;overflow:auto;border:1px solid #eee;border-radius:6px;padding:8px">'+arr.map(fn).join('<br>')+'</div></div>';}
+  var h='<div class="card"><div class="card-title loc"><i class="ti ti-checklist"></i> Conferência da importação</div>';
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+cardN('Novos',d.add.length,'#f0faf4','#c3e6cb','#1a7a3c')+cardN('Alterados',d.upd.length,'#eff6ff','#bfdbfe','#0369a1')+cardN('Removidos',d.rem.length,'#fff5f5','#f5c6cb','#FE0000')+'</div>';
+  h+='<div style="font-size:12px;color:#888;margin-bottom:10px">Arquivo com <strong>'+total+'</strong> produto(s). Hoje no sistema: <strong>'+PROD.length+'</strong>.</div>';
+  h+=lista('\u2713 Novos (vão ser cadastrados)',d.add,'#1a7a3c',function(n){return cotEsc(n.nome)+' <span style="color:#888">('+n.unidade+' · '+fmt(n.preco)+')</span>';});
+  h+=lista('~ Alterados',d.upd,'#0369a1',function(u){return cotEsc(u.n.nome)+' <span style="color:#888">— '+u.chg.join(', ')+'</span>';});
+  h+=lista('\u2717 Removidos (vão SAIR do sistema)',d.rem,'#FE0000',function(p){return cotEsc(p.nomeTV||p.nome)+' <span style="color:#888">(cód '+p.codigo+')</span>';});
+  h+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';
+  if(d.add.length||d.upd.length||d.rem.length)h+='<button class="btn btn-primary" onclick="prodImpApply()"><i class="ti ti-check"></i> Confirmar e aplicar</button>';
+  else h+='<div style="font-size:13px;color:#1a7a3c;font-weight:600;align-self:center">Tudo já está igual ao arquivo — nada a mudar.</div>';
+  h+='<button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="prodImpCancel()">Cancelar</button></div></div>';
+  box.innerHTML=h;box.style.display='block';
+}
+function prodImpCancel(){PRODIMP=null;var b=document.getElementById('impprod-prev');if(b){b.innerHTML='';b.style.display='none';}var f=document.getElementById('impprod-file');if(f)f.value='';}
+async function prodImpApply(){
+  if(!PRODIMP)return;var d=PRODIMP.diff;
+  sync('s','Atualizando produtos...');
+  try{
+    var byCod={};PROD.forEach(function(p){byCod[p.codigo]=p;});
+    var ups=[];
+    d.add.forEach(function(n){var p={codigo:n.codigo,nome:n.nome,nomeTV:n.nome,unidade:n.unidade,preco:n.preco,exibir:false,ordem:0,foto:''};PROD.push(p);byCod[n.codigo]=p;ups.push(p);});
+    d.upd.forEach(function(u){var p=byCod[u.n.codigo];if(!p)return;var padrao=(!p.nomeTV||p.nomeTV===p.nome);p.preco=u.n.preco;p.unidade=u.n.unidade;if(p.nome!==u.n.nome){if(padrao)p.nomeTV=u.n.nome;p.nome=u.n.nome;}ups.push(p);});
+    for(var i=0;i<d.rem.length;i++){await sbDelete('produtos',d.rem[i].codigo);}
+    var remc={};d.rem.forEach(function(p){remc[p.codigo]=1;});PROD=PROD.filter(function(p){return !remc[p.codigo];});
+    for(var j=0;j<ups.length;j+=200){await sbUpsert('produtos',ups.slice(j,j+200).map(prodToDB));}
+    PROD.sort(function(a,b){return (a.nomeTV||a.nome).localeCompare(b.nomeTV||b.nome);});
+    sync('','Produtos atualizados: +'+d.add.length+' alterados '+d.upd.length+' removidos '+d.rem.length);
+    fzToast('Importação concluída','s');prodImpCancel();tvSelRender();
+  }catch(e){sync('e','Erro: '+e.message);fzToast('Erro ao salvar: '+e.message,'e');}
+}
+function tvSelCount(){var n=PROD.filter(function(p){return p.exibir;}).length;var c=document.getElementById('tvsel-count');if(c)c.textContent=n+' produto(s) selecionado(s) pra TV';}
+function tvSelRender(){
+  var box=document.getElementById('tvsel-list');if(!box)return;
+  tvSelCount();
+  if(!PROD.length){box.innerHTML='<p style="color:#999;font-size:14px">Nenhum produto ainda. Vá em <strong>Ferramentas \u2192 Importar produtos</strong> e carregue o arquivo da balança.</p>';return;}
+  var q=((document.getElementById('tvsel-busca')||{}).value||'').trim().toUpperCase();
+  var arr=PROD.slice().sort(function(a,b){return (a.nomeTV||a.nome).localeCompare(b.nomeTV||b.nome);});
+  if(q)arr=arr.filter(function(p){return (p.nomeTV||p.nome).toUpperCase().indexOf(q)>=0||p.codigo.indexOf(q)>=0;});
+  var h='<div class="tbl-wrap"><table><thead><tr><th style="width:42px">TV</th><th>Nome na TV</th><th style="width:46px">Un</th><th style="text-align:right;width:90px">Preço</th></tr></thead><tbody>';
+  arr.forEach(function(p){
+    var nm=p.nomeTV||p.nome;
+    h+='<tr'+(p.exibir?' style="background:#f0faf4"':'')+'>';
+    h+='<td><input type="checkbox" data-nocaps '+(p.exibir?'checked':'')+' onchange="tvToggle(\''+p.codigo+'\',this.checked)" style="width:20px;height:20px;cursor:pointer"></td>';
+    h+='<td><input value="'+cotEsc(nm)+'" onchange="tvNome(\''+p.codigo+'\',this.value)" style="width:100%;border:1px solid #eee;border-radius:5px;padding:5px 7px;font-size:13px">'+(p.nome!==nm?'<div style="font-size:10px;color:#bbb;margin-top:1px">balança: '+cotEsc(p.nome)+'</div>':'')+'</td>';
+    h+='<td style="color:#888;font-size:12px">'+p.unidade+'</td>';
+    h+='<td style="text-align:right;font-weight:700">'+(p.preco>0?fmt(p.preco):'<span style="color:#bbb">—</span>')+'</td></tr>';
+  });
+  h+='</tbody></table></div>';box.innerHTML=h;
+}
+function tvToggle(cod,on){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.exibir=on;tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
+function tvNome(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.nomeTV=((v||'').trim().toUpperCase())||p.nome;sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function showSec(id,el){
   const btn=(el&&el.closest)?el.closest('.nav-btn')||el:el;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -750,6 +872,7 @@ function showSec(id,el){
   else if(id==='gado'){proxReg();PG.g=1;renderGad();}
   else if(id==='cheques'){PG.c=1;renderChq();}
   else if(id==='cotacoes')cotRender();
+  else if(id==='tv')tvSelRender();
   else if(id==='saldo')saldoRender();
 }
 function toggleSidebar(){
@@ -1358,6 +1481,10 @@ async function syncCloudExtras(){
       rs.forEach(function(r){var cur=m[r.acctid];if(!cur||(''+(r.ts||''))>=(''+(cur.ts||'')))m[r.acctid]={acctid:r.acctid,banco:r.banco,saldo:Number(r.saldo),data:r.data,ts:r.ts,imp:(cur&&cur.imp)||null,label:(cur&&cur.label)||r.label||''};});
       saldoSet(m);saldoRender();
     }
+  }catch(e){}
+  try{
+    var rp=await sbGet('produtos','select=*&order=nome.asc');
+    if(rp&&rp.length){PROD=rp.map(prodFromDB);PROD.sort(function(a,b){return (a.nomeTV||a.nome).localeCompare(b.nomeTV||b.nome);});tvSelRender();}
   }catch(e){}
 }
 function saldoFmtDT(ms){if(!ms)return '';var d=new Date(ms);function z(n){return (n<10?'0':'')+n;}return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds());}
