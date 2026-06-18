@@ -75,6 +75,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;c
 .btn-sm{padding:7px 13px;font-size:13px}
 .btn-edit{background:none;border:none;cursor:pointer;color:#aaa;padding:3px 6px;font-size:14px}.btn-edit:hover{color:#1a56b0}
 .btn-del{background:none;border:none;cursor:pointer;color:#ccc;padding:3px 6px;font-size:14px}.btn-del:hover{color:#b91c1c}
+input[type="text"],input[type="search"],input:not([type]),textarea{text-transform:uppercase}
 .btn-pay{background:none;border:none;cursor:pointer;color:#FE0000;font-size:12px;text-decoration:underline;padding:2px 4px;font-weight:500}
 .btn-del-soft{background:none;border:none;cursor:pointer;color:#ddd;padding:3px 6px;font-size:14px;cursor:default}
 table{width:100%;font-size:13px;border-collapse:collapse}
@@ -616,6 +617,16 @@ const SB_HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'a
 
 function sync(st,msg){document.getElementById('sdot').className='dot'+(st==='s'?' saving':st==='e'?' err':'');document.getElementById('stxt').textContent=msg;}
 function updStatus(){sync('','Pronto — '+(E.length+S.length+G.length+C.length)+' lançamentos');}
+document.addEventListener('input',function(ev){
+  var el=ev.target;if(!el||ev.isComposing)return;
+  var tag=el.tagName,t=el.type;
+  var isText=(tag==='TEXTAREA')||(tag==='INPUT'&&(t==='text'||t==='search'||t===''||t==null));
+  if(!isText)return;
+  if(el.dataset&&el.dataset.nocaps!==undefined)return;
+  var v=el.value,up=v.toUpperCase();if(up===v)return;
+  var s=el.selectionStart,e=el.selectionEnd;el.value=up;
+  try{el.setSelectionRange(s,e);}catch(_){}
+});
 function fzToast(msg,type){
   var t=document.getElementById('fz-toast');
   if(!t){t=document.createElement('div');t.id='fz-toast';t.style.cssText='position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%) translateY(16px);opacity:0;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 10px 34px rgba(0,0,0,.20);color:#fff;max-width:92vw';document.body.appendChild(t);}
