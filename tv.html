@@ -42,7 +42,7 @@
   .card .ph-fallback .ic{font-size:7vh}
   .card .cat{position:absolute;top:0;left:0;background:rgba(254,0,0,.92);color:#fff;font-size:1.9vh;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:.6vh 1.1vw;border-bottom-right-radius:8px}
   .card .bar{flex:0 0 auto;background:#fff;color:#111;padding:1.2vh 1.2vw;display:flex;align-items:center;justify-content:space-between;gap:.6vw}
-  .card .nm{font-size:3.4vh;font-weight:800;text-transform:uppercase;line-height:1.05;letter-spacing:.2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .card .nm{font-size:3.4vh;font-weight:800;text-transform:uppercase;line-height:1.05;letter-spacing:.2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-word}
   .card .right{display:flex;align-items:baseline;gap:.3vw;white-space:nowrap}
   .card .cif{font-size:2.7vh;font-weight:800;color:#FE0000}
   .card .val{font-size:5.9vh;font-weight:900;color:#FE0000;line-height:1}
@@ -112,6 +112,7 @@ var PAGES=[], cur=0;
 
 function cardHTML(p){
   var nome=(p.nometv||p.nome||'').toUpperCase();
+  var nsz=nome.length>30?'2.3vh':(nome.length>22?'2.7vh':(nome.length>16?'3.0vh':'3.4vh'));
   var un=(p.unidade==='UN')?'un':'kg';
   var cat=catOf(p.id,p.nometv||p.nome);
   var foto=(p.foto||'').trim();
@@ -119,7 +120,7 @@ function cardHTML(p){
     ? '<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">'
     : fb();
   return '<div class="card"><div class="photo"><span class="cat">'+esc(cat)+'</span>'+photo+'</div>'+
-    '<div class="bar"><div class="nm">'+esc(nome)+'</div>'+
+    '<div class="bar"><div class="nm" style="font-size:'+nsz+'">'+esc(nome)+'</div>'+
     '<div class="right"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div></div></div>';
 }
 function fb(){return '<div class="ph-fallback"><div class="ic">🥩</div></div>';}
@@ -210,7 +211,7 @@ function armFirstGesture(){function go(){document.removeEventListener('click',go
 function mAutoResume(){if(lsGet('playing')!=='1'){mUpd();return;}mWantPlay=true;var p=mplayer.play();if(p&&p.then){p.then(function(){mplaying=true;mTries=0;mUpd();}).catch(function(){mplaying=false;mUpd();armFirstGesture();});}else{armFirstGesture();}}
 mplayer.addEventListener('playing',function(){mplaying=true;mTries=0;mClearFail();lsSet('playing','1');mUpd();});
 mplayer.addEventListener('error',function(){if(mWantPlay)mSkip();});
-setInterval(function(){if(mWantPlay&&RADIOS.length>1)nextStation();},3000000);
+/* troca de estação só manual (botão Trocar / tecla do controle) — sem rodízio automático */
 var RADIO_REGIONAIS=['Nova Sertaneja','A Sertaneja','Espacial FM','Radio Santana Itauna','Montense FM'];
 var RADIO_PODE_MISSA=[];
 var MISSA_JANELAS=[
