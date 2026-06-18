@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casa de Carnes Filezão — Tabela de Preços</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'Segoe UI',Arial,sans-serif;
+    background:#0d0d0d;color:#fff;
+    height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  }
+  header{
+    background:linear-gradient(180deg,#FE0000,#b00000);
+    padding:1.6vh 3vw;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 4px 18px rgba(0,0,0,.5);flex:0 0 auto;
+  }
+  header .brand{display:flex;align-items:center;gap:1.2vw}
+  header .logo{font-size:3.4vh;font-weight:900;letter-spacing:1px;line-height:1;text-transform:uppercase}
+  header .logo small{display:block;font-size:1.5vh;font-weight:600;letter-spacing:3px;opacity:.85;margin-top:.3vh}
+  header .meat{font-size:4vh}
+  header .clock{font-size:2.4vh;font-weight:700;text-align:right;opacity:.95}
+  header .clock small{display:block;font-size:1.4vh;font-weight:500;opacity:.8}
+
+  main{flex:1 1 auto;overflow:hidden;padding:1.6vh 2vw}
+  .grid{
+    height:100%;
+    display:grid;
+    grid-template-columns:repeat(var(--cols,3),1fr);
+    grid-auto-rows:1fr;
+    gap:1vh 1.4vw;
+  }
+  .item{
+    display:flex;align-items:center;justify-content:space-between;gap:1vw;
+    background:#181818;border-radius:10px;padding:0 1.6vw;
+    border-left:7px solid #FE0000;overflow:hidden;
+  }
+  .item:nth-child(even){background:#141414}
+  .item .nome{
+    font-size:2.5vh;font-weight:700;text-transform:uppercase;line-height:1.05;
+    letter-spacing:.3px;overflow:hidden;
+  }
+  .item .right{display:flex;align-items:baseline;gap:.4vw;white-space:nowrap}
+  .item .cifrao{font-size:1.8vh;font-weight:700;color:#ff5a5a}
+  .item .preco{font-size:3.4vh;font-weight:900;color:#ffd400;line-height:1}
+  .item .un{font-size:1.7vh;font-weight:700;color:#bbb;text-transform:lowercase}
+
+  .empty,.err{
+    height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;gap:2vh;opacity:.8
+  }
+  .empty h2,.err h2{font-size:4vh;color:#FE0000}
+  .empty p,.err p{font-size:2.2vh;color:#aaa;max-width:60vw;line-height:1.5}
+
+  footer{
+    flex:0 0 auto;text-align:center;font-size:1.3vh;color:#666;
+    padding:.7vh 0;background:#0a0a0a;letter-spacing:1px
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="meat">🥩</span>
+      <div class="logo">Casa de Carnes Filezão<small>Qualidade de verdade</small></div>
+    </div>
+    <div class="clock"><span id="hora">--:--</span><small id="data">—</small></div>
+  </header>
+  <main><div id="board" class="grid"></div></main>
+  <footer>Preços sujeitos a alteração • Atualizado <span id="upd">—</span></footer>
+
+<script>
+const SB_URL='https://vfrgqtuvbflkexapdzho.supabase.co';
+const SB_KEY='sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5';
+const HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+function fmtPreco(v){
+  v=Number(v)||0;
+  return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function z(n){return (n<10?'0':'')+n;}
+function tick(){
+  var d=new Date();
+  var dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  document.getElementById('hora').textContent=z(d.getHours())+':'+z(d.getMinutes());
+  document.getElementById('data').textContent=dias[d.getDay()]+' '+z(d.getDate())+'/'+z(d.getMonth()+1);
+}
+
+// Quantas colunas usar conforme a quantidade de itens (pra preencher a tela sem cortar)
+function calcCols(n){
+  if(n<=8) return 1;
+  if(n<=20) return 2;
+  if(n<=33) return 3;
+  return 4;
+}
+
+async function carregar(){
+  try{
+    var url=SB_URL+'/rest/v1/produtos?select=nome,nometv,unidade,preco,exibir,ordem&exibir=eq.true&order=nometv.asc';
+    var r=await fetch(url,{headers:HDR});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var rows=await r.json();
+    rows=rows.filter(function(p){return Number(p.preco)>0;});
+    rows.sort(function(a,b){
+      var na=(a.nometv||a.nome||'').toUpperCase(), nb=(b.nometv||b.nome||'').toUpperCase();
+      return na<nb?-1:na>nb?1:0;
+    });
+    render(rows);
+  }catch(e){
+    document.getElementById('board').className='';
+    document.getElementById('board').innerHTML='<div class="err"><h2>Sem conexão</h2><p>Não consegui carregar os preços agora. Vou tentar de novo em alguns segundos.</p></div>';
+  }
+}
+
+function render(rows){
+  var board=document.getElementById('board');
+  if(!rows.length){
+    board.className='';
+    board.innerHTML='<div class="empty"><h2>Nenhum produto selecionado</h2><p>Abra o sistema, vá em <b>TV → Seleção TV</b> e marque os produtos que devem aparecer aqui.</p></div>';
+    return;
+  }
+  board.className='grid';
+  board.style.setProperty('--cols', calcCols(rows.length));
+  var h='';
+  rows.forEach(function(p){
+    var nome=(p.nometv||p.nome||'').toUpperCase();
+    var un=(p.unidade==='UN')?'un':'kg';
+    h+='<div class="item"><div class="nome">'+esc(nome)+'</div>'+
+       '<div class="right"><span class="cifrao">R$</span><span class="preco">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div></div>';
+  });
+  board.innerHTML=h;
+  var d=new Date();
+  document.getElementById('upd').textContent=z(d.getHours())+':'+z(d.getMinutes());
+}
+
+function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+tick(); setInterval(tick,1000*20);
+carregar(); setInterval(carregar,1000*60); // atualiza a cada 1 min
+</script>
+</body>
+</html>
