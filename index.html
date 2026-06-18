@@ -1651,6 +1651,7 @@ function renderFech(){
   const aAn_=liq>0?r2(aA_-cAn_):0;
   const saldoAposComissoes=liq>0?aAn_:liq;
   const sobra=r2(saldoAposComissoes-tG);
+  const totC=r2(cD_+cA_+cAn_);
   const nms=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const mn=nms[parseInt(ms)-1]+'/'+an;
 
@@ -1686,9 +1687,37 @@ function renderFech(){
 
   html+='</div>'; // fecha card principal
 
+  // Dashboard do mês: quanto do faturamento virou lucro
+  (function(){
+    var C=2*Math.PI*70;
+    var resid=(sobra>=0)?r2(tE-tS-tG-totC-sobra):0;
+    var segs=[{nm:'Saídas',v:tS,c:'#FE0000'},{nm:'Gado',v:tG,c:'#b45309'},{nm:'Comissões',v:totC,c:'#6b7280'},{nm:'Reserva energia',v:resid,c:'#0891b2'},{nm:'Sobra',v:Math.max(sobra,0),c:'#1a7a3c'}];
+    var base=(sobra>=0)?tE:(tS+tG+totC);if(base<=0)base=1;
+    var off=0,ring='';
+    segs.forEach(function(s){if(s.v<=0)return;var len=s.v/base*C;ring+='<circle cx="90" cy="90" r="70" fill="none" stroke="'+s.c+'" stroke-width="24" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 90 90)"/>';off+=len;});
+    html+='<div class="card">';
+    html+='<div style="font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:#000;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="ti ti-chart-pie" style="color:#FE0000"></i> Dashboard do mês — '+mn+'</div>';
+    if(tE>0){
+      var pct=sobra/tE*100,pc=pct>=0?'#1a7a3c':'#FE0000';
+      html+='<div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;justify-content:center">';
+      html+='<svg viewBox="0 0 180 180" width="170" height="170" style="flex:0 0 auto"><circle cx="90" cy="90" r="70" fill="none" stroke="#eee" stroke-width="24"/>'+ring+'<text x="90" y="84" text-anchor="middle" font-size="30" font-weight="800" fill="'+pc+'">'+(pct<0?'\u2212':'')+Math.abs(pct).toFixed(1)+'%</text><text x="90" y="105" text-anchor="middle" font-size="11" fill="#888">virou lucro</text></svg>';
+      html+='<div style="flex:1 1 230px;min-width:230px">';
+      if(pct>=0)html+='<div style="font-size:13px;color:#555;margin-bottom:12px">De cada <strong>R$ 100</strong> que entraram no mês, sobraram <strong style="color:'+pc+'">R$ '+pct.toFixed(2).replace('.',',')+'</strong> pra você depois de tudo.</div>';
+      else html+='<div style="font-size:13px;color:#FE0000;margin-bottom:12px">Esse mês fechou no vermelho — as despesas passaram do faturamento.</div>';
+      function leg(c,nm,v){return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #f1f1f1"><div style="display:flex;align-items:center;gap:7px"><span style="width:11px;height:11px;border-radius:3px;background:'+c+';display:inline-block"></span><span style="font-size:13px">'+nm+'</span></div><div style="font-size:13px;font-weight:600">'+fmt(v)+' <span style="color:#aaa;font-weight:400;font-size:11px">'+(v/tE*100).toFixed(1)+'%</span></div></div>';}
+      html+=leg('#FE0000','Saídas',tS);
+      html+=leg('#b45309','Gado',tG);
+      if(totC>0)html+=leg('#6b7280','Comissões',totC);
+      if(resid>0.005)html+=leg('#0891b2','Reserva energia',resid);
+      html+=leg('#1a7a3c','Sobra (lucro)',sobra);
+      html+='<div style="display:flex;justify-content:space-between;padding-top:9px;font-weight:700;font-size:14px"><span>Faturamento</span><span>'+fmt(tE)+'</span></div>';
+      html+='</div></div>';
+    }else{html+='<p style="color:#888;font-size:14px">Sem faturamento registrado nesse mês.</p>';}
+    html+='</div>';
+  })();
+
   // Comissões (só quando liq > 0)
   if(liq>0){
-    var totC=r2(cD_+cA_+cAn_);
     function rowC(nm,pc,base,val){
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee">'+
         '<div><div style="font-size:13px;font-weight:600">'+nm+' <span style="font-size:11px;color:#888;font-weight:400">— '+pc+'</span></div>'+
