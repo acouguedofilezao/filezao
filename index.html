@@ -74,6 +74,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;c
 .btn-ghost{background:transparent;border:1px solid #ddd;color:#1a1a1a}.btn-ghost:hover{background:#f5f5f5}
 .btn-sm{padding:7px 13px;font-size:13px}
 .btn-edit{background:none;border:none;cursor:pointer;color:#aaa;padding:3px 6px;font-size:14px}.btn-edit:hover{color:#1a56b0}
+.btn-del{background:none;border:none;cursor:pointer;color:#ccc;padding:3px 6px;font-size:14px}.btn-del:hover{color:#b91c1c}
 .btn-pay{background:none;border:none;cursor:pointer;color:#FE0000;font-size:12px;text-decoration:underline;padding:2px 4px;font-weight:500}
 .btn-del-soft{background:none;border:none;cursor:pointer;color:#ddd;padding:3px 6px;font-size:14px;cursor:default}
 table{width:100%;font-size:13px;border-collapse:collapse}
@@ -654,6 +655,17 @@ async function sbPatch(table,id,data){
 async function sbDelete(table,id){
   var r=await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:SB_HDR});
   if(!r.ok)throw new Error('DELETE '+table+' '+r.status);
+}
+async function delRec(tipo,id){
+  if(!confirm('Excluir este registro? Essa ação não pode ser desfeita.'))return;
+  var map={ent:['entradas',E,renderEnt],sai:['saidas',S,renderSai],gad:['gado',G,renderGad],chq:['cheques',C,renderChq]};
+  var cfg=map[tipo];if(!cfg)return;
+  var tbl=cfg[0],arr=cfg[1],render=cfg[2];
+  var idx=arr.findIndex(function(x){return x.id===id;});if(idx<0)return;
+  sync('s','Excluindo...');
+  try{await sbDelete(tbl,id);}catch(err){sync('e','Erro ao excluir: '+err.message);fzToast('Não consegui excluir','err');return;}
+  arr.splice(idx,1);
+  render();renderDash();updStatus();fzToast('Registro excluído');
 }
 
 // Converter gado do banco para formato do sistema
@@ -1353,7 +1365,7 @@ function renderEnt(){
   sl.forEach(e=>{
     const cls=e.tipo==='DINHEIRO'?'tc-din':e.tipo==='PIX'?'tc-pix':'tc-car';
     h+=`<tr><td>${fd(e.data)}</td><td><span class="tipo-chip ${cls}">${e.tipo}</span></td><td style="font-weight:700">${fmt(e.valor)}</td>
-    <td><button class="btn-edit" onclick="editEnt('${e.id}')" title="Editar"><i class="ti ti-edit"></i></button></td></tr>`;
+    <td><button class="btn-edit" onclick="editEnt('${e.id}')" title="Editar"><i class="ti ti-edit"></i></button><button class="btn-del" onclick="delRec('ent','${e.id}')" title="Excluir"><i class="ti ti-trash"></i></button></td></tr>`;
   });
   h+=`</tbody></table></div>`;
   el.innerHTML=h;
@@ -1397,7 +1409,7 @@ function renderSai(){
   sl.forEach(s=>{
     h+=`<tr><td>${fd(s.data)}</td><td style="font-size:13px">${s.descricao}</td><td>${formaBadge(s.formaPgto)}</td>
     <td style="font-weight:700">${fmt(s.valor)}</td>
-    <td><button class="btn-edit" onclick="editSai('${s.id}')" title="Editar"><i class="ti ti-edit"></i></button></td></tr>`;
+    <td><button class="btn-edit" onclick="editSai('${s.id}')" title="Editar"><i class="ti ti-edit"></i></button><button class="btn-del" onclick="delRec('sai','${s.id}')" title="Excluir"><i class="ti ti-trash"></i></button></td></tr>`;
   });
   h+=`</tbody></table></div>`;
   el.innerHTML=h;
@@ -1517,7 +1529,7 @@ function renderGad(){
       <td>${Number(g.kg).toFixed(2)} kg</td><td>R$ ${Number(g.preco).toFixed(2)}</td>
       <td style="font-weight:700">${fmt(g.total)}</td><td>${g.fornecedor}</td>
       <td>${fTxt}${logPag}</td><td><span class="badge ${bc}">${g.status}</span></td>
-      <td>${pagBtn}</td></tr>`;
+      <td>${pagBtn}<button class="btn-del" onclick="delRec('gad','${g.id}')" title="Excluir"><i class="ti ti-trash"></i></button></td></tr>`;
   });
   h+=`</tbody></table></div>`;
   el.innerHTML=h;document.getElementById('pg-gad').innerHTML=pgCtrl(tot,PG.g,'PG.g','renderGad');
@@ -1576,7 +1588,7 @@ function renderChq(){
       <td style="font-size:11px;color:#888">${c.gadoReg?c.gadoReg.split(',').map(r=>'<span class=\"reg\" style=\"margin:1px\">#'+r.trim()+'</span>').join(' '):'—'}</td>
       <td><span class="badge ${c.compensado?'b-pago':'b-cheque'}">${c.compensado?'Compensado':'Pendente'}</span></td>
       <td>${dtComp}</td>
-      <td>${compAcao}</td></tr>`;
+      <td>${compAcao}<button class="btn-del" onclick="delRec('chq','${c.id}')" title="Excluir"><i class="ti ti-trash"></i></button></td></tr>`;
   });
   h+=`</tbody></table></div>`;
   el.innerHTML=h;document.getElementById('pg-chq').innerHTML=pgCtrl(tot,PG.c,'PG.c','renderChq');
