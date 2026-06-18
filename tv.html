@@ -7,138 +7,158 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
-  body{
-    font-family:'Segoe UI',Arial,sans-serif;
-    background:#0d0d0d;color:#fff;
-    height:100vh;display:flex;flex-direction:column;overflow:hidden;
-  }
-  header{
-    background:linear-gradient(180deg,#FE0000,#b00000);
-    padding:1.6vh 3vw;display:flex;align-items:center;justify-content:space-between;
-    box-shadow:0 4px 18px rgba(0,0,0,.5);flex:0 0 auto;
-  }
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#0d0d0d;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  header{background:linear-gradient(180deg,#FE0000,#b00000);padding:1.4vh 3vw;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 18px rgba(0,0,0,.5);flex:0 0 auto;z-index:2}
   header .brand{display:flex;align-items:center;gap:1.2vw}
-  header .logo{font-size:3.4vh;font-weight:900;letter-spacing:1px;line-height:1;text-transform:uppercase}
-  header .logo small{display:block;font-size:1.5vh;font-weight:600;letter-spacing:3px;opacity:.85;margin-top:.3vh}
   header .meat{font-size:4vh}
-  header .clock{font-size:2.4vh;font-weight:700;text-align:right;opacity:.95}
-  header .clock small{display:block;font-size:1.4vh;font-weight:500;opacity:.8}
+  header .logo{font-size:3.2vh;font-weight:900;letter-spacing:1px;line-height:1;text-transform:uppercase}
+  header .logo small{display:block;font-size:1.4vh;font-weight:600;letter-spacing:3px;opacity:.85;margin-top:.3vh}
+  header .clock{font-size:2.3vh;font-weight:700;text-align:right}
+  header .clock small{display:block;font-size:1.3vh;font-weight:500;opacity:.85}
 
-  main{flex:1 1 auto;overflow:hidden;padding:1.6vh 2vw}
-  .grid{
-    height:100%;
-    display:grid;
-    grid-template-columns:repeat(var(--cols,3),1fr);
-    grid-auto-rows:1fr;
-    gap:1vh 1.4vw;
-  }
-  .item{
-    display:flex;align-items:center;justify-content:space-between;gap:1vw;
-    background:#181818;border-radius:10px;padding:0 1.6vw;
-    border-left:7px solid #FE0000;overflow:hidden;
-  }
-  .item:nth-child(even){background:#141414}
-  .item .nome{
-    font-size:2.5vh;font-weight:700;text-transform:uppercase;line-height:1.05;
-    letter-spacing:.3px;overflow:hidden;
-  }
-  .item .right{display:flex;align-items:baseline;gap:.4vw;white-space:nowrap}
-  .item .cifrao{font-size:1.8vh;font-weight:700;color:#ff5a5a}
-  .item .preco{font-size:3.4vh;font-weight:900;color:#ffd400;line-height:1}
-  .item .un{font-size:1.7vh;font-weight:700;color:#bbb;text-transform:lowercase}
+  main{flex:1 1 auto;overflow:hidden;padding:1.6vh 2vw;position:relative}
+  #stage{height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.4vh 1.4vw;transition:opacity .35s ease}
 
-  .empty,.err{
-    height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;gap:2vh;opacity:.8
-  }
-  .empty h2,.err h2{font-size:4vh;color:#FE0000}
-  .empty p,.err p{font-size:2.2vh;color:#aaa;max-width:60vw;line-height:1.5}
+  .card{background:#161616;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;border:1px solid #262626;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .card .photo{flex:1 1 auto;position:relative;background:#1d1d1d;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .card .photo img{width:100%;height:100%;object-fit:cover}
+  .card .ph-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;color:#3a3a3a}
+  .card .ph-fallback .ic{font-size:7vh}
+  .card .cat{position:absolute;top:0;left:0;background:rgba(254,0,0,.92);color:#fff;font-size:1.3vh;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:.5vh 1vw;border-bottom-right-radius:8px}
+  .card .bar{flex:0 0 auto;background:#fff;color:#111;padding:1.2vh 1.2vw;display:flex;align-items:center;justify-content:space-between;gap:.6vw}
+  .card .nm{font-size:2.4vh;font-weight:800;text-transform:uppercase;line-height:1.05;letter-spacing:.2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .card .right{display:flex;align-items:baseline;gap:.3vw;white-space:nowrap}
+  .card .cif{font-size:1.8vh;font-weight:800;color:#FE0000}
+  .card .val{font-size:3.6vh;font-weight:900;color:#FE0000;line-height:1}
+  .card .un{font-size:1.7vh;font-weight:700;color:#999;text-transform:lowercase}
 
-  footer{
-    flex:0 0 auto;text-align:center;font-size:1.3vh;color:#666;
-    padding:.7vh 0;background:#0a0a0a;letter-spacing:1px
-  }
+  footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:.7vh 3vw;background:#0a0a0a;font-size:1.3vh;color:#777;letter-spacing:.5px}
+  .dots{display:flex;gap:.8vw;align-items:center}
+  .dots .d{width:1.1vh;height:1.1vh;border-radius:50%;background:#333;transition:all .3s}
+  .dots .d.on{background:#FE0000;width:2.4vh;border-radius:1vh}
+
+  .center{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2vh}
+  .center h2{font-size:4vh;color:#FE0000}
+  .center p{font-size:2.2vh;color:#aaa;max-width:60vw;line-height:1.5}
 </style>
 </head>
 <body>
   <header>
-    <div class="brand">
-      <span class="meat">🥩</span>
-      <div class="logo">Casa de Carnes Filezão<small>Qualidade de verdade</small></div>
-    </div>
+    <div class="brand"><span class="meat">🥩</span><div class="logo">Casa de Carnes Filezão<small>Qualidade de verdade</small></div></div>
     <div class="clock"><span id="hora">--:--</span><small id="data">—</small></div>
   </header>
-  <main><div id="board" class="grid"></div></main>
-  <footer>Preços sujeitos a alteração • Atualizado <span id="upd">—</span></footer>
+  <main><div id="stage"></div></main>
+  <footer>
+    <span>Preços sujeitos a alteração</span>
+    <div class="dots" id="dots"></div>
+    <span>Atualizado <span id="upd">—</span></span>
+  </footer>
 
 <script>
 const SB_URL='https://vfrgqtuvbflkexapdzho.supabase.co';
 const SB_KEY='sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5';
 const HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+const PER_PAGE=6;
+const ROTACAO_MS=12000;   // troca de tela a cada 12s
+const REFRESH_MS=60000;   // rebusca os dados a cada 1min
 
-function fmtPreco(v){
-  v=Number(v)||0;
-  return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+var CATMAP={"1":"CARNES BOVINAS","2":"CARNES BOVINAS","3":"CARNES BOVINAS","4":"CARNES BOVINAS","5":"CARNES BOVINAS","6":"CARNES BOVINAS","8":"CARNES BOVINAS","9":"CARNES BOVINAS","10":"CARNES BOVINAS","11":"CARNES BOVINAS","12":"CARNES BOVINAS","13":"CARNES BOVINAS","14":"CARNES BOVINAS","15":"CARNES BOVINAS","16":"CARNES BOVINAS","17":"CARNES BOVINAS","18":"CARNES BOVINAS","19":"CARNES BOVINAS","21":"CARNES BOVINAS","22":"TEMPERADOS E RECHEADOS","23":"CARNES BOVINAS","24":"CARNES SUINAS","25":"CARNES SUINAS","27":"CARNES SUINAS","28":"CARNES SUINAS","29":"CARNES SUINAS","30":"CARNES SUINAS","31":"CARNES SUINAS","32":"CARNES SUINAS","33":"CARNES SUINAS","34":"OUTROS","35":"CARNES SUINAS","36":"CARNES SUINAS","37":"FRANGOS E AVES","38":"FRANGOS E AVES","39":"FRANGOS E AVES","40":"FRANGOS E AVES","41":"FRANGOS E AVES","42":"FRANGOS E AVES","44":"TEMPERADOS E RECHEADOS","45":"TEMPERADOS E RECHEADOS","46":"FRANGOS E AVES","47":"CARNES SUINAS","48":"CARNES SUINAS","49":"FRANGOS E AVES","50":"EMBUTIDOS","51":"FRANGOS E AVES","58":"TEMPERADOS E RECHEADOS","59":"LATICÍNIOS","60":"LINGUIÇAS","62":"LINGUIÇAS","63":"LINGUIÇAS","64":"LINGUIÇAS","67":"CARNES BOVINAS","68":"CARNES BOVINAS","69":"CARNES SUINAS","70":"CARNES SUINAS","71":"LINGUIÇAS","73":"LINGUIÇAS","75":"CARNES BOVINAS","76":"CARNES BOVINAS","77":"CARNES SUINAS","78":"CARNES SUINAS","80":"TEMPERADOS E RECHEADOS","81":"CARNES SUINAS","82":"TEMPERADOS E RECHEADOS","83":"TEMPERADOS E RECHEADOS","84":"FRANGOS E AVES","87":"TEMPERADOS E RECHEADOS","89":"TEMPERADOS E RECHEADOS","91":"CARNES SUINAS","92":"KITS","93":"KITS","95":"LATICÍNIOS","96":"KITS","102":"KITS","104":"TEMPERADOS E RECHEADOS","109":"LINGUIÇAS","110":"KITS","111":"LINGUIÇAS","112":"FRANGOS E AVES","113":"LINGUIÇAS","199":"ESPETINHOS","200":"ESPETINHOS","206":"TEMPERADOS E RECHEADOS","212":"MERCEARIA","213":"KITS","216":"CARNES SUINAS","234":"TEMPERADOS E RECHEADOS","237":"KITS","238":"CARNES BOVINAS","255":"CARNES BOVINAS","256":"LINGUIÇAS","260":"KITS","263":"FRANGOS E AVES","264":"TEMPERADOS E RECHEADOS","268":"LINGUIÇAS","272":"TEMPERADOS E RECHEADOS","273":"LATICÍNIOS","274":"TEMPERADOS E RECHEADOS","275":"TEMPERADOS E RECHEADOS","276":"TEMPERADOS E RECHEADOS","286":"LINGUIÇAS","287":"LINGUIÇAS","288":"CARCAÇAS","289":"CARCAÇAS","291":"KITS","292":"FRANGOS E AVES","293":"FRANGOS E AVES","294":"USO INTERNO","295":"USO INTERNO","296":"USO INTERNO","297":"USO INTERNO","303":"OUTROS","304":"USO INTERNO","311":"USO INTERNO","312":"USO INTERNO","313":"KITS","314":"ESPETINHOS","338":"ESPETINHOS","344":"CARCAÇAS","345":"CARCAÇAS","349":"KITS","356":"FRANGOS E AVES","357":"CARNES BOVINAS","358":"CARNES BOVINAS","359":"LINGUIÇAS","360":"TEMPERADOS E RECHEADOS","361":"KITS","362":"CARNES SUINAS","366":"TEMPERADOS E RECHEADOS","371":"KITS","372":"KITS","373":"KITS","374":"KITS","375":"KITS","376":"KITS","377":"KITS","378":"KITS","379":"KITS","380":"KITS","381":"KITS","382":"KITS","383":"KITS","384":"KITS","385":"KITS","386":"FRANGOS E AVES","387":"KITS","388":"KITS","389":"KITS","390":"KITS","391":"KITS","392":"KITS","393":"KITS","395":"OUTROS","396":"LATICÍNIOS","397":"LATICÍNIOS","400":"TEMPERADOS E RECHEADOS"};
+var CAT_ORDER=['CARNES BOVINAS','CARNES SUINAS','FRANGOS E AVES','LINGUIÇAS','EMBUTIDOS','TEMPERADOS E RECHEADOS','ESPETINHOS','KITS','LATICÍNIOS','MERCEARIA','CARCAÇAS','OUTROS','USO INTERNO'];
+function canonCat(nome){var s=(nome||'').toUpperCase();
+  if(/BOVIN/.test(s))return 'CARNES BOVINAS';
+  if(/SUIN|SUÍN|PORCO|PERNIL|LOMBO|COSTELINHA|BACON|TOUCINHO|JOELHO/.test(s))return 'CARNES SUINAS';
+  if(/FRANGO|AVES|TULIPA|\bASA\b|COXA|SOBRECOXA|PERU|GALINHA|MOELA|CORACAO|PASSARINHO/.test(s))return 'FRANGOS E AVES';
+  if(/LINGUI/.test(s))return 'LINGUIÇAS';
+  if(/SALSICHA|EMPANAD|EMBUTID|CALABRESA/.test(s))return 'EMBUTIDOS';
+  if(/ESPET/.test(s))return 'ESPETINHOS';
+  if(/RECHEAD|TEMPERAD|MEDALHAO|ROCAMBOLE|VULCAO|CHIMICHURRI|PORQUETA|BANANINHA|PISCINA/.test(s))return 'TEMPERADOS E RECHEADOS';
+  if(/\bKIT\b|HAMBURGUER/.test(s))return 'KITS';
+  if(/QUEIJO|REQUEIJAO|MUSSARELA|COALHO|LATIC/.test(s))return 'LATICÍNIOS';
+  if(/CARCACA|CARCAÇA|DIANTEIRO|TRASEIRO/.test(s))return 'CARCAÇAS';
+  if(/BOBINA|SACOLA|ETIQUETA|EMBALAGEM|TAPETE|RETALHO|PERCA|PERDA/.test(s))return 'USO INTERNO';
+  return 'OUTROS';
 }
+function catOf(cod,nome){return CATMAP[String(cod)]||canonCat(nome)||'OUTROS';}
+function catRank(c){var i=CAT_ORDER.indexOf(c);return i<0?98:i;}
+
+function fmtPreco(v){v=Number(v)||0;return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function z(n){return (n<10?'0':'')+n;}
-function tick(){
-  var d=new Date();
-  var dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-  document.getElementById('hora').textContent=z(d.getHours())+':'+z(d.getMinutes());
-  document.getElementById('data').textContent=dias[d.getDay()]+' '+z(d.getDate())+'/'+z(d.getMonth()+1);
+function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function tick(){var d=new Date();var dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];document.getElementById('hora').textContent=z(d.getHours())+':'+z(d.getMinutes());document.getElementById('data').textContent=dias[d.getDay()]+' '+z(d.getDate())+'/'+z(d.getMonth()+1);}
+
+var PAGES=[], cur=0;
+
+function cardHTML(p){
+  var nome=(p.nometv||p.nome||'').toUpperCase();
+  var un=(p.unidade==='UN')?'un':'kg';
+  var cat=catOf(p.id,p.nometv||p.nome);
+  var foto=(p.foto||'').trim();
+  var photo = foto
+    ? '<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">'
+    : fb();
+  return '<div class="card"><div class="photo"><span class="cat">'+esc(cat)+'</span>'+photo+'</div>'+
+    '<div class="bar"><div class="nm">'+esc(nome)+'</div>'+
+    '<div class="right"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div></div></div>';
+}
+function fb(){return '<div class="ph-fallback"><div class="ic">🥩</div></div>';}
+
+function renderDots(){
+  var el=document.getElementById('dots');
+  if(PAGES.length<=1){el.innerHTML='';return;}
+  var h='';for(var i=0;i<PAGES.length;i++)h+='<div class="d'+(i===cur?' on':'')+'"></div>';
+  el.innerHTML=h;
+}
+function showPage(){
+  var stage=document.getElementById('stage');
+  var pg=PAGES[cur]||[];
+  stage.style.display='grid';
+  stage.innerHTML=pg.map(cardHTML).join('');
+  renderDots();
+  var d=new Date();document.getElementById('upd').textContent=z(d.getHours())+':'+z(d.getMinutes());
+}
+function rotate(){
+  if(PAGES.length<=1)return;
+  var stage=document.getElementById('stage');
+  stage.style.opacity='0';
+  setTimeout(function(){cur=(cur+1)%PAGES.length;showPage();stage.style.opacity='1';},350);
 }
 
-// Quantas colunas usar conforme a quantidade de itens (pra preencher a tela sem cortar)
-function calcCols(n){
-  if(n<=8) return 1;
-  if(n<=20) return 2;
-  if(n<=33) return 3;
-  return 4;
+function montarPaginas(rows){
+  rows.sort(function(a,b){
+    var ca=catOf(a.id,a.nometv||a.nome), cb=catOf(b.id,b.nometv||b.nome);
+    if(ca!==cb)return catRank(ca)-catRank(cb);
+    var na=(a.nometv||a.nome||'').toUpperCase(), nb=(b.nometv||b.nome||'').toUpperCase();
+    return na<nb?-1:na>nb?1:0;
+  });
+  var pages=[];for(var i=0;i<rows.length;i+=PER_PAGE)pages.push(rows.slice(i,i+PER_PAGE));
+  return pages;
 }
 
 async function carregar(){
   try{
-    var url=SB_URL+'/rest/v1/produtos?select=nome,nometv,unidade,preco,exibir,ordem&exibir=eq.true&order=nometv.asc';
+    var url=SB_URL+'/rest/v1/produtos?select=id,nome,nometv,unidade,preco,exibir,foto&exibir=eq.true';
     var r=await fetch(url,{headers:HDR});
-    if(!r.ok) throw new Error('HTTP '+r.status);
+    if(!r.ok)throw new Error('HTTP '+r.status);
     var rows=await r.json();
     rows=rows.filter(function(p){return Number(p.preco)>0;});
-    rows.sort(function(a,b){
-      var na=(a.nometv||a.nome||'').toUpperCase(), nb=(b.nometv||b.nome||'').toUpperCase();
-      return na<nb?-1:na>nb?1:0;
-    });
-    render(rows);
+    if(!rows.length){
+      PAGES=[];document.getElementById('stage').style.display='block';
+      document.getElementById('stage').innerHTML='<div class="center"><h2>Nenhum produto selecionado</h2><p>No sistema, vá em <b>TV → Seleção TV</b> e marque os produtos que devem aparecer aqui.</p></div>';
+      document.getElementById('dots').innerHTML='';return;
+    }
+    PAGES=montarPaginas(rows);
+    if(cur>=PAGES.length)cur=0;
+    showPage();
   }catch(e){
-    document.getElementById('board').className='';
-    document.getElementById('board').innerHTML='<div class="err"><h2>Sem conexão</h2><p>Não consegui carregar os preços agora. Vou tentar de novo em alguns segundos.</p></div>';
+    document.getElementById('stage').style.display='block';
+    document.getElementById('stage').innerHTML='<div class="center"><h2>Sem conexão</h2><p>Não consegui carregar os preços agora. Vou tentar de novo em alguns segundos.</p></div>';
   }
 }
 
-function render(rows){
-  var board=document.getElementById('board');
-  if(!rows.length){
-    board.className='';
-    board.innerHTML='<div class="empty"><h2>Nenhum produto selecionado</h2><p>Abra o sistema, vá em <b>TV → Seleção TV</b> e marque os produtos que devem aparecer aqui.</p></div>';
-    return;
-  }
-  board.className='grid';
-  board.style.setProperty('--cols', calcCols(rows.length));
-  var h='';
-  rows.forEach(function(p){
-    var nome=(p.nometv||p.nome||'').toUpperCase();
-    var un=(p.unidade==='UN')?'un':'kg';
-    h+='<div class="item"><div class="nome">'+esc(nome)+'</div>'+
-       '<div class="right"><span class="cifrao">R$</span><span class="preco">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div></div>';
-  });
-  board.innerHTML=h;
-  var d=new Date();
-  document.getElementById('upd').textContent=z(d.getHours())+':'+z(d.getMinutes());
-}
-
-function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-
-tick(); setInterval(tick,1000*20);
-carregar(); setInterval(carregar,1000*60); // atualiza a cada 1 min
+tick(); setInterval(tick,20000);
+carregar();
+setInterval(rotate, ROTACAO_MS);
+setInterval(carregar, REFRESH_MS);
 </script>
 </body>
 </html>

@@ -336,7 +336,8 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <div class="card-title loc"><i class="ti ti-device-tv"></i> Seleção de produtos pra TV</div>
     <p style="font-size:13px;color:#555;margin:-2px 0 12px;line-height:1.5">Marque os produtos que você quer mostrar na televisão. Dá pra editar o <strong>nome que aparece na TV</strong> (o da balança vem cortado em 22 letras, aqui você deixa bonito). A tela da TV lê essa seleção e atualiza sozinha.</p>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-      <input id="tvsel-busca" type="search" placeholder="Buscar produto..." oninput="tvSelRender()" style="flex:1 1 200px;border:1px solid #ddd;border-radius:6px;padding:9px 11px;font-size:13px">
+      <input id="tvsel-busca" type="search" placeholder="Buscar produto..." oninput="tvSelRender()" style="flex:1 1 160px;border:1px solid #ddd;border-radius:6px;padding:9px 11px;font-size:13px">
+      <select id="tvsel-cat" onchange="tvSelRender()" style="flex:0 1 200px;border:1px solid #ddd;border-radius:6px;padding:9px 11px;font-size:13px;background:#fff"><option value="">Todas as categorias</option></select>
       <a class="btn btn-primary" href="tv.html" target="_blank" style="text-decoration:none"><i class="ti ti-external-link"></i> Abrir tela da TV</a>
     </div>
     <div id="tvsel-count" style="font-size:12px;color:#0369a1;font-weight:600;margin-bottom:8px"></div>
@@ -792,6 +793,24 @@ function prodParseBalanca(txt){
   });
   return out;
 }
+var CATMAP={"1":"CARNES BOVINAS","2":"CARNES BOVINAS","3":"CARNES BOVINAS","4":"CARNES BOVINAS","5":"CARNES BOVINAS","6":"CARNES BOVINAS","8":"CARNES BOVINAS","9":"CARNES BOVINAS","10":"CARNES BOVINAS","11":"CARNES BOVINAS","12":"CARNES BOVINAS","13":"CARNES BOVINAS","14":"CARNES BOVINAS","15":"CARNES BOVINAS","16":"CARNES BOVINAS","17":"CARNES BOVINAS","18":"CARNES BOVINAS","19":"CARNES BOVINAS","21":"CARNES BOVINAS","22":"TEMPERADOS E RECHEADOS","23":"CARNES BOVINAS","24":"CARNES SUINAS","25":"CARNES SUINAS","27":"CARNES SUINAS","28":"CARNES SUINAS","29":"CARNES SUINAS","30":"CARNES SUINAS","31":"CARNES SUINAS","32":"CARNES SUINAS","33":"CARNES SUINAS","34":"OUTROS","35":"CARNES SUINAS","36":"CARNES SUINAS","37":"FRANGOS E AVES","38":"FRANGOS E AVES","39":"FRANGOS E AVES","40":"FRANGOS E AVES","41":"FRANGOS E AVES","42":"FRANGOS E AVES","44":"TEMPERADOS E RECHEADOS","45":"TEMPERADOS E RECHEADOS","46":"FRANGOS E AVES","47":"CARNES SUINAS","48":"CARNES SUINAS","49":"FRANGOS E AVES","50":"EMBUTIDOS","51":"FRANGOS E AVES","58":"TEMPERADOS E RECHEADOS","59":"LATICÍNIOS","60":"LINGUIÇAS","62":"LINGUIÇAS","63":"LINGUIÇAS","64":"LINGUIÇAS","67":"CARNES BOVINAS","68":"CARNES BOVINAS","69":"CARNES SUINAS","70":"CARNES SUINAS","71":"LINGUIÇAS","73":"LINGUIÇAS","75":"CARNES BOVINAS","76":"CARNES BOVINAS","77":"CARNES SUINAS","78":"CARNES SUINAS","80":"TEMPERADOS E RECHEADOS","81":"CARNES SUINAS","82":"TEMPERADOS E RECHEADOS","83":"TEMPERADOS E RECHEADOS","84":"FRANGOS E AVES","87":"TEMPERADOS E RECHEADOS","89":"TEMPERADOS E RECHEADOS","91":"CARNES SUINAS","92":"KITS","93":"KITS","95":"LATICÍNIOS","96":"KITS","102":"KITS","104":"TEMPERADOS E RECHEADOS","109":"LINGUIÇAS","110":"KITS","111":"LINGUIÇAS","112":"FRANGOS E AVES","113":"LINGUIÇAS","199":"ESPETINHOS","200":"ESPETINHOS","206":"TEMPERADOS E RECHEADOS","212":"MERCEARIA","213":"KITS","216":"CARNES SUINAS","234":"TEMPERADOS E RECHEADOS","237":"KITS","238":"CARNES BOVINAS","255":"CARNES BOVINAS","256":"LINGUIÇAS","260":"KITS","263":"FRANGOS E AVES","264":"TEMPERADOS E RECHEADOS","268":"LINGUIÇAS","272":"TEMPERADOS E RECHEADOS","273":"LATICÍNIOS","274":"TEMPERADOS E RECHEADOS","275":"TEMPERADOS E RECHEADOS","276":"TEMPERADOS E RECHEADOS","286":"LINGUIÇAS","287":"LINGUIÇAS","288":"CARCAÇAS","289":"CARCAÇAS","291":"KITS","292":"FRANGOS E AVES","293":"FRANGOS E AVES","294":"USO INTERNO","295":"USO INTERNO","296":"USO INTERNO","297":"USO INTERNO","303":"OUTROS","304":"USO INTERNO","311":"USO INTERNO","312":"USO INTERNO","313":"KITS","314":"ESPETINHOS","338":"ESPETINHOS","344":"CARCAÇAS","345":"CARCAÇAS","349":"KITS","356":"FRANGOS E AVES","357":"CARNES BOVINAS","358":"CARNES BOVINAS","359":"LINGUIÇAS","360":"TEMPERADOS E RECHEADOS","361":"KITS","362":"CARNES SUINAS","366":"TEMPERADOS E RECHEADOS","371":"KITS","372":"KITS","373":"KITS","374":"KITS","375":"KITS","376":"KITS","377":"KITS","378":"KITS","379":"KITS","380":"KITS","381":"KITS","382":"KITS","383":"KITS","384":"KITS","385":"KITS","386":"FRANGOS E AVES","387":"KITS","388":"KITS","389":"KITS","390":"KITS","391":"KITS","392":"KITS","393":"KITS","395":"OUTROS","396":"LATICÍNIOS","397":"LATICÍNIOS","400":"TEMPERADOS E RECHEADOS"};
+var CAT_ORDER=['CARNES BOVINAS','CARNES SUINAS','FRANGOS E AVES','LINGUIÇAS','EMBUTIDOS','TEMPERADOS E RECHEADOS','ESPETINHOS','KITS','LATICÍNIOS','MERCEARIA','CARCAÇAS','OUTROS','USO INTERNO'];
+function prodCanonCat(nome){var s=(nome||'').toUpperCase();
+  if(/BOVIN/.test(s))return 'CARNES BOVINAS';
+  if(/SUIN|SUÍN|PORCO|PERNIL|LOMBO|COSTELINHA|BACON|TOUCINHO|JOELHO/.test(s))return 'CARNES SUINAS';
+  if(/FRANGO|AVES|TULIPA|\bASA\b|COXA|SOBRECOXA|PERU|GALINHA|MOELA|CORACAO|PASSARINHO/.test(s))return 'FRANGOS E AVES';
+  if(/LINGUI/.test(s))return 'LINGUIÇAS';
+  if(/SALSICHA|EMPANAD|EMBUTID|CALABRESA/.test(s))return 'EMBUTIDOS';
+  if(/ESPET/.test(s))return 'ESPETINHOS';
+  if(/RECHEAD|TEMPERAD|MEDALHAO|ROCAMBOLE|VULCAO|CHIMICHURRI|PORQUETA|BANANINHA|PISCINA/.test(s))return 'TEMPERADOS E RECHEADOS';
+  if(/\bKIT\b|HAMBURGUER/.test(s))return 'KITS';
+  if(/QUEIJO|REQUEIJAO|MUSSARELA|COALHO|LATIC/.test(s))return 'LATICÍNIOS';
+  if(/CARCACA|CARCAÇA|DIANTEIRO|TRASEIRO/.test(s))return 'CARCAÇAS';
+  if(/BOBINA|SACOLA|ETIQUETA|EMBALAGEM|TAPETE|RETALHO|PERCA|PERDA/.test(s))return 'USO INTERNO';
+  return 'OUTROS';
+}
+function prodCat(p){return CATMAP[p.codigo]||prodCanonCat(p.nome||p.nomeTV)||'OUTROS';}
+function catRank(c){var i=CAT_ORDER.indexOf(c);return i<0?98:i;}
 var PRODIMP=null;
 function prodDiff(novos){
   var byCod={};PROD.forEach(function(p){byCod[p.codigo]=p;});
@@ -852,23 +871,44 @@ async function prodImpApply(){
   }catch(e){sync('e','Erro: '+e.message);fzToast('Erro ao salvar: '+e.message,'e');}
 }
 function tvSelCount(){var n=PROD.filter(function(p){return p.exibir;}).length;var c=document.getElementById('tvsel-count');if(c)c.textContent=n+' produto(s) selecionado(s) pra TV';}
+function tvFillCatFilter(){
+  var sel=document.getElementById('tvsel-cat');if(!sel)return;
+  var cur=sel.value||'';
+  var cats={};PROD.forEach(function(p){cats[prodCat(p)]=1;});
+  var ks=Object.keys(cats).sort(function(a,b){return catRank(a)-catRank(b)||a.localeCompare(b);});
+  var h='<option value="">Todas as categorias</option>';
+  ks.forEach(function(c){h+='<option value="'+cotEsc(c)+'"'+(c===cur?' selected':'')+'>'+cotEsc(c)+'</option>';});
+  sel.innerHTML=h;
+}
 function tvSelRender(){
   var box=document.getElementById('tvsel-list');if(!box)return;
-  tvSelCount();
+  tvSelCount();tvFillCatFilter();
   if(!PROD.length){box.innerHTML='<p style="color:#999;font-size:14px">Nenhum produto ainda. Vá em <strong>Ferramentas \u2192 Importar produtos</strong> e carregue o arquivo da balança.</p>';return;}
   var q=((document.getElementById('tvsel-busca')||{}).value||'').trim().toUpperCase();
-  var arr=PROD.slice().sort(function(a,b){return (a.nomeTV||a.nome).localeCompare(b.nomeTV||b.nome);});
+  var catf=((document.getElementById('tvsel-cat')||{}).value)||'';
+  var arr=PROD.slice();
   if(q)arr=arr.filter(function(p){return (p.nomeTV||p.nome).toUpperCase().indexOf(q)>=0||p.codigo.indexOf(q)>=0;});
-  var h='<div class="tbl-wrap"><table><thead><tr><th style="width:42px">TV</th><th>Nome na TV</th><th style="width:46px">Un</th><th style="text-align:right;width:90px">Preço</th></tr></thead><tbody>';
-  arr.forEach(function(p){
-    var nm=p.nomeTV||p.nome;
-    h+='<tr'+(p.exibir?' style="background:#f0faf4"':'')+'>';
-    h+='<td><input type="checkbox" data-nocaps '+(p.exibir?'checked':'')+' onchange="tvToggle(\''+p.codigo+'\',this.checked)" style="width:20px;height:20px;cursor:pointer"></td>';
-    h+='<td><input value="'+cotEsc(nm)+'" onchange="tvNome(\''+p.codigo+'\',this.value)" style="width:100%;border:1px solid #eee;border-radius:5px;padding:5px 7px;font-size:13px">'+(p.nome!==nm?'<div style="font-size:10px;color:#bbb;margin-top:1px">balança: '+cotEsc(p.nome)+'</div>':'')+'</td>';
-    h+='<td style="color:#888;font-size:12px">'+p.unidade+'</td>';
-    h+='<td style="text-align:right;font-weight:700">'+(p.preco>0?fmt(p.preco):'<span style="color:#bbb">—</span>')+'</td></tr>';
+  if(catf)arr=arr.filter(function(p){return prodCat(p)===catf;});
+  var groups={};arr.forEach(function(p){var c=prodCat(p);(groups[c]=groups[c]||[]).push(p);});
+  var cats=Object.keys(groups).sort(function(a,b){return catRank(a)-catRank(b)||a.localeCompare(b);});
+  if(!cats.length){box.innerHTML='<p style="color:#999;font-size:14px">Nada encontrado.</p>';return;}
+  var h='';
+  cats.forEach(function(c){
+    var list=groups[c].sort(function(a,b){return (a.nomeTV||a.nome).localeCompare(b.nomeTV||b.nome);});
+    var selN=list.filter(function(p){return p.exibir;}).length;
+    h+='<div style="margin:16px 0 6px;display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:800;color:#6D0909;text-transform:uppercase;letter-spacing:.5px">'+cotEsc(c)+'</span><span style="font-size:11px;color:#999">'+selN+' de '+list.length+' na TV</span></div>';
+    h+='<div class="tbl-wrap"><table><tbody>';
+    list.forEach(function(p){
+      var nm=p.nomeTV||p.nome;
+      h+='<tr'+(p.exibir?' style="background:#f0faf4"':'')+'>';
+      h+='<td style="width:42px"><input type="checkbox" data-nocaps '+(p.exibir?'checked':'')+' onchange="tvToggle(\''+p.codigo+'\',this.checked)" style="width:20px;height:20px;cursor:pointer"></td>';
+      h+='<td><input value="'+cotEsc(nm)+'" onchange="tvNome(\''+p.codigo+'\',this.value)" style="width:100%;border:1px solid #eee;border-radius:5px;padding:5px 7px;font-size:13px">'+(p.nome!==nm?'<div style="font-size:10px;color:#bbb;margin-top:1px">balança: '+cotEsc(p.nome)+'</div>':'')+'</td>';
+      h+='<td style="color:#888;font-size:12px;width:46px">'+p.unidade+'</td>';
+      h+='<td style="text-align:right;font-weight:700;width:90px">'+(p.preco>0?fmt(p.preco):'<span style="color:#bbb">—</span>')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
   });
-  h+='</tbody></table></div>';box.innerHTML=h;
+  box.innerHTML=h;
 }
 function tvToggle(cod,on){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.exibir=on;tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvNome(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.nomeTV=((v||'').trim().toUpperCase())||p.nome;sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
@@ -1738,6 +1778,7 @@ function confirmarPag(){
   if(chqs.length)save('fz_cheques',C);
   const fu=[...new Set(linhas.map(l=>l.forma))];
   g.status='PAGO';g.pagamento=fu.length===1?fu[0]:'MISTO';g.formasPgto=linhas;g.cheques=chqs.map(c=>c.numero);g.cheque=chqs.length?chqs.map(c=>c.numero).join(', '):null;g.dataPagamento=td();
+  logReg('Gado','Pagou','Reg #'+g.registro+' · '+(g.fornecedor||'')+' · '+g.pagamento,'',fmt(g.total));
   save('fz_gado',G);closeModal('modal-pg');renderGad();renderDash();
 }
 function renderGad(){
@@ -1783,9 +1824,10 @@ function confirmarCompensacao(){
   if(!dt)return alert('Informe a data de compensação.');
   const c=C.find(x=>x.id===id);if(!c)return;
   c.compensado=true;c.dataCompensacao=dt;
+  logReg('Cheques','Compensou','Nº '+c.numero+' · '+(c.credor||''),'',fmt(c.valor)+' em '+fd(dt));
   save('fz_cheques',C);closeModal('modal-comp-chq');renderChq();
 }
-function desfazerComp(id){const c=C.find(x=>x.id===id);if(!c)return;c.compensado=false;c.dataCompensacao=null;save('fz_cheques',C);renderChq();}
+function desfazerComp(id){const c=C.find(x=>x.id===id);if(!c)return;c.compensado=false;c.dataCompensacao=null;logReg('Cheques','Reabriu','Nº '+c.numero+' · '+(c.credor||''),'Compensado',fmt(c.valor)+' pendente');save('fz_cheques',C);renderChq();}
 function addChq(){
   if(addChq._busy)return;
   const d=document.getElementById('c-dt').value,n=document.getElementById('c-nm').value.trim(),v=getDV('c-vl');
