@@ -331,7 +331,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <div class="form-row">
       <div class="form-group"><label>Data</label><input type="date" id="s-dt" onkeydown="if(event.key==='Enter')addSai()"></div>
       <div class="form-group"><label>Descrição</label><input type="text" id="s-dc" placeholder="Ex: Frango, Energia..." onkeydown="if(event.key==='Enter')addSai()"></div>
-      <div class="form-group"><label>Valor R$</label><input id="s-vl" placeholder="0,00" onkeydown="if(event.key==='Enter')addSai()"></div>
+      <div class="form-group"><label>Valor R$</label><input id="s-vl" placeholder="0,00"></div>
       <div class="form-group"><label>Forma</label>
         <select id="s-fp"><option value="DINHEIRO">Dinheiro</option><option value="PIX">Pix</option><option value="BOLETO">Boleto</option><option value="CARTÃO">Cartão</option></select>
       </div>
@@ -867,8 +867,10 @@ async function impRestore(input){
 
 /* ── ENTRADAS ── */
 function addEnt(){
+  if(addEnt._busy)return;
   const d=document.getElementById('e-dt').value,t=document.getElementById('e-tp').value,v=getDV('e-vl');
   if(!d||v<=0)return alert('Preencha data e valor.');
+  addEnt._busy=true;setTimeout(function(){addEnt._busy=false;},400);
   E.push({id:uid(),data:d,tipo:t,valor:r2(v)});
   save('fz_entradas',E);clrV('e-vl');document.getElementById('e-vl').focus();renderEnt();renderDash();
 }
