@@ -1094,12 +1094,26 @@ function cotTabela(nomes,rows,ro,bench){
     lista.push(row.nome+' — '+nomes[row.minFi]+' '+fmt(row.min));
   });
   h+='</tbody></table></div>';
+  var groups={};rows.forEach(function(r){if(r.minFi>=0)(groups[r.minFi]=groups[r.minFi]||[]).push(r);});
+  var fis=Object.keys(groups);
+  if(fis.length){
+    h+='<div style="margin-top:18px;font-weight:700;font-size:13px;color:#444"><i class="ti ti-send"></i> Pedido por fornecedor <span style="font-weight:500;color:#888">— copie e mande pra cada um (só o que é dele, sem o preço dos outros)</span></div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">';
+    fis.forEach(function(fi){
+      var nm=nomes[fi],its=groups[fi];
+      var txt='*Pedido*\n'+its.map(function(r){return '- '+r.nome+' — '+fmt(r.min);}).join('\n');
+      h+='<div data-fc="1" style="flex:1 1 240px;min-width:230px;border:1px solid #eee;border-radius:10px;padding:12px;background:#fafafa">'+
+         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><strong style="font-size:14px">'+cotEsc(nm)+'</strong>'+
+         '<button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="cotCopiarTxt(this)"><i class="ti ti-copy"></i> Copiar</button></div>'+
+         '<div style="font-size:12px;color:#555;line-height:1.8">'+its.map(function(r){return cotEsc(r.nome)+' <span style="color:#166534;font-weight:600">'+fmt(r.min)+'</span>';}).join('<br>')+'</div>'+
+         '<textarea style="display:none">'+cotEsc(txt)+'</textarea></div>';
+    });
+    h+='</div>';
+  }
   if(!ro){
     h+='<div style="margin-top:16px;border-top:1px solid #eee;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
        '<div style="font-size:13px;color:#555">'+rows.length+' item(ns) comparado(s)</div>'+
-       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="cotCopiar()"><i class="ti ti-copy"></i> Copiar lista</button>'+
-       '<button class="btn btn-primary" onclick="cotSalvar()"><i class="ti ti-device-floppy"></i> Salvar cotação</button></div></div>';
-    h+='<pre id="cot-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
+       '<button class="btn btn-primary" onclick="cotSalvar()"><i class="ti ti-device-floppy"></i> Salvar cotação</button></div>';
   }
   return h;
 }
@@ -1147,6 +1161,12 @@ function cotCopiar(){
   var el=document.getElementById('cot-lista');if(!el)return;
   var txt='\uD83D\uDED2 LISTA DE COMPRA\n'+el.textContent;
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){fzToast('Lista copiada');},function(){cotCopiaFb(txt);});}
+  else cotCopiaFb(txt);
+}
+function cotCopiarTxt(btn){
+  var card=btn.closest('[data-fc]');if(!card)return;
+  var ta=card.querySelector('textarea');if(!ta)return;var txt=ta.value;
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){fzToast('Pedido copiado');},function(){cotCopiaFb(txt);});
   else cotCopiaFb(txt);
 }
 function cotCopiaFb(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');fzToast('Lista copiada');}catch(e){alert('Copie manualmente:\n\n'+txt);}document.body.removeChild(ta);}
@@ -1226,11 +1246,12 @@ function estAnalisar(){
   var precos=estPrecos(),rows=[],nComprar=0;
   txt.split(/\r?\n/).forEach(function(l){
     var it=estParseLine(l);if(!it)return;
-    if(it.plenty){rows.push({nome:it.nome,est:'tem muito',min:'—',status:'muito',comprar:'—',order:3});return;}
+    var pr=it.key?precos[it.key]:null,forn=pr?pr.forn:null,preco=pr?pr.preco:null;
+    if(it.plenty){rows.push({nome:it.nome,est:'tem muito',min:'—',status:'muito',comprar:'—',forn:forn,preco:preco,order:3});return;}
     var cfg=EST_CFG[it.key];
     if(!cfg||it.qty==null){
       var er=it.qty!=null?(it.qty+(it.unit?(' '+(it.unit==='cx'?'cx':it.unit==='pct'?'pacote':it.unit)):'')):'?';
-      rows.push({nome:it.raw,est:er,min:'—',status:'semregra',comprar:'',order:1});return;
+      rows.push({nome:it.raw,est:er,min:'—',status:'semregra',comprar:'',forn:forn,preco:preco,order:1});return;
     }
     var val=estVal(it.qty,it.unit,cfg),estL=estEstoque(val,cfg),minL=cfg.min+' '+estUL(cfg.unit);
     if(val<cfg.min-1e-6){
@@ -1238,9 +1259,8 @@ function estAnalisar(){
       if(cfg.buy==='fill'){var n=Math.max(1,Math.round(cfg.min-val));lbl=n+' caixa'+(n>1?'s':'');}
       else if(cfg.buy==='1cx')lbl='1 caixa ('+cfg.cxKg+' un)';
       else lbl=cfg.buy+' '+(cfg.unit==='kg'?'kg':(cfg.unit==='un'?'un':'caixa'+(cfg.buy>1?'s':'')));
-      var pr=precos[it.key];
-      rows.push({nome:it.nome,est:estL,min:minL,status:'comprar',comprar:lbl,forn:pr?pr.forn:null,preco:pr?pr.preco:null,order:0});nComprar++;
-    }else rows.push({nome:it.nome,est:estL,min:minL,status:'ok',comprar:'—',order:2});
+      rows.push({nome:it.nome,est:estL,min:minL,status:'comprar',comprar:lbl,forn:forn,preco:preco,order:0});nComprar++;
+    }else rows.push({nome:it.nome,est:estL,min:minL,status:'ok',comprar:'—',forn:forn,preco:preco,order:2});
   });
   rows.sort(function(a,b){return a.order-b.order;});
   estResultRender(rows,nComprar);
@@ -1252,21 +1272,38 @@ function estResultRender(rows,nComprar){
   var lista=[];
   rows.forEach(function(r){
     var trbg='',estCol='#555',compCell='—',onde='';
+    if(r.forn){
+      var cs=(r.status==='comprar')?'background:#dcfce7;color:#166534':'background:#f1f5f9;color:#475569';
+      var ss=(r.status==='comprar')?'':'color:#475569';
+      onde='<span class="tipo-chip" style="'+cs+'">'+cotEsc(r.forn)+'</span> <strong style="'+ss+'">'+fmt(r.preco)+'</strong>';
+    }else if(r.status==='comprar'){onde='<span style="color:#999;font-size:12px">fora da cotação de frango</span>';}
     if(r.status==='comprar'){
       trbg=' style="background:#fff6f6"';estCol='#b91c1c';
       compCell='<span class="tipo-chip" style="background:#fee2e2;color:#991b1b;font-weight:700">'+cotEsc(r.comprar)+'</span>';
-      onde=r.forn?('<span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(r.forn)+'</span> <strong>'+fmt(r.preco)+'</strong>'):'<span style="color:#999;font-size:12px">fora da cotação de frango</span>';
       lista.push(r.nome+' — comprar '+r.comprar+(r.forn?(' — '+r.forn+' '+fmt(r.preco)):''));
     }else if(r.status==='ok'){compCell='<span style="color:#16a34a;font-size:12px"><i class="ti ti-check"></i> ok</span>';}
-    else if(r.status==='muito'){trbg=' style="opacity:.55"';estCol='#888';compCell='<span style="color:#999;font-size:12px">não precisa</span>';}
+    else if(r.status==='muito'){trbg=' style="opacity:.7"';estCol='#888';compCell='<span style="color:#999;font-size:12px">não precisa</span>';}
     else{estCol='#b45309';compCell='<span style="color:#b45309;font-size:12px">sem mínimo definido</span>';}
     h+='<tr'+trbg+'><td style="font-weight:600">'+cotEsc(r.nome)+'</td><td style="text-align:right;color:'+estCol+'">'+cotEsc(r.est)+'</td><td style="text-align:right;color:#888">'+cotEsc(r.min)+'</td><td>'+compCell+'</td><td>'+onde+'</td></tr>';
   });
   h+='</tbody></table></div>';
-  h+='<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
-     '<div style="font-size:13px;color:#555">'+(nComprar?('<strong style="color:#b91c1c">'+nComprar+'</strong> item(ns) abaixo do mínimo (destacados) — confira a lista toda mesmo assim'):'Nada abaixo do mínimo — mas confira a lista mesmo assim')+'</div>'+
-     (nComprar?'<button class="btn btn-primary" onclick="estCopiar()"><i class="ti ti-copy"></i> Copiar lista de compra</button>':'')+'</div>';
-  h+='<pre id="est-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
+  h+='<div style="margin-top:14px;font-size:13px;color:#555">'+(nComprar?('<strong style="color:#b91c1c">'+nComprar+'</strong> item(ns) abaixo do mínimo (destacados) — confira a lista toda mesmo assim'):'Nada abaixo do mínimo — mas confira a lista mesmo assim')+'</div>';
+  var byForn={};rows.forEach(function(r){if(r.status==='comprar'){var k=r.forn||'__sem__';(byForn[k]=byForn[k]||[]).push(r);}});
+  var fks=Object.keys(byForn);
+  if(fks.length){
+    h+='<div style="margin-top:16px;font-weight:700;font-size:13px;color:#444"><i class="ti ti-send"></i> Pedido por fornecedor <span style="font-weight:500;color:#888">— copie e mande pra cada um (só o que é dele)</span></div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">';
+    fks.forEach(function(k){
+      var its=byForn[k],nm=(k==='__sem__'?'Sem fornecedor (cotar primeiro)':k);
+      var txt='*Pedido*\n'+its.map(function(r){return '- '+r.nome+' — '+r.comprar;}).join('\n');
+      h+='<div data-fc="1" style="flex:1 1 240px;min-width:230px;border:1px solid #eee;border-radius:10px;padding:12px;background:#fafafa">'+
+         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><strong style="font-size:14px">'+cotEsc(nm)+'</strong>'+
+         '<button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="cotCopiarTxt(this)"><i class="ti ti-copy"></i> Copiar</button></div>'+
+         '<div style="font-size:12px;color:#555;line-height:1.8">'+its.map(function(r){return cotEsc(r.nome)+' <span style="color:#991b1b;font-weight:600">'+cotEsc(r.comprar)+'</span>'+(r.forn?(' <span style="color:#888">· '+fmt(r.preco)+'</span>'):'');}).join('<br>')+'</div>'+
+         '<textarea style="display:none">'+cotEsc(txt)+'</textarea></div>';
+    });
+    h+='</div>';
+  }
   out.innerHTML=h;box.style.display='block';
 }
 function estCopiar(){
@@ -1289,7 +1326,7 @@ function saldoCapturar(text){
   var iso=raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8);
   var m=saldoGet(),cur=m[acct];
   if(!cur||(''+raw)>=(''+(cur.ts||''))){
-    m[acct]={acctid:acct,banco:org,saldo:saldo,data:iso,ts:raw,label:(cur&&cur.label)||''};
+    m[acct]={acctid:acct,banco:org,saldo:saldo,data:iso,ts:raw,imp:Date.now(),label:(cur&&cur.label)||''};
     saldoSet(m);saldoCloudSave(m[acct]);
   }
 }
@@ -1307,11 +1344,12 @@ async function syncCloudExtras(){
     var rs=await sbGet('saldos','select=acctid,banco,saldo,data,ts,label');
     if(rs&&rs.length){
       var m=saldoGet();
-      rs.forEach(function(r){var cur=m[r.acctid];if(!cur||(''+(r.ts||''))>=(''+(cur.ts||'')))m[r.acctid]={acctid:r.acctid,banco:r.banco,saldo:Number(r.saldo),data:r.data,ts:r.ts,label:(cur&&cur.label)||r.label||''};});
+      rs.forEach(function(r){var cur=m[r.acctid];if(!cur||(''+(r.ts||''))>=(''+(cur.ts||'')))m[r.acctid]={acctid:r.acctid,banco:r.banco,saldo:Number(r.saldo),data:r.data,ts:r.ts,imp:(cur&&cur.imp)||null,label:(cur&&cur.label)||r.label||''};});
       saldoSet(m);saldoRender();
     }
   }catch(e){}
 }
+function saldoFmtDT(ms){if(!ms)return '';var d=new Date(ms);function z(n){return (n<10?'0':'')+n;}return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds());}
 function saldoRender(){
   var c=document.getElementById('saldo-list'),tt=document.getElementById('saldo-tot');if(!c)return;
   var m=saldoGet(),ks=Object.keys(m);
@@ -1321,7 +1359,7 @@ function saldoRender(){
   ks.forEach(function(k){var s=m[k];tot+=s.saldo||0;
     h+='<div style="border:1px solid #eee;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'+
        '<div><input value="'+(s.label||'').replace(/"/g,'&quot;')+'" placeholder="Nome da conta (ex: Jurídica / CPF)" onchange="saldoSetLabel(\''+s.acctid+'\',this.value)" style="border:1px solid #ddd;border-radius:7px;padding:7px 10px;font-size:14px;font-weight:600;min-width:230px">'+
-       '<div style="font-size:12px;color:#888;margin-top:5px">'+cotEsc(s.banco||'')+' · conta '+cotEsc(s.acctid)+' · saldo de '+fd(s.data)+'</div></div>'+
+       '<div style="font-size:12px;color:#888;margin-top:5px">'+cotEsc(s.banco||'')+' · conta '+cotEsc(s.acctid)+' · saldo de '+fd(s.data)+(s.imp?(' · <span style="color:#aaa">importado em '+saldoFmtDT(s.imp)+'</span>'):'')+'</div></div>'+
        '<div style="font-size:22px;font-weight:800;color:'+((s.saldo||0)<0?'#b91c1c':'#166534')+'">'+fmt(s.saldo||0)+'</div></div>';
   });
   c.innerHTML=h;if(tt)tt.textContent=fmt(tot);
