@@ -177,26 +177,44 @@ async function carregar(){
   }
 }
 
-var RADIOS=[
-  {nome:'Groove Salad (lounge instrumental)', url:'https://ice1.somafm.com/groovesalad-128-mp3'},
-  {nome:'Lush (vocais suaves)', url:'https://ice1.somafm.com/lush-128-mp3'},
-  {nome:'Seven Inch Soul (soul/funk)', url:'https://ice1.somafm.com/7soul-128-mp3'},
-  {nome:'Bossa / Jazz (Sonic Universe)', url:'https://ice1.somafm.com/sonicuniverse-128-mp3'}
+var RADIO_TAGS=['sertanejo','forro','pagode'];
+var RADIO_API='https://de1.api.radio-browser.info';
+var RADIO_FALLBACK=[
+  {nome:'Groove Salad (lounge)', url:'https://ice1.somafm.com/groovesalad-128-mp3'},
+  {nome:'Seven Inch Soul (soul/funk)', url:'https://ice1.somafm.com/7soul-128-mp3'}
 ];
+var RADIOS=[];
 var mplayer=new Audio(); mplayer.preload='none'; mplayer.volume=0.9;
-var mcur=0, mplaying=false;
-function mUpd(){var b=document.getElementById('mbtn');if(b){b.textContent=mplaying?'❚❚':'▶';b.className='mbtn '+(mplaying?'on':'off');}var s=document.getElementById('mstation');if(s)s.textContent=RADIOS.length?RADIOS[mcur].nome:'Sem estações';}
-function loadStation(i){if(!RADIOS.length)return;mcur=((i%RADIOS.length)+RADIOS.length)%RADIOS.length;mplayer.src=RADIOS[mcur].url;mUpd();}
-function toggleMusic(){
-  if(!RADIOS.length)return;
-  if(mplaying){mplayer.pause();mplaying=false;mUpd();return;}
-  if(!mplayer.src)loadStation(mcur);
-  mplayer.play().then(function(){mplaying=true;mUpd();}).catch(function(){mplaying=false;mUpd();});
+var mcur=0, mplaying=false, mWantPlay=false, mTries=0, mFail=null;
+function mShuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function mUpd(){var b=document.getElementById('mbtn');if(b){b.textContent=mplaying?'❚❚':'▶';b.className='mbtn '+(mplaying?'on':'off');}var s=document.getElementById('mstation');if(s)s.textContent=RADIOS.length?RADIOS[mcur].nome:'Carregando rádios...';}
+function mClearFail(){if(mFail){clearTimeout(mFail);mFail=null;}}
+function loadStation(i){if(!RADIOS.length)return;mClearFail();mcur=((i%RADIOS.length)+RADIOS.length)%RADIOS.length;mplayer.src=RADIOS[mcur].url;mUpd();}
+function mSkip(){mTries++;if(mTries>RADIOS.length){mplaying=false;mClearFail();var s=document.getElementById('mstation');if(s)s.textContent='Nenhuma rádio disponível';mUpd();return;}loadStation(mcur+1);if(mWantPlay)mPlay();}
+function mPlay(){
+  mClearFail();
+  var p=mplayer.play();
+  if(p&&p.then){p.then(function(){mplaying=true;mTries=0;mUpd();}).catch(function(err){mplaying=false;mUpd();if(err&&err.name!=='NotAllowedError'&&mWantPlay)mSkip();});}
+  if(mWantPlay){mFail=setTimeout(function(){if(mplayer.paused||mplayer.readyState<3)mSkip();},9000);}
 }
-function nextStation(){if(!RADIOS.length)return;loadStation(mcur+1);if(mplaying){mplayer.play().catch(function(){});}else{toggleMusic();}}
-mplayer.addEventListener('error',function(){var s=document.getElementById('mstation');if(s)s.textContent=(RADIOS[mcur]?RADIOS[mcur].nome:'')+' (indisponível)';});
-loadStation(0);
-mplayer.play().then(function(){mplaying=true;mUpd();}).catch(function(){mplaying=false;mUpd();});
+function toggleMusic(){if(!RADIOS.length)return;if(mplaying){mWantPlay=false;mplayer.pause();mplaying=false;mClearFail();mUpd();return;}mWantPlay=true;if(!mplayer.src)loadStation(mcur);mTries=0;mPlay();}
+function nextStation(){if(!RADIOS.length)return;mWantPlay=true;mTries=0;loadStation(mcur+1);mPlay();}
+mplayer.addEventListener('playing',function(){mplaying=true;mTries=0;mClearFail();mUpd();});
+mplayer.addEventListener('error',function(){if(mWantPlay)mSkip();});
+setInterval(function(){if(mWantPlay&&RADIOS.length>1)nextStation();},3000000);
+function loadRadios(){
+  var seen={},list=[],done=0;
+  function finish(){done++;if(done<RADIO_TAGS.length)return;if(list.length){RADIOS=mShuffle(list).slice(0,15);}else{RADIOS=RADIO_FALLBACK.slice();}loadStation(0);var p=mplayer.play();if(p&&p.then){p.then(function(){mplaying=true;mTries=0;mUpd();}).catch(function(){mplaying=false;mUpd();});}}
+  RADIO_TAGS.forEach(function(tag){
+    fetch(RADIO_API+'/json/stations/search?tag='+tag+'&hidebroken=true&order=clickcount&reverse=true&limit=20')
+      .then(function(r){return r.json();})
+      .then(function(arr){if(arr&&arr.length){arr.forEach(function(s){var u=s.url_resolved||s.url;if(u&&s.lastcheckok===1&&u.indexOf('https://')===0&&!seen[u]){seen[u]=1;list.push({nome:((s.name||'Rádio').replace(/\s+/g,' ').trim()).slice(0,38),url:u});}});}finish();})
+      .catch(function(){finish();});
+  });
+}
+mUpd();
+loadRadios();
+
 (function(){var t=document.getElementById('tickertrack');if(t){var u=('Preços sujeitos a alteração \u00A0\u00A0\u2022\u00A0\u00A0 ').repeat(8);t.innerHTML='<span>'+u+'</span><span>'+u+'</span>';}})();
 tick(); setInterval(tick,1000);
 carregar();
