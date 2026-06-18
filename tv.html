@@ -13,8 +13,8 @@
   header .brandlogo{height:10vh;width:10vh;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 2px 7px rgba(0,0,0,.45))}
   header .logo{font-size:4.8vh;font-weight:900;letter-spacing:1px;line-height:1.02;text-transform:uppercase;text-shadow:0 2px 6px rgba(0,0,0,.25)}
   header .logo small{display:block;font-size:2vh;font-weight:600;letter-spacing:3px;opacity:.92;margin-top:.6vh}
-  header .clock{font-size:3.6vh;font-weight:800;text-align:right;text-shadow:0 2px 5px rgba(0,0,0,.25)}
-  header .clock small{display:block;font-size:1.9vh;font-weight:600;opacity:.92}
+  header .clock{font-size:5vh;font-weight:800;text-align:right;text-shadow:0 2px 5px rgba(0,0,0,.25);line-height:1}
+  header .clock small{display:block;font-size:2.4vh;font-weight:600;opacity:.95;margin-top:.7vh}
 
   main{flex:1 1 auto;overflow:hidden;padding:1.6vh 2vw;position:relative}
   #stage{height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.4vh 1.4vw;transition:opacity .35s ease}
@@ -84,7 +84,7 @@ function catRank(c){var i=CAT_ORDER.indexOf(c);return i<0?98:i;}
 function fmtPreco(v){v=Number(v)||0;return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function z(n){return (n<10?'0':'')+n;}
 function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function tick(){var d=new Date();var dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];document.getElementById('hora').textContent=z(d.getHours())+':'+z(d.getMinutes());document.getElementById('data').textContent=dias[d.getDay()]+' '+z(d.getDate())+'/'+z(d.getMonth()+1);}
+function tick(){var d=new Date();var dias=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];var meses=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];document.getElementById('hora').textContent=z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds());document.getElementById('data').textContent=dias[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()]+' de '+d.getFullYear();}
 
 var PAGES=[], cur=0;
 
@@ -155,7 +155,7 @@ async function carregar(){
   }
 }
 
-tick(); setInterval(tick,20000);
+tick(); setInterval(tick,1000);
 carregar();
 setInterval(rotate, ROTACAO_MS);
 setInterval(carregar, REFRESH_MS);
