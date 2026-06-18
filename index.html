@@ -1048,12 +1048,12 @@ function cotComparar(){
   COT.res={nomes:nomes,rows:rows};
   cotResultRender();
 }
-function cotTabela(nomes,rows,ro){
-  var h='<div class="tbl-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Seu custo</th>';
+function cotTabela(nomes,rows,ro,bench){
+  var h='<div class="tbl-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Última cotação</th>';
   nomes.forEach(function(n){h+='<th style="text-align:right">'+cotEsc(n)+'</th>';});
   h+='<th>Melhor</th></tr></thead><tbody>';var lista=[];
   rows.forEach(function(row){
-    var custo=COT_CUSTO[cotKey(row.nome)];
+    var custo=bench?bench[cotKey(row.nome)]:null;
     h+='<tr><td style="font-weight:600">'+cotEsc(row.nome)+(row.pref?' <span style="font-size:10px;color:#aaa;font-weight:500">· '+row.pref+'</span>':'')+'</td>';
     h+='<td style="text-align:right;color:#888">'+(custo!=null?fmt(custo):'—')+'</td>';
     nomes.forEach(function(_,fi){
@@ -1063,9 +1063,9 @@ function cotTabela(nomes,rows,ro){
     });
     var nota='';
     if(custo!=null){var df=row.min-custo;
-      if(df<-0.005)nota=' <span style="font-size:11px;color:#166534">\u2193 '+fmt(-df)+' abaixo</span>';
-      else if(df>0.005)nota=' <span style="font-size:11px;color:#b45309">\u2191 '+fmt(df)+' acima</span>';
-      else nota=' <span style="font-size:11px;color:#888">= seu custo</span>';
+      if(df<-0.005)nota=' <span style="font-size:11px;color:#166534">\u2193 '+fmt(-df)+' que a última</span>';
+      else if(df>0.005)nota=' <span style="font-size:11px;color:#b45309">\u2191 '+fmt(df)+' que a última</span>';
+      else nota=' <span style="font-size:11px;color:#888">= última</span>';
     }
     h+='<td><span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(nomes[row.minFi])+'</span> <strong>'+fmt(row.min)+'</strong>'+nota+'</td></tr>';
     lista.push(row.nome+' — '+nomes[row.minFi]+' '+fmt(row.min));
@@ -1083,17 +1083,19 @@ function cotTabela(nomes,rows,ro){
 function cotResultRender(){
   var R=COT.res,box=document.getElementById('cot-result'),out=document.getElementById('cot-out');
   if(!R||!R.rows.length){out.innerHTML='<p style="color:#888;font-size:14px">Nenhum item reconhecido. Confira se cada linha tem o item e o preço (ex: <em>Picanha 39,90</em>).</p>';box.style.display='block';return;}
-  out.innerHTML=cotTabela(R.nomes,R.rows,false);box.style.display='block';
+  out.innerHTML=cotTabela(R.nomes,R.rows,false,cotBenchLatest());box.style.display='block';
 }
 function cotLogGet(){try{return JSON.parse(localStorage.getItem('fz_cotlog')||'[]');}catch(e){return [];}}
 function cotLogSet(a){try{localStorage.setItem('fz_cotlog',JSON.stringify(a));}catch(e){}}
+function cotBenchLatest(){var log=cotLogGet();if(!log.length)return {};var mp={};if(log[0].rows)log[0].rows.forEach(function(r){if(r.minFi>=0)mp[cotKey(r.nome)]=r.min;});return mp;}
+function cotBenchBefore(id){var log=cotLogGet(),idx=-1;for(var i=0;i<log.length;i++)if(log[i].id===id){idx=i;break;}if(idx<0||idx+1>=log.length)return {};var e=log[idx+1],mp={};if(e.rows)e.rows.forEach(function(r){if(r.minFi>=0)mp[cotKey(r.nome)]=r.min;});return mp;}
 function cotSalvar(){
   if(!COT.res||!COT.res.rows.length){alert('Compare uma cotação antes de salvar.');return;}
-  var log=cotLogGet();
-  log.unshift({id:Date.now(),ts:new Date().toISOString(),nomes:COT.res.nomes,rows:COT.res.rows});
-  if(log.length>300)log=log.slice(0,300);
-  cotLogSet(log);cotHist();alert('Cotação salva no histórico.');
+  var snap={id:Date.now(),ts:new Date().toISOString(),nomes:COT.res.nomes,rows:COT.res.rows};
+  var log=cotLogGet();log.unshift(snap);if(log.length>300)log=log.slice(0,300);
+  cotLogSet(log);cotCloudSave(snap);cotHist();alert('Cotação salva no histórico.');
 }
+function cotCloudSave(snap){try{sbUpsert('cotacoes',[{id:snap.id,ts:snap.ts,payload:snap}]).catch(function(){});}catch(e){}}
 function cotFmtTs(ts){var d=new Date(ts);function p(n){return String(n).padStart(2,'0');}return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
 function cotHist(){
   var c=document.getElementById('cot-hist-list');if(!c)return;
@@ -1111,7 +1113,7 @@ function cotHist(){
 function cotVer(id){
   var e=cotLogGet().filter(function(x){return x.id===id;})[0];if(!e)return;
   var out=document.getElementById('cot-out'),box=document.getElementById('cot-result');
-  out.innerHTML='<div style="font-size:13px;color:#555;margin-bottom:10px"><i class="ti ti-history"></i> Cotação salva em <strong>'+cotFmtTs(e.ts)+'</strong></div>'+cotTabela(e.nomes,e.rows,true);
+  out.innerHTML='<div style="font-size:13px;color:#555;margin-bottom:10px"><i class="ti ti-history"></i> Cotação salva em <strong>'+cotFmtTs(e.ts)+'</strong></div>'+cotTabela(e.nomes,e.rows,true,cotBenchBefore(id));
   box.style.display='block';box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function cotDelLog(id){
@@ -1140,9 +1142,9 @@ var EST_CFG={
   'CALABRESA':{unit:'cx',cxKg:20,min:2,buy:3},
   'BACON':{unit:'cx',cxKg:20,min:2,buy:3},
   'BACON EM CUBOS':{unit:'cx',cxKg:20,min:2,buy:2},
-  'EMPANADO':{unit:'cx',cxKg:5,min:1,buy:1},
-  'SALSICHA':{unit:'cx',cxKg:5,min:1,buy:1},
-  'PAO DE ALHO FRIGOLEMOS':{unit:'un',cxKg:1,min:6,buy:'1cx'}
+  'EMPANADO':{unit:'kg',cxKg:5,min:5,buy:5},
+  'SALSICHA':{unit:'kg',cxKg:5,min:5,buy:5},
+  'PAO DE ALHO FRIGOLEMOS':{unit:'un',cxKg:10,min:6,buy:'1cx'}
 };
 function estCanon(nome){
   var up=cotKey(nome);
@@ -1182,7 +1184,7 @@ function estParseLine(l){
   return {raw:nome,nome:canon,key:cotKey(canon),qty:qty,unit:unit,plenty:plenty};
 }
 function estVal(qty,unit,cfg){
-  if(cfg.unit==='un')return unit==='cx'?qty*20:qty;
+  if(cfg.unit==='un')return unit==='cx'?qty*cfg.cxKg:qty;
   var kg;
   if(unit==='kg'||unit==='pct')kg=qty;else if(unit==='cx')kg=qty*cfg.cxKg;else kg=(cfg.unit==='kg'?qty:qty*cfg.cxKg);
   return cfg.unit==='kg'?kg:kg/cfg.cxKg;
@@ -1208,7 +1210,7 @@ function estAnalisar(){
     if(val<cfg.min-1e-6){
       var lbl;
       if(cfg.buy==='fill'){var n=Math.max(1,Math.round(cfg.min-val));lbl=n+' caixa'+(n>1?'s':'');}
-      else if(cfg.buy==='1cx')lbl='1 caixa';
+      else if(cfg.buy==='1cx')lbl='1 caixa ('+cfg.cxKg+' un)';
       else lbl=cfg.buy+' '+(cfg.unit==='kg'?'kg':(cfg.unit==='un'?'un':'caixa'+(cfg.buy>1?'s':'')));
       var pr=precos[it.key];
       comprar.push({nome:it.nome,est:estEstoque(val,cfg),min:cfg.min+' '+estUL(cfg.unit),comprar:lbl,forn:pr?pr.forn:null,preco:pr?pr.preco:null});
@@ -1258,8 +1260,27 @@ function saldoCapturar(text){
   var m=saldoGet(),cur=m[acct];
   if(!cur||(''+raw)>=(''+(cur.ts||''))){
     m[acct]={acctid:acct,banco:org,saldo:saldo,data:iso,ts:raw,label:(cur&&cur.label)||''};
-    saldoSet(m);
+    saldoSet(m);saldoCloudSave(m[acct]);
   }
+}
+function saldoCloudSave(s){if(!s)return;try{sbUpsert('saldos',[{acctid:s.acctid,banco:s.banco,saldo:s.saldo,data:s.data,ts:s.ts,label:s.label||''}]).catch(function(){});}catch(e){}}
+async function syncCloudExtras(){
+  try{
+    var rc=await sbGet('cotacoes','select=id,ts,payload&order=id.desc');
+    if(rc&&rc.length){
+      var local=cotLogGet(),ids={};local.forEach(function(x){ids[x.id]=1;});
+      rc.forEach(function(r){if(!ids[r.id]&&r.payload){var p=(typeof r.payload==='string')?JSON.parse(r.payload):r.payload;p.id=r.id;if(r.ts)p.ts=r.ts;local.push(p);}});
+      local.sort(function(a,b){return b.id-a.id;});if(local.length>300)local=local.slice(0,300);cotLogSet(local);cotHist();
+    }
+  }catch(e){}
+  try{
+    var rs=await sbGet('saldos','select=acctid,banco,saldo,data,ts,label');
+    if(rs&&rs.length){
+      var m=saldoGet();
+      rs.forEach(function(r){var cur=m[r.acctid];if(!cur||(''+(r.ts||''))>=(''+(cur.ts||'')))m[r.acctid]={acctid:r.acctid,banco:r.banco,saldo:Number(r.saldo),data:r.data,ts:r.ts,label:(cur&&cur.label)||r.label||''};});
+      saldoSet(m);saldoRender();
+    }
+  }catch(e){}
 }
 function saldoRender(){
   var c=document.getElementById('saldo-list'),tt=document.getElementById('saldo-tot');if(!c)return;
@@ -1275,7 +1296,7 @@ function saldoRender(){
   });
   c.innerHTML=h;if(tt)tt.textContent=fmt(tot);
 }
-function saldoSetLabel(k,v){var m=saldoGet();if(m[k]){m[k].label=v;saldoSet(m);}}
+function saldoSetLabel(k,v){var m=saldoGet();if(m[k]){m[k].label=v;saldoSet(m);saldoCloudSave(m[k]);}}
 
 /* ── ENTRADAS ── */
 function addEnt(){
@@ -2008,6 +2029,7 @@ async function init(){
     // Fallback: usa dados embedded
     E=_DE;S=_DS;G=_DG;C=_DC;
   }
+  syncCloudExtras();
   const today=td(),m=new Date().getMonth()+1;
   ['e-dt','s-dt','g-dt','c-dt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
   document.getElementById('dash-de').value=today;
