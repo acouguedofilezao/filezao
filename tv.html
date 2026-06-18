@@ -203,15 +203,23 @@ function nextStation(){if(!RADIOS.length)return;mWantPlay=true;mTries=0;loadStat
 mplayer.addEventListener('playing',function(){mplaying=true;mTries=0;mClearFail();mUpd();});
 mplayer.addEventListener('error',function(){if(mWantPlay)mSkip();});
 setInterval(function(){if(mWantPlay&&RADIOS.length>1)nextStation();},3000000);
+var RADIO_REGIONAIS=['Nova Sertaneja','A Sertaneja','Espacial FM','Radio Santana Itauna','Montense FM'];
+var RADIO_PODE_MISSA=[];
+var MISSA_JANELAS=[
+  {dias:[0],ini:[7,0],fim:[8,30]},
+  {dias:[1,2,3,4,5,6],ini:[6,0],fim:[6,45]},
+  {dias:[1,2,3,4,5,6],ini:[18,0],fim:[18,45]}
+];
+function emMissa(){var d=new Date(),dow=d.getDay(),mn=d.getHours()*60+d.getMinutes();for(var i=0;i<MISSA_JANELAS.length;i++){var w=MISSA_JANELAS[i];if(w.dias.indexOf(dow)<0)continue;if(mn>=w.ini[0]*60+w.ini[1]&&mn<w.fim[0]*60+w.fim[1])return true;}return false;}
+function ehSegura(st){if(!st)return true;if(st.safe===false)return false;var n=(st.nome||'').toLowerCase();for(var i=0;i<RADIO_PODE_MISSA.length;i++){if(RADIO_PODE_MISSA[i]&&n.indexOf(RADIO_PODE_MISSA[i])>=0)return false;}return true;}
+function checaMissa(){if(!mWantPlay||RADIOS.length<2)return;if(emMissa()&&!ehSegura(RADIOS[mcur])){for(var i=1;i<=RADIOS.length;i++){var k=(mcur+i)%RADIOS.length;if(ehSegura(RADIOS[k])){mTries=0;loadStation(k);mPlay();break;}}}}
+setInterval(checaMissa,30000);
+function rbFiltra(arr,seen,list){if(!arr||!arr.length)return;arr.forEach(function(s){var u=s.url_resolved||s.url;if(u&&s.lastcheckok===1&&u.indexOf('https://')===0&&!seen[u]&&(s.countrycode==='BR'||!s.countrycode)){seen[u]=1;list.push({nome:((s.name||'Rádio').replace(/\s+/g,' ').trim()).slice(0,38),url:u});}});}
 function loadRadios(){
-  var seen={},list=[],done=0;
-  function finish(){done++;if(done<RADIO_TAGS.length)return;if(list.length){RADIOS=mShuffle(list).slice(0,15);}else{RADIOS=RADIO_FALLBACK.slice();}loadStation(0);var p=mplayer.play();if(p&&p.then){p.then(function(){mplaying=true;mTries=0;mUpd();}).catch(function(){mplaying=false;mUpd();});}}
-  RADIO_TAGS.forEach(function(tag){
-    fetch(RADIO_API+'/json/stations/search?tag='+tag+'&hidebroken=true&order=clickcount&reverse=true&limit=20')
-      .then(function(r){return r.json();})
-      .then(function(arr){if(arr&&arr.length){arr.forEach(function(s){var u=s.url_resolved||s.url;if(u&&s.lastcheckok===1&&u.indexOf('https://')===0&&!seen[u]){seen[u]=1;list.push({nome:((s.name||'Rádio').replace(/\s+/g,' ').trim()).slice(0,38),url:u});}});}finish();})
-      .catch(function(){finish();});
-  });
+  var seen={},regs=[],gen=[],pend=RADIO_REGIONAIS.length+RADIO_TAGS.length;
+  function finish(){pend--;if(pend>0)return;var all=regs.concat(mShuffle(gen));RADIOS=all.length?all.slice(0,18):RADIO_FALLBACK.slice();loadStation(0);checaMissa();var p=mplayer.play();if(p&&p.then){p.then(function(){mplaying=true;mTries=0;mUpd();}).catch(function(){mplaying=false;mUpd();});}}
+  RADIO_REGIONAIS.forEach(function(nm){fetch(RADIO_API+'/json/stations/byname/'+encodeURIComponent(nm)+'?hidebroken=true&order=votes&reverse=true&limit=3').then(function(r){return r.json();}).then(function(arr){rbFiltra(arr,seen,regs);finish();}).catch(function(){finish();});});
+  RADIO_TAGS.forEach(function(tag){fetch(RADIO_API+'/json/stations/search?tag='+tag+'&hidebroken=true&order=clickcount&reverse=true&limit=15').then(function(r){return r.json();}).then(function(arr){rbFiltra(arr,seen,gen);finish();}).catch(function(){finish();});});
 }
 mUpd();
 loadRadios();
