@@ -615,6 +615,17 @@ const SB_HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'a
 
 function sync(st,msg){document.getElementById('sdot').className='dot'+(st==='s'?' saving':st==='e'?' err':'');document.getElementById('stxt').textContent=msg;}
 function updStatus(){sync('','Pronto — '+(E.length+S.length+G.length+C.length)+' lançamentos');}
+function fzToast(msg,type){
+  var t=document.getElementById('fz-toast');
+  if(!t){t=document.createElement('div');t.id='fz-toast';t.style.cssText='position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%) translateY(16px);opacity:0;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 10px 34px rgba(0,0,0,.20);color:#fff;max-width:92vw';document.body.appendChild(t);}
+  var col=type==='err'?'#b42318':(type==='info'?'#0369a1':'#15803d');
+  var ic=type==='err'?'ti-alert-triangle':(type==='info'?'ti-info-circle':'ti-circle-check');
+  t.style.background=col;
+  t.innerHTML='<i class="ti '+ic+'" style="font-size:18px"></i><span>'+cotEsc(msg)+'</span>';
+  clearTimeout(t._h);t.style.display='flex';
+  requestAnimationFrame(function(){t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';});
+  t._h=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(16px)';},2600);
+}
 
 // Supabase helpers
 async function sbGet(table,params){
@@ -1090,10 +1101,10 @@ function cotLogSet(a){try{localStorage.setItem('fz_cotlog',JSON.stringify(a));}c
 function cotBenchLatest(){var log=cotLogGet();if(!log.length)return {};var mp={};if(log[0].rows)log[0].rows.forEach(function(r){if(r.minFi>=0)mp[cotKey(r.nome)]=r.min;});return mp;}
 function cotBenchBefore(id){var log=cotLogGet(),idx=-1;for(var i=0;i<log.length;i++)if(log[i].id===id){idx=i;break;}if(idx<0||idx+1>=log.length)return {};var e=log[idx+1],mp={};if(e.rows)e.rows.forEach(function(r){if(r.minFi>=0)mp[cotKey(r.nome)]=r.min;});return mp;}
 function cotSalvar(){
-  if(!COT.res||!COT.res.rows.length){alert('Compare uma cotação antes de salvar.');return;}
+  if(!COT.res||!COT.res.rows.length){fzToast('Compare uma cotação antes de salvar','err');return;}
   var snap={id:Date.now(),ts:new Date().toISOString(),nomes:COT.res.nomes,rows:COT.res.rows};
   var log=cotLogGet();log.unshift(snap);if(log.length>300)log=log.slice(0,300);
-  cotLogSet(log);cotCloudSave(snap);cotHist();alert('Cotação salva no histórico.');
+  cotLogSet(log);cotCloudSave(snap);cotHist();fzToast('Cotação salva no histórico');
 }
 function cotCloudSave(snap){try{sbUpsert('cotacoes',[{id:snap.id,ts:snap.ts,payload:snap}]).catch(function(){});}catch(e){}}
 function cotFmtTs(ts){var d=new Date(ts);function p(n){return String(n).padStart(2,'0');}return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
@@ -1123,10 +1134,10 @@ function cotDelLog(id){
 function cotCopiar(){
   var el=document.getElementById('cot-lista');if(!el)return;
   var txt='\uD83D\uDED2 LISTA DE COMPRA\n'+el.textContent;
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){alert('Lista copiada! É só colar onde quiser.');},function(){cotCopiaFb(txt);});}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){fzToast('Lista copiada');},function(){cotCopiaFb(txt);});}
   else cotCopiaFb(txt);
 }
-function cotCopiaFb(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');alert('Lista copiada!');}catch(e){alert('Copie manualmente:\n\n'+txt);}document.body.removeChild(ta);}
+function cotCopiaFb(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');fzToast('Lista copiada');}catch(e){alert('Copie manualmente:\n\n'+txt);}document.body.removeChild(ta);}
 
 /* ── ESTOQUE & SUGESTÃO DE COMPRA ── */
 var EST_CFG={
@@ -1200,49 +1211,56 @@ function estPrecos(){
 }
 function estAnalisar(){
   var txt=document.getElementById('est-txt').value||'';
-  var precos=estPrecos(),comprar=[],ok=[],muito=[],semregra=[];
+  var precos=estPrecos(),rows=[],nComprar=0;
   txt.split(/\r?\n/).forEach(function(l){
     var it=estParseLine(l);if(!it)return;
-    if(it.plenty){muito.push(it.nome);return;}
+    if(it.plenty){rows.push({nome:it.nome,est:'tem muito',min:'—',status:'muito',comprar:'—',order:3});return;}
     var cfg=EST_CFG[it.key];
-    if(!cfg||it.qty==null){semregra.push(it.raw);return;}
-    var val=estVal(it.qty,it.unit,cfg);
+    if(!cfg||it.qty==null){
+      var er=it.qty!=null?(it.qty+(it.unit?(' '+(it.unit==='cx'?'cx':it.unit==='pct'?'pacote':it.unit)):'')):'?';
+      rows.push({nome:it.raw,est:er,min:'—',status:'semregra',comprar:'',order:1});return;
+    }
+    var val=estVal(it.qty,it.unit,cfg),estL=estEstoque(val,cfg),minL=cfg.min+' '+estUL(cfg.unit);
     if(val<cfg.min-1e-6){
       var lbl;
       if(cfg.buy==='fill'){var n=Math.max(1,Math.round(cfg.min-val));lbl=n+' caixa'+(n>1?'s':'');}
       else if(cfg.buy==='1cx')lbl='1 caixa ('+cfg.cxKg+' un)';
       else lbl=cfg.buy+' '+(cfg.unit==='kg'?'kg':(cfg.unit==='un'?'un':'caixa'+(cfg.buy>1?'s':'')));
       var pr=precos[it.key];
-      comprar.push({nome:it.nome,est:estEstoque(val,cfg),min:cfg.min+' '+estUL(cfg.unit),comprar:lbl,forn:pr?pr.forn:null,preco:pr?pr.preco:null});
-    }else ok.push(it.nome+' ('+estEstoque(val,cfg)+')');
+      rows.push({nome:it.nome,est:estL,min:minL,status:'comprar',comprar:lbl,forn:pr?pr.forn:null,preco:pr?pr.preco:null,order:0});nComprar++;
+    }else rows.push({nome:it.nome,est:estL,min:minL,status:'ok',comprar:'—',order:2});
   });
-  estResultRender(comprar,ok,muito,semregra);
+  rows.sort(function(a,b){return a.order-b.order;});
+  estResultRender(rows,nComprar);
 }
-function estResultRender(comprar,ok,muito,semregra){
-  var box=document.getElementById('est-result'),out=document.getElementById('est-out'),h='';
-  if(comprar.length){
-    h+='<div class="tbl-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Em estoque</th><th style="text-align:right">Mínimo</th><th>Comprar</th><th>Onde (cotação)</th></tr></thead><tbody>';
-    var lista=[];
-    comprar.forEach(function(c){
-      var onde=c.forn?('<span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(c.forn)+'</span> <strong>'+fmt(c.preco)+'</strong>'):'<span style="color:#999;font-size:12px">fora da cotação de frango</span>';
-      h+='<tr><td style="font-weight:600">'+cotEsc(c.nome)+'</td><td style="text-align:right;color:#b91c1c">'+c.est+'</td><td style="text-align:right;color:#888">'+c.min+'</td><td style="font-weight:700">'+c.comprar+'</td><td>'+onde+'</td></tr>';
-      lista.push(c.nome+' — comprar '+c.comprar+(c.forn?(' — '+c.forn+' '+fmt(c.preco)):''));
-    });
-    h+='</tbody></table></div>';
-    h+='<div style="margin-top:14px;display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="estCopiar()"><i class="ti ti-copy"></i> Copiar lista de compra</button></div>';
-    h+='<pre id="est-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
-  }else{
-    h+='<p style="color:#166534;font-size:14px"><i class="ti ti-circle-check"></i> Nada a comprar pelos parâmetros atuais.</p>';
-  }
-  if(ok.length)h+='<div style="margin-top:14px;font-size:12px;color:#888"><strong>Estoque ok:</strong> '+ok.map(cotEsc).join(' · ')+'</div>';
-  if(muito.length)h+='<div style="margin-top:6px;font-size:12px;color:#888"><strong>Tem muito (ignorado):</strong> '+muito.map(cotEsc).join(' · ')+'</div>';
-  if(semregra.length)h+='<div style="margin-top:6px;font-size:12px;color:#b45309"><strong>Sem parâmetro definido:</strong> '+semregra.map(cotEsc).join(' · ')+' — me diga o mínimo desses se quiser incluir.</div>';
+function estResultRender(rows,nComprar){
+  var box=document.getElementById('est-result'),out=document.getElementById('est-out');
+  if(!rows.length){out.innerHTML='<p style="color:#888;font-size:14px">Cole a lista do Magela e clique em analisar.</p>';box.style.display='block';return;}
+  var h='<div class="tbl-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Em estoque</th><th style="text-align:right">Mínimo</th><th>Comprar</th><th>Onde (cotação)</th></tr></thead><tbody>';
+  var lista=[];
+  rows.forEach(function(r){
+    var trbg='',estCol='#555',compCell='—',onde='';
+    if(r.status==='comprar'){
+      trbg=' style="background:#fff6f6"';estCol='#b91c1c';
+      compCell='<span class="tipo-chip" style="background:#fee2e2;color:#991b1b;font-weight:700">'+cotEsc(r.comprar)+'</span>';
+      onde=r.forn?('<span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(r.forn)+'</span> <strong>'+fmt(r.preco)+'</strong>'):'<span style="color:#999;font-size:12px">fora da cotação de frango</span>';
+      lista.push(r.nome+' — comprar '+r.comprar+(r.forn?(' — '+r.forn+' '+fmt(r.preco)):''));
+    }else if(r.status==='ok'){compCell='<span style="color:#16a34a;font-size:12px"><i class="ti ti-check"></i> ok</span>';}
+    else if(r.status==='muito'){trbg=' style="opacity:.55"';estCol='#888';compCell='<span style="color:#999;font-size:12px">não precisa</span>';}
+    else{estCol='#b45309';compCell='<span style="color:#b45309;font-size:12px">sem mínimo definido</span>';}
+    h+='<tr'+trbg+'><td style="font-weight:600">'+cotEsc(r.nome)+'</td><td style="text-align:right;color:'+estCol+'">'+cotEsc(r.est)+'</td><td style="text-align:right;color:#888">'+cotEsc(r.min)+'</td><td>'+compCell+'</td><td>'+onde+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
+     '<div style="font-size:13px;color:#555">'+(nComprar?('<strong style="color:#b91c1c">'+nComprar+'</strong> item(ns) abaixo do mínimo (destacados) — confira a lista toda mesmo assim'):'Nada abaixo do mínimo — mas confira a lista mesmo assim')+'</div>'+
+     (nComprar?'<button class="btn btn-primary" onclick="estCopiar()"><i class="ti ti-copy"></i> Copiar lista de compra</button>':'')+'</div>';
+  h+='<pre id="est-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
   out.innerHTML=h;box.style.display='block';
 }
 function estCopiar(){
   var el=document.getElementById('est-lista');if(!el)return;
   var txt='\uD83D\uDED2 COMPRAR\n'+el.textContent;
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){alert('Lista copiada!');},function(){cotCopiaFb(txt);});
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){fzToast('Lista copiada');},function(){cotCopiaFb(txt);});
   else cotCopiaFb(txt);
 }
 
