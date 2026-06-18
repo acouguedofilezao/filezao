@@ -219,6 +219,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <div class="nav-section">Financeiro</div>
     <button class="nav-btn" onclick="showSec('fechamento',this)"><i class="ti ti-report-money"></i><span>Fechamento</span></button>
     <button class="nav-btn" onclick="showSec('relatorio',this)"><i class="ti ti-chart-bar"></i><span>Relatórios</span></button>
+    <button class="nav-btn" onclick="showSec('saldo',this)"><i class="ti ti-building-bank"></i><span>Saldo bancário</span></button>
     <div class="nav-section">Compras</div>
     <button class="nav-btn" onclick="showSec('cotacoes',this)"><i class="ti ti-shopping-cart"></i><span>Cotações</span></button>
     <button class="nav-btn" onclick="showSec('estoque',this)"><i class="ti ti-clipboard-list"></i><span>Estoque</span></button>
@@ -324,6 +325,16 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
       <button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="document.getElementById('imp-restore').click()"><i class="ti ti-upload"></i> Restaurar de um backup</button>
       <input type="file" id="imp-restore" accept=".json" style="display:none" onchange="impRestore(this)">
     </div>
+  </div>
+</div>
+
+<!-- SALDO BANCÁRIO -->
+<div id="sec-saldo" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-building-bank"></i> Saldo bancário</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Toda vez que você importar o extrato OFX na aba <strong>Importar dados</strong>, o último saldo de cada conta aparece aqui. Dê um nome pra cada conta (Jurídica / CPF) — fica salvo e só atualiza o valor quando você trouxer um extrato mais novo.</p>
+    <div id="saldo-list"></div>
+    <div style="margin-top:10px;border-top:1px solid #eee;padding-top:12px;display:flex;justify-content:space-between;align-items:center;font-size:14px"><strong>Saldo total nas contas</strong> <strong id="saldo-tot" style="font-size:18px;color:#166534"></strong></div>
   </div>
 </div>
 
@@ -705,6 +716,7 @@ function showSec(id,el){
   else if(id==='gado'){proxReg();PG.g=1;renderGad();}
   else if(id==='cheques'){PG.c=1;renderChq();}
   else if(id==='cotacoes')cotRender();
+  else if(id==='saldo')saldoRender();
 }
 function toggleSidebar(){
   const sb=document.getElementById('sidebar');
@@ -821,7 +833,7 @@ async function impHandleFile(input,kind){
   var f=input.files[0];if(!f)return;
   try{
     if(kind==='csv'){IMP.card=impParseCsv(await f.text());}
-    else{var buf=await f.arrayBuffer();IMP.pix=impParseOfx(new TextDecoder('windows-1252').decode(buf));}
+    else{var buf=await f.arrayBuffer();var dec=new TextDecoder('windows-1252').decode(buf);IMP.pix=impParseOfx(dec);saldoCapturar(dec);}
   }catch(err){alert('Não consegui ler o arquivo: '+err.message);return;}
   document.getElementById('imp-files').textContent=(IMP.card.length?'\u2713 Sipag ('+IMP.card.length+' dia(s))   ':'')+((IMP.pix.length||IMP.deb.length)?'\u2713 Sicoob ('+IMP.pix.length+' crédito(s), '+IMP.deb.length+' débito(s))':'');
   impRender();
@@ -915,7 +927,7 @@ function impLaunch(){
 }
 
 function impBackup(){
-  var data={app:'filezao',versao:1,gerado:new Date().toISOString(),entradas:E,saidas:S,gado:G,cheques:C,cotacoes:cotLogGet()};
+  var data={app:'filezao',versao:1,gerado:new Date().toISOString(),entradas:E,saidas:S,gado:G,cheques:C,cotacoes:cotLogGet(),saldos:saldoGet()};
   var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='backup-filezao-'+td()+'.json';
@@ -935,6 +947,7 @@ async function impRestore(input){
     if(data.gado&&data.gado.length)await sbUpsert('gado',data.gado.map(gadoToDB));
     if(data.cheques&&data.cheques.length)await sbUpsert('cheques',data.cheques.map(chqToDB));
     if(data.cotacoes&&data.cotacoes.length){var cur=cotLogGet(),ids={};cur.forEach(function(x){ids[x.id]=1;});data.cotacoes.forEach(function(x){if(!ids[x.id])cur.push(x);});cur.sort(function(a,b){return b.id-a.id;});cotLogSet(cur);}
+    if(data.saldos){var sm=saldoGet();Object.keys(data.saldos).forEach(function(k){if(!sm[k])sm[k]=data.saldos[k];else if(!sm[k].label&&data.saldos[k].label)sm[k].label=data.saldos[k].label;});saldoSet(sm);}
     alert('Backup restaurado! A página vai recarregar pra atualizar tudo.');
     location.reload();
   }catch(err){alert('Erro ao restaurar: '+err.message);}
@@ -1230,6 +1243,39 @@ function estCopiar(){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){alert('Lista copiada!');},function(){cotCopiaFb(txt);});
   else cotCopiaFb(txt);
 }
+
+/* ── SALDO BANCÁRIO ── */
+function saldoGet(){try{return JSON.parse(localStorage.getItem('fz_saldos')||'{}');}catch(e){return {};}}
+function saldoSet(m){try{localStorage.setItem('fz_saldos',JSON.stringify(m));}catch(e){}}
+function saldoCapturar(text){
+  var acct=((text.match(/<ACCTID>([^<\r\n]*)/)||[])[1]||'').trim();
+  var org=((text.match(/<ORG>([^<\r\n]*)/)||[])[1]||'').trim();
+  var lb=text.match(/<LEDGERBAL>[\s\S]*?<BALAMT>([^<\r\n]*)[\s\S]*?<DTASOF>([^<\r\n]*)/);
+  if(!acct||!lb)return;
+  var saldo=parseFloat(lb[1]);if(isNaN(saldo))return;
+  var raw=(lb[2]||'').replace(/[^0-9]/g,'').slice(0,14);
+  var iso=raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8);
+  var m=saldoGet(),cur=m[acct];
+  if(!cur||(''+raw)>=(''+(cur.ts||''))){
+    m[acct]={acctid:acct,banco:org,saldo:saldo,data:iso,ts:raw,label:(cur&&cur.label)||''};
+    saldoSet(m);
+  }
+}
+function saldoRender(){
+  var c=document.getElementById('saldo-list'),tt=document.getElementById('saldo-tot');if(!c)return;
+  var m=saldoGet(),ks=Object.keys(m);
+  if(!ks.length){c.innerHTML='<p style="color:#999;font-size:14px">Nenhum saldo ainda. Importe um extrato OFX na aba <strong>Importar dados</strong> que o último saldo de cada conta aparece aqui.</p>';if(tt)tt.textContent='';return;}
+  ks.sort(function(a,b){return (m[b].saldo||0)-(m[a].saldo||0);});
+  var h='',tot=0;
+  ks.forEach(function(k){var s=m[k];tot+=s.saldo||0;
+    h+='<div style="border:1px solid #eee;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'+
+       '<div><input value="'+(s.label||'').replace(/"/g,'&quot;')+'" placeholder="Nome da conta (ex: Jurídica / CPF)" onchange="saldoSetLabel(\''+s.acctid+'\',this.value)" style="border:1px solid #ddd;border-radius:7px;padding:7px 10px;font-size:14px;font-weight:600;min-width:230px">'+
+       '<div style="font-size:12px;color:#888;margin-top:5px">'+cotEsc(s.banco||'')+' · conta '+cotEsc(s.acctid)+' · saldo de '+fd(s.data)+'</div></div>'+
+       '<div style="font-size:22px;font-weight:800;color:'+((s.saldo||0)<0?'#b91c1c':'#166534')+'">'+fmt(s.saldo||0)+'</div></div>';
+  });
+  c.innerHTML=h;if(tt)tt.textContent=fmt(tot);
+}
+function saldoSetLabel(k,v){var m=saldoGet();if(m[k]){m[k].label=v;saldoSet(m);}}
 
 /* ── ENTRADAS ── */
 function addEnt(){
