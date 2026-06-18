@@ -219,6 +219,9 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <div class="nav-section">Financeiro</div>
     <button class="nav-btn" onclick="showSec('fechamento',this)"><i class="ti ti-report-money"></i><span>Fechamento</span></button>
     <button class="nav-btn" onclick="showSec('relatorio',this)"><i class="ti ti-chart-bar"></i><span>Relatórios</span></button>
+    <div class="nav-section">Ferramentas</div>
+    <button class="nav-btn" onclick="showSec('importar',this)"><i class="ti ti-file-import"></i><span>Importar dados</span></button>
+    <button class="nav-btn" onclick="showSec('backup',this)"><i class="ti ti-shield-check"></i><span>Backup</span></button>
   </div>
   <!-- Status de conexão no fundo da sidebar -->
   <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);margin-top:auto">
@@ -282,6 +285,42 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <div class="card-title loc"><i class="ti ti-history"></i> Histórico</div>
     <input class="srch" type="text" id="e-sr" placeholder="Buscar..." oninput="PG.e=1;renderEnt()">
     <div id="l-ent"></div><div class="pag" id="pg-ent"></div>
+  </div>
+</div>
+
+<!-- IMPORTAÇÃO -->
+<div id="sec-importar" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-file-import"></i> Importar do banco e da maquininha</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Carregue o <strong>CSV de vendas da Sipag</strong> e/ou o <strong>extrato OFX do Sicoob</strong>. O sistema soma o cartão por dia, traz o Pix recebido já marcado, e descarta sozinho os créditos da Sipag (pra não contar o cartão duas vezes), aplicações e débitos. Confira e clique em lançar.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Vendas Sipag (CSV)</label><input type="file" id="imp-csv" accept=".csv" onchange="impHandleFile(this,'csv')"></div>
+      <div class="form-group"><label>Extrato Sicoob (OFX)</label><input type="file" id="imp-ofx" accept=".ofx" onchange="impHandleFile(this,'ofx')"></div>
+    </div>
+    <div id="imp-files" style="font-size:12px;color:#0369a1;font-weight:600;min-height:16px"></div>
+  </div>
+
+  <div class="card" id="imp-prev" style="display:none">
+    <div class="card-title loc"><i class="ti ti-checklist"></i> Conferência</div>
+    <div id="imp-preview"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #eee;padding-top:14px">
+      <div style="font-size:13px;color:#555">Selecionado &nbsp; <strong style="color:#5b21b6">Cartão</strong> <strong id="imp-tot-car" style="font-size:17px;color:#5b21b6">R$ 0,00</strong> &nbsp;·&nbsp; <strong style="color:#0369a1">Pix</strong> <strong id="imp-tot-pix" style="font-size:17px;color:#0369a1">R$ 0,00</strong></div>
+      <button class="btn btn-primary" onclick="impLaunch()"><i class="ti ti-circle-check"></i> Lançar no sistema</button>
+    </div>
+    <div id="imp-status" style="font-size:13px;margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- BACKUP / RESTAURAÇÃO -->
+<div id="sec-backup" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-shield-check"></i> Backup e segurança</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Baixe uma cópia de tudo (entradas, saídas, gado, cheques) num arquivo só — guarde no celular, e-mail ou Google Drive. Se um dia precisar, o restaurar repõe os lançamentos do arquivo <strong>sem apagar</strong> o que já existe.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="impBackup()"><i class="ti ti-download"></i> Baixar backup</button>
+      <button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="document.getElementById('imp-restore').click()"><i class="ti ti-upload"></i> Restaurar de um backup</button>
+      <input type="file" id="imp-restore" accept=".json" style="display:none" onchange="impRestore(this)">
+    </div>
   </div>
 </div>
 
@@ -685,6 +724,142 @@ function mkDInput(el,onEnter){
 function getDV(id){const el=document.getElementById(id);if(!el)return 0;return el._di?el.getVal():(parseFloat(el.value)||0);}
 function clrV(id){const el=document.getElementById(id);if(!el)return;if(el._di)el.clr();else el.value='';}
 function setV(id,v){const el=document.getElementById(id);if(!el)return;if(el._di)el.setC(Math.round(v*100));else el.value=v;}
+
+/* ── IMPORTAÇÃO (Sipag CSV + Sicoob OFX) ── */
+var IMP={card:[],pix:[],excl:null,bld:'bruto'};
+function impMoney(s){return parseFloat(String(s).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'))||0;}
+function impCsvDate(d){var m=String(d).match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:'';}
+function impTag(b,t){var m=b.match(new RegExp('<'+t+'>([^<\\r\\n]*)'));return m?m[1].trim():'';}
+
+function impParseCsv(text){
+  var lines=text.replace(/^\uFEFF/,'').split(/\r?\n/),by={};
+  lines.forEach(function(line){
+    if(!/^CB-/.test(line))return;
+    var c=line.split(';');if(c.length<8)return;
+    var iso=impCsvDate(c[1]);if(!iso)return;
+    var o=by[iso]||(by[iso]={data:iso,bruto:0,liquido:0,qtd:0,est:{}});
+    o.qtd+=parseInt(c[4])||0;o.bruto+=impMoney(c[5]);o.liquido+=impMoney(c[7]);o.est[c[0]]=1;
+  });
+  return Object.keys(by).map(function(k){var o=by[k];o.nEst=Object.keys(o.est).length;return o;}).sort(function(a,b){return a.data<b.data?-1:1;});
+}
+
+function impParseOfx(text){
+  var ex={sipag:{n:0,v:0},interno:{n:0,v:0},debito:{n:0,v:0}};
+  var blocks=text.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g)||[],out=[];
+  blocks.forEach(function(b){
+    var amt=parseFloat(impTag(b,'TRNAMT'))||0;
+    var dt=impTag(b,'DTPOSTED').slice(0,8),iso=dt.slice(0,4)+'-'+dt.slice(4,6)+'-'+dt.slice(6,8);
+    var memo=impTag(b,'MEMO'),name=impTag(b,'NAME'),fit=impTag(b,'FITID');
+    var up=(memo+' '+name).toUpperCase();
+    if(amt<0){ex.debito.n++;ex.debito.v+=-amt;return;}                                   // só entradas
+    if(up.indexOf('SIPAG')>=0||up.indexOf('CR COMPRAS')>=0||up.indexOf('CR ANTECIP')>=0){ex.sipag.n++;ex.sipag.v+=amt;return;} // cartão (vem do CSV)
+    if(up.indexOf('APLICA')>=0||up.indexOf('RDC')>=0||up.indexOf('RESGATE')>=0||up.indexOf('MESMA TIT')>=0){ex.interno.n++;ex.interno.v+=amt;return;} // interno
+    var isPix=up.indexOf('PIX')>=0;
+    out.push({data:iso,memo:memo,name:name,valor:amt,auto:true,fit:fit,kind:isPix?'pix':'transf'});
+  });
+  IMP.excl=ex;
+  return out.sort(function(a,b){return a.data<b.data?-1:1;});
+}
+
+async function impHandleFile(input,kind){
+  var f=input.files[0];if(!f)return;
+  try{
+    if(kind==='csv'){IMP.card=impParseCsv(await f.text());}
+    else{var buf=await f.arrayBuffer();IMP.pix=impParseOfx(new TextDecoder('windows-1252').decode(buf));}
+  }catch(err){alert('Não consegui ler o arquivo: '+err.message);return;}
+  document.getElementById('imp-files').textContent=(IMP.card.length?'\u2713 Sipag ('+IMP.card.length+' dia(s))   ':'')+(IMP.pix.length?'\u2713 Sicoob ('+IMP.pix.length+' crédito(s))':'');
+  impRender();
+}
+
+function impCardVal(o){return o.liquido;}
+
+function impRender(){
+  var has=IMP.card.length||IMP.pix.length;
+  document.getElementById('imp-prev').style.display=has?'block':'none';
+  if(!has)return;
+  var h='';
+  if(IMP.card.length){
+    h+='<div style="font-weight:700;font-size:13px;margin:4px 0 6px"><span class="tipo-chip tc-car">CARTÃO</span> Maquininha (valor líquido) — 1 por dia</div><div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Detalhe</th><th>Valor</th></tr></thead><tbody>';
+    IMP.card.forEach(function(o,i){
+      var done=E.some(function(e){return e.tipo==='CARTÃO'&&e.data===o.data;});
+      var cell=done?'<span class="tipo-chip" style="background:#dcfce7;color:#166534">já lançado</span>':'<input type="checkbox" class="imp-ck-card" data-i="'+i+'" checked onchange="impTotal()">';
+      h+='<tr'+(done?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-size:12px;color:#888">'+o.qtd+' vendas \u00b7 '+o.nEst+' estab.</td><td style="font-weight:700">'+fmt(impCardVal(o))+'</td></tr>';});
+    h+='</tbody></table></div>';
+  }
+  if(IMP.pix.length){
+    var nConf=IMP.pix.filter(function(o){return o.kind==='transf';}).length;
+    h+='<div style="font-weight:700;font-size:13px;margin:16px 0 6px"><span class="tipo-chip tc-pix">PIX</span> Recebimentos no extrato';
+    if(nConf)h+=' <span style="font-weight:500;color:#888;font-size:12px">\u2014 '+nConf+' transferência(s), já marcadas \u2014 desmarque as que não forem cliente: <a href="#" onclick="impAll(true);return false">marcar todas</a> \u00b7 <a href="#" onclick="impAll(false);return false">limpar</a></span>';
+    h+='</div><div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Origem</th><th>Situação</th><th>Valor</th></tr></thead><tbody>';
+    IMP.pix.forEach(function(o,i){
+      var done=E.some(function(e){return e.tipo==='PIX'&&e.data===o.data;});
+      var cell=done?'<span class="tipo-chip" style="background:#dcfce7;color:#166534">já lançado</span>':'<input type="checkbox" class="imp-ck-pix" data-i="'+i+'" '+(o.auto?'checked':'')+' onchange="impTotal()">';
+      h+='<tr'+(done?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-size:12px;color:#666">'+(o.name||o.memo||'\u2014')+'</td><td>'+(o.kind==='pix'?'<span class="tipo-chip tc-pix">Pix</span>':'<span class="tipo-chip" style="background:#fef3c7;color:#92400e">Transf.</span>')+'</td><td style="font-weight:700">'+fmt(o.valor)+'</td></tr>';});
+    h+='</tbody></table></div>';
+  }
+  var e=IMP.excl,parts=[];
+  if(e){
+    if(e.sipag.n)parts.push(e.sipag.n+' créditos Sipag ('+fmt(e.sipag.v)+') \u2014 já vêm pelo cartão');
+    if(e.interno.n)parts.push(e.interno.n+' internas/aplicação ('+fmt(e.interno.v)+')');
+    if(e.debito.n)parts.push(e.debito.n+' débitos ('+fmt(e.debito.v)+') \u2014 só entradas');
+  }
+  if(parts.length)h+='<div style="background:#f3f4f6;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-top:12px">Descartado automaticamente: '+parts.join(' \u00b7 ')+'</div>';
+  document.getElementById('imp-preview').innerHTML=h;
+  impTotal();
+}
+
+function impAll(v){document.querySelectorAll('.imp-ck-pix').forEach(function(ck){if(IMP.pix[+ck.dataset.i].kind==='transf')ck.checked=v;});impTotal();}
+
+function impSelected(){
+  var rows=[];
+  document.querySelectorAll('.imp-ck-card:checked').forEach(function(ck){var o=IMP.card[+ck.dataset.i];rows.push({id:'impcard_'+o.data,data:o.data,tipo:'CARTÃO',valor:r2(impCardVal(o))});});
+  var pixDia={};
+  document.querySelectorAll('.imp-ck-pix:checked').forEach(function(ck){var o=IMP.pix[+ck.dataset.i];pixDia[o.data]=(pixDia[o.data]||0)+o.valor;});
+  Object.keys(pixDia).forEach(function(d){rows.push({id:'imppix_'+d,data:d,tipo:'PIX',valor:r2(pixDia[d])});});
+  return rows;
+}
+function impTotal(){
+  var rows=impSelected();
+  var car=rows.filter(function(r){return r.tipo==='CARTÃO';}).reduce(function(s,r){return s+r.valor;},0);
+  var pix=rows.filter(function(r){return r.tipo==='PIX';}).reduce(function(s,r){return s+r.valor;},0);
+  document.getElementById('imp-tot-car').textContent=fmt(car);
+  document.getElementById('imp-tot-pix').textContent=fmt(pix);
+}
+
+function impLaunch(){
+  var rows=impSelected();
+  if(!rows.length){alert('Marque ao menos um lançamento.');return;}
+  var novos=0,atual=0;
+  rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});if(idx>=0){E[idx]=r;atual++;}else{E.push(r);novos++;}});
+  save('fz_entradas',E);renderEnt();renderDash();impRender();
+  var st=document.getElementById('imp-status');st.style.color='#1a7a3c';
+  st.innerHTML='<i class="ti ti-circle-check"></i> '+novos+' nova(s)'+(atual?' e '+atual+' atualizada(s)':'')+' \u2014 '+fmt(rows.reduce(function(s,r){return s+r.valor;},0))+' lançado. Veja na aba Entradas.';
+}
+
+function impBackup(){
+  var data={app:'filezao',versao:1,gerado:new Date().toISOString(),entradas:E,saidas:S,gado:G,cheques:C};
+  var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='backup-filezao-'+td()+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
+}
+async function impRestore(input){
+  var f=input.files[0];if(!f)return;input.value='';
+  var data;
+  try{data=JSON.parse(await f.text());}catch(e){alert('Arquivo de backup inválido.');return;}
+  var tot=(data.entradas||[]).length+(data.saidas||[]).length+(data.gado||[]).length+(data.cheques||[]).length;
+  if(!tot){alert('Esse arquivo não parece um backup do sistema.');return;}
+  if(!confirm('Restaurar '+tot+' lançamento(s) do backup? Isso repõe o que estiver faltando e NÃO apaga o que já existe.'))return;
+  try{
+    if(data.entradas&&data.entradas.length)await sbUpsert('entradas',data.entradas.map(entToDB));
+    if(data.saidas&&data.saidas.length)await sbUpsert('saidas',data.saidas.map(saiToDB));
+    if(data.gado&&data.gado.length)await sbUpsert('gado',data.gado.map(gadoToDB));
+    if(data.cheques&&data.cheques.length)await sbUpsert('cheques',data.cheques.map(chqToDB));
+    alert('Backup restaurado! A página vai recarregar pra atualizar tudo.');
+    location.reload();
+  }catch(err){alert('Erro ao restaurar: '+err.message);}
+}
 
 /* ── ENTRADAS ── */
 function addEnt(){
