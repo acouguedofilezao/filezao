@@ -202,7 +202,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
 #authgate .top p{margin:6px 0 0;font-size:12.5px;opacity:.92}
 #authgate .bd{padding:22px 24px 24px}
 #authgate label{display:block;font-size:12px;font-weight:600;color:#444;margin:0 0 5px}
-#authgate input{width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #e3e3e3;border-radius:9px;margin-bottom:14px;outline:none;transition:border-color .15s}
+#authgate input{width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #e3e3e3;border-radius:9px;margin-bottom:14px;outline:none;transition:border-color .15s;text-transform:none !important}
 #authgate input:focus{border-color:#FE0000}
 #authgate button{width:100%;padding:13px;font-size:15px;font-weight:700;color:#fff;background:#FE0000;border:none;border-radius:9px;cursor:pointer;transition:background .15s}
 #authgate button:hover{background:#d80000}
@@ -677,7 +677,8 @@ let E=[],S=[],G=[],C=[],PROD=[],LOG=[],pagId=null,pgLC=0,gadoFiltro='todos';
 const fmt=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtKg=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' kg';
 const fd=d=>{if(!d)return'';const[y,m,di]=d.split('-');return`${di}/${m}/${y}`};
-const td=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+function nowBR(){try{return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));}catch(e){return new Date();}}
+const td=()=>{const d=nowBR();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const addDays=(ds,n)=>{const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
 const r2=v=>Math.round(v*100)/100;
 const uid=()=>Date.now()+'_'+Math.random().toString(36).slice(2,6);
@@ -2365,7 +2366,7 @@ function dashQ(tipo,btn){
 function renderDash(){
   let de=document.getElementById('dash-de').value,ate=document.getElementById('dash-ate').value;
   // Se datas vazias, usa hoje
-  if(!de||!ate){const h=new Date().toISOString().slice(0,10);de=de||h;ate=ate||h;document.getElementById('dash-de').value=de;document.getElementById('dash-ate').value=ate;}
+  if(!de||!ate){const h=td();de=de||h;ate=ate||h;document.getElementById('dash-de').value=de;document.getElementById('dash-ate').value=ate;}
   const eD=E.filter(e=>e.data>=de&&e.data<=ate),sD=S.filter(s=>s.data>=de&&s.data<=ate);
   const tE=r2(eD.reduce((s,e)=>s+e.valor,0)),tS=r2(sD.reduce((s,e)=>s+e.valor,0)),sal=r2(tE-tS);
   const din=r2(eD.filter(e=>e.tipo==='DINHEIRO').reduce((s,e)=>s+e.valor,0));
@@ -2468,11 +2469,11 @@ async function init(){
     E=_DE;S=_DS;G=_DG;C=_DC;
   }
   syncCloudExtras();
-  const today=td(),m=new Date().getMonth()+1;
+  const today=td(),m=nowBR().getMonth()+1;
   ['e-dt','s-dt','g-dt','c-dt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
   document.getElementById('dash-de').value=today;
   document.getElementById('dash-ate').value=today;
-  document.getElementById('f-an').value=new Date().getFullYear();
+  document.getElementById('f-an').value=nowBR().getFullYear();
   document.getElementById('f-ms').value=String(m).padStart(2,'0');
   document.getElementById('rel-de').value=today.slice(0,7)+'-01';
   document.getElementById('rel-ate').value=today;
