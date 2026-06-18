@@ -219,6 +219,8 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <div class="nav-section">Financeiro</div>
     <button class="nav-btn" onclick="showSec('fechamento',this)"><i class="ti ti-report-money"></i><span>Fechamento</span></button>
     <button class="nav-btn" onclick="showSec('relatorio',this)"><i class="ti ti-chart-bar"></i><span>Relatórios</span></button>
+    <div class="nav-section">Compras</div>
+    <button class="nav-btn" onclick="showSec('cotacoes',this)"><i class="ti ti-shopping-cart"></i><span>Cotações</span></button>
     <div class="nav-section">Ferramentas</div>
     <button class="nav-btn" onclick="showSec('importar',this)"><i class="ti ti-file-import"></i><span>Importar dados</span></button>
     <button class="nav-btn" onclick="showSec('backup',this)"><i class="ti ti-shield-check"></i><span>Backup</span></button>
@@ -292,7 +294,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
 <div id="sec-importar" class="section">
   <div class="card">
     <div class="card-title loc"><i class="ti ti-file-import"></i> Importar do banco e da maquininha</div>
-    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Carregue o <strong>CSV de vendas da Sipag</strong> e/ou o <strong>extrato OFX do Sicoob</strong>. O sistema soma o cartão por dia, traz o Pix recebido já marcado, e descarta sozinho os créditos da Sipag (pra não contar o cartão duas vezes), aplicações e débitos. Confira e clique em lançar.</p>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Carregue o <strong>CSV de vendas da Sipag</strong> e/ou o <strong>extrato OFX do Sicoob</strong>. O sistema soma o cartão por dia, traz o Pix recebido já marcado, e lista os <strong>débitos como saídas</strong> (desmarcados) pra você marcar só os gastos do açougue. Descarta sozinho os créditos da Sipag (pra não contar o cartão duas vezes) e as aplicações. Confira e clique em lançar.</p>
     <div class="form-row">
       <div class="form-group"><label>Vendas Sipag (CSV)</label><input type="file" id="imp-csv" accept=".csv" onchange="impHandleFile(this,'csv')"></div>
       <div class="form-group"><label>Extrato Sicoob (OFX)</label><input type="file" id="imp-ofx" accept=".ofx" onchange="impHandleFile(this,'ofx')"></div>
@@ -304,7 +306,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <div class="card-title loc"><i class="ti ti-checklist"></i> Conferência</div>
     <div id="imp-preview"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #eee;padding-top:14px">
-      <div style="font-size:13px;color:#555">Selecionado &nbsp; <strong style="color:#5b21b6">Cartão</strong> <strong id="imp-tot-car" style="font-size:17px;color:#5b21b6">R$ 0,00</strong> &nbsp;·&nbsp; <strong style="color:#0369a1">Pix</strong> <strong id="imp-tot-pix" style="font-size:17px;color:#0369a1">R$ 0,00</strong></div>
+      <div style="font-size:13px;color:#555">Selecionado &nbsp; <strong style="color:#5b21b6">Cartão</strong> <strong id="imp-tot-car" style="font-size:17px;color:#5b21b6">R$ 0,00</strong> &nbsp;·&nbsp; <strong style="color:#0369a1">Pix</strong> <strong id="imp-tot-pix" style="font-size:17px;color:#0369a1">R$ 0,00</strong> &nbsp;·&nbsp; <strong style="color:#b91c1c">Saídas</strong> <strong id="imp-tot-sai" style="font-size:17px;color:#b91c1c">R$ 0,00</strong></div>
       <button class="btn btn-primary" onclick="impLaunch()"><i class="ti ti-circle-check"></i> Lançar no sistema</button>
     </div>
     <div id="imp-status" style="font-size:13px;margin-top:10px"></div>
@@ -321,6 +323,24 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
       <button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="document.getElementById('imp-restore').click()"><i class="ti ti-upload"></i> Restaurar de um backup</button>
       <input type="file" id="imp-restore" accept=".json" style="display:none" onchange="impRestore(this)">
     </div>
+  </div>
+</div>
+
+<!-- COTAÇÕES -->
+<div id="sec-cotacoes" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-shopping-cart"></i> Cotações — comparar fornecedores</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Cole a mensagem de cada fornecedor (um item por linha, com o preço). O sistema lê tudo, acha o <strong>mais barato por item</strong> e monta a lista de compra pra você copiar. Reconhece formatos comuns de WhatsApp — ex: <em>Picanha 39,90</em> · <em>Alcatra - 32,50</em> · <em>Coxão mole R$ 28,00</em>.</p>
+    <div id="cot-inputs"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+      <button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="cotAdd()"><i class="ti ti-plus"></i> Adicionar fornecedor</button>
+      <button class="btn btn-primary" onclick="cotComparar()"><i class="ti ti-arrows-sort"></i> Comparar e achar o mais barato</button>
+      <button class="btn" style="background:#fff;border:1px solid #ddd;color:#444" onclick="cotLimpar()"><i class="ti ti-eraser"></i> Limpar tudo</button>
+    </div>
+  </div>
+  <div class="card" id="cot-result" style="display:none">
+    <div class="card-title loc"><i class="ti ti-checklist"></i> Resultado</div>
+    <div id="cot-out"></div>
   </div>
 </div>
 
@@ -661,6 +681,7 @@ function showSec(id,el){
   else if(id==='saidas'){PG.s=1;renderSai();}
   else if(id==='gado'){proxReg();PG.g=1;renderGad();}
   else if(id==='cheques'){PG.c=1;renderChq();}
+  else if(id==='cotacoes')cotRender();
 }
 function toggleSidebar(){
   const sb=document.getElementById('sidebar');
@@ -726,7 +747,7 @@ function clrV(id){const el=document.getElementById(id);if(!el)return;if(el._di)e
 function setV(id,v){const el=document.getElementById(id);if(!el)return;if(el._di)el.setC(Math.round(v*100));else el.value=v;}
 
 /* ── IMPORTAÇÃO (Sipag CSV + Sicoob OFX) ── */
-var IMP={card:[],pix:[],excl:null,bld:'bruto'};
+var IMP={card:[],pix:[],deb:[],excl:null,bld:'bruto'};
 function impMoney(s){return parseFloat(String(s).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'))||0;}
 function impCsvDate(d){var m=String(d).match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:'';}
 function impTag(b,t){var m=b.match(new RegExp('<'+t+'>([^<\\r\\n]*)'));return m?m[1].trim():'';}
@@ -743,21 +764,33 @@ function impParseCsv(text){
   return Object.keys(by).map(function(k){var o=by[k];o.nEst=Object.keys(o.est).length;return o;}).sort(function(a,b){return a.data<b.data?-1:1;});
 }
 
+function impDebForma(up){
+  if(up.indexOf('PIX')>=0)return'PIX';
+  if(up.indexOf('BOLETO')>=0||up.indexOf('PAGAMENTO')>=0||up.indexOf('CONVENIO')>=0||up.indexOf('DARF')>=0||up.indexOf('GPS')>=0||up.indexOf('TRIBUTO')>=0||up.indexOf('FATURA')>=0||up.indexOf('TARIFA')>=0||up.indexOf('TAR ')>=0)return'BOLETO';
+  if(up.indexOf('CARTAO')>=0||up.indexOf('COMPRA')>=0||up.indexOf('DEBITO')>=0)return'CARTÃO';
+  return'PIX';
+}
 function impParseOfx(text){
   var ex={sipag:{n:0,v:0},interno:{n:0,v:0},debito:{n:0,v:0}};
-  var blocks=text.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g)||[],out=[];
+  var blocks=text.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g)||[],out=[],deb=[];
   blocks.forEach(function(b){
     var amt=parseFloat(impTag(b,'TRNAMT'))||0;
     var dt=impTag(b,'DTPOSTED').slice(0,8),iso=dt.slice(0,4)+'-'+dt.slice(4,6)+'-'+dt.slice(6,8);
     var memo=impTag(b,'MEMO'),name=impTag(b,'NAME'),fit=impTag(b,'FITID');
     var up=(memo+' '+name).toUpperCase();
-    if(amt<0){ex.debito.n++;ex.debito.v+=-amt;return;}                                   // só entradas
+    if(amt<0){                                                                            // débito = possível saída
+      var dv=-amt;
+      if(up.indexOf('APLICA')>=0||up.indexOf('RDC')>=0||up.indexOf('RESGATE')>=0||up.indexOf('MESMA TIT')>=0){ex.interno.n++;ex.interno.v+=dv;return;} // movimentação interna
+      deb.push({data:iso,memo:memo,name:name,valor:r2(dv),fit:fit,forma:impDebForma(up)});
+      return;
+    }
     if(up.indexOf('SIPAG')>=0||up.indexOf('CR COMPRAS')>=0||up.indexOf('CR ANTECIP')>=0){ex.sipag.n++;ex.sipag.v+=amt;return;} // cartão (vem do CSV)
     if(up.indexOf('APLICA')>=0||up.indexOf('RDC')>=0||up.indexOf('RESGATE')>=0||up.indexOf('MESMA TIT')>=0){ex.interno.n++;ex.interno.v+=amt;return;} // interno
     var isPix=up.indexOf('PIX')>=0;
     out.push({data:iso,memo:memo,name:name,valor:amt,auto:true,fit:fit,kind:isPix?'pix':'transf'});
   });
   IMP.excl=ex;
+  IMP.deb=deb.sort(function(a,b){return a.data<b.data?-1:1;});
   return out.sort(function(a,b){return a.data<b.data?-1:1;});
 }
 
@@ -767,14 +800,14 @@ async function impHandleFile(input,kind){
     if(kind==='csv'){IMP.card=impParseCsv(await f.text());}
     else{var buf=await f.arrayBuffer();IMP.pix=impParseOfx(new TextDecoder('windows-1252').decode(buf));}
   }catch(err){alert('Não consegui ler o arquivo: '+err.message);return;}
-  document.getElementById('imp-files').textContent=(IMP.card.length?'\u2713 Sipag ('+IMP.card.length+' dia(s))   ':'')+(IMP.pix.length?'\u2713 Sicoob ('+IMP.pix.length+' crédito(s))':'');
+  document.getElementById('imp-files').textContent=(IMP.card.length?'\u2713 Sipag ('+IMP.card.length+' dia(s))   ':'')+((IMP.pix.length||IMP.deb.length)?'\u2713 Sicoob ('+IMP.pix.length+' crédito(s), '+IMP.deb.length+' débito(s))':'');
   impRender();
 }
 
 function impCardVal(o){return o.liquido;}
 
 function impRender(){
-  var has=IMP.card.length||IMP.pix.length;
+  var has=IMP.card.length||IMP.pix.length||IMP.deb.length;
   document.getElementById('imp-prev').style.display=has?'block':'none';
   if(!has)return;
   var h='';
@@ -797,11 +830,18 @@ function impRender(){
       h+='<tr'+(done?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-size:12px;color:#666">'+(o.name||o.memo||'\u2014')+'</td><td>'+(o.kind==='pix'?'<span class="tipo-chip tc-pix">Pix</span>':'<span class="tipo-chip" style="background:#fef3c7;color:#92400e">Transf.</span>')+'</td><td style="font-weight:700">'+fmt(o.valor)+'</td></tr>';});
     h+='</tbody></table></div>';
   }
+  if(IMP.deb.length){
+    h+='<div style="font-weight:700;font-size:13px;margin:16px 0 6px"><span class="tipo-chip" style="background:#fee2e2;color:#991b1b">SAÍDAS</span> Débitos no extrato <span style="font-weight:500;color:#888;font-size:12px">\u2014 marque os que são gastos do açougue: <a href="#" onclick="impAllDeb(true);return false">marcar todas</a> \u00b7 <a href="#" onclick="impAllDeb(false);return false">limpar</a></span></div><div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Descrição</th><th>Forma</th><th>Valor</th></tr></thead><tbody>';
+    IMP.deb.forEach(function(o,i){
+      var done=S.some(function(s){return s.id==='impdeb_'+o.fit;});
+      var cell=done?'<span class="tipo-chip" style="background:#dcfce7;color:#166534">já lançado</span>':'<input type="checkbox" class="imp-ck-deb" data-i="'+i+'" onchange="impTotal()">';
+      h+='<tr'+(done?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-size:12px;color:#666">'+(o.memo||o.name||'\u2014')+'</td><td><span class="tipo-chip" style="background:#f3f4f6;color:#555">'+o.forma+'</span></td><td style="font-weight:700;color:#b91c1c">'+fmt(o.valor)+'</td></tr>';});
+    h+='</tbody></table></div>';
+  }
   var e=IMP.excl,parts=[];
   if(e){
     if(e.sipag.n)parts.push(e.sipag.n+' créditos Sipag ('+fmt(e.sipag.v)+') \u2014 já vêm pelo cartão');
     if(e.interno.n)parts.push(e.interno.n+' internas/aplicação ('+fmt(e.interno.v)+')');
-    if(e.debito.n)parts.push(e.debito.n+' débitos ('+fmt(e.debito.v)+') \u2014 só entradas');
   }
   if(parts.length)h+='<div style="background:#f3f4f6;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-top:12px">Descartado automaticamente: '+parts.join(' \u00b7 ')+'</div>';
   document.getElementById('imp-preview').innerHTML=h;
@@ -809,6 +849,12 @@ function impRender(){
 }
 
 function impAll(v){document.querySelectorAll('.imp-ck-pix').forEach(function(ck){if(IMP.pix[+ck.dataset.i].kind==='transf')ck.checked=v;});impTotal();}
+function impAllDeb(v){document.querySelectorAll('.imp-ck-deb').forEach(function(ck){ck.checked=v;});impTotal();}
+function impSelectedSai(){
+  var rows=[];
+  document.querySelectorAll('.imp-ck-deb:checked').forEach(function(ck){var o=IMP.deb[+ck.dataset.i];rows.push({id:'impdeb_'+o.fit,data:o.data,descricao:(o.memo||o.name||'DÉBITO').toUpperCase(),valor:r2(o.valor),formaPgto:o.forma});});
+  return rows;
+}
 
 function impSelected(){
   var rows=[];
@@ -822,22 +868,27 @@ function impTotal(){
   var rows=impSelected();
   var car=rows.filter(function(r){return r.tipo==='CARTÃO';}).reduce(function(s,r){return s+r.valor;},0);
   var pix=rows.filter(function(r){return r.tipo==='PIX';}).reduce(function(s,r){return s+r.valor;},0);
+  var sai=impSelectedSai().reduce(function(s,r){return s+r.valor;},0);
   document.getElementById('imp-tot-car').textContent=fmt(car);
   document.getElementById('imp-tot-pix').textContent=fmt(pix);
+  var es=document.getElementById('imp-tot-sai');if(es)es.textContent=fmt(sai);
 }
 
 function impLaunch(){
-  var rows=impSelected();
-  if(!rows.length){alert('Marque ao menos um lançamento.');return;}
-  var novos=0,atual=0;
-  rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});if(idx>=0){E[idx]=r;atual++;}else{E.push(r);novos++;}});
-  save('fz_entradas',E);renderEnt();renderDash();
-  var tot=rows.reduce(function(s,r){return s+r.valor;},0);
-  IMP.card=[];IMP.pix=[];IMP.excl=null;
+  var rows=impSelected(),sai=impSelectedSai();
+  if(!rows.length&&!sai.length){alert('Marque ao menos um lançamento.');return;}
+  rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});if(idx>=0){E[idx]=r;}else{E.push(r);}});
+  sai.forEach(function(r){var idx=S.findIndex(function(x){return x.id===r.id;});if(idx>=0){S[idx]=r;}else{S.push(r);}});
+  if(rows.length){save('fz_entradas',E);renderEnt();}
+  if(sai.length){save('fz_saidas',S);renderSai();}
+  renderDash();
+  var totE=rows.reduce(function(s,r){return s+r.valor;},0),totS=sai.reduce(function(s,r){return s+r.valor;},0);
+  IMP.card=[];IMP.pix=[];IMP.deb=[];IMP.excl=null;
   var ci=document.getElementById('imp-csv');if(ci)ci.value='';
   var oi=document.getElementById('imp-ofx');if(oi)oi.value='';
   impRender();
-  document.getElementById('imp-files').innerHTML='<span style="color:#1a7a3c"><i class="ti ti-circle-check"></i> '+rows.length+' lançamento(s) \u2014 '+fmt(tot)+' lançado. Seleção limpa. Veja na aba Entradas.</span>';
+  var p=[];if(rows.length)p.push(rows.length+' entrada(s) '+fmt(totE));if(sai.length)p.push(sai.length+' saída(s) '+fmt(totS));
+  document.getElementById('imp-files').innerHTML='<span style="color:#1a7a3c"><i class="ti ti-circle-check"></i> Lançado: '+p.join(' \u00b7 ')+'. Seleção limpa.</span>';
 }
 
 function impBackup(){
@@ -864,6 +915,91 @@ async function impRestore(input){
     location.reload();
   }catch(err){alert('Erro ao restaurar: '+err.message);}
 }
+
+/* ── COTAÇÕES ── */
+var COT={forn:[{nome:'',txt:''},{nome:'',txt:''},{nome:'',txt:''}],res:null};
+function cotEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cotNum(t){t=String(t).trim();if(t.indexOf(',')>-1)return parseFloat(t.replace(/\./g,'').replace(',','.'))||0;var p=t.split('.');if(p.length>1&&p[p.length-1].length===2)return parseFloat(p.slice(0,-1).join('')+'.'+p[p.length-1])||0;return parseFloat(t.replace(/\./g,''))||0;}
+function cotKey(s){return s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();}
+function cotParseLine(l){
+  l=l.trim();if(!l)return null;
+  var re=/\d[\d.,]*/g,m,last=null;while((m=re.exec(l))){last=m;}
+  if(!last)return null;
+  var after=l.slice(last.index+last[0].length).replace(/[\s.,:;rR$\/\\\-]|kg|KG|un|UN/g,'');
+  if(after.length>0)return null;
+  var preco=cotNum(last[0]);if(!preco||preco>100000)return null;
+  var nome=l.slice(0,last.index).replace(/[\s\-:–—.>·=*]+$/,'').replace(/\bR\$$/i,'').replace(/[\s\-:–—.>·=*]+$/,'').trim();
+  if(!nome||nome.length<2)return null;
+  return {nome:nome,preco:preco};
+}
+function cotParse(txt){var out=[];(txt||'').split(/\r?\n/).forEach(function(l){var r=cotParseLine(l);if(r)out.push(r);});return out;}
+function cotSync(){
+  var nomes=document.querySelectorAll('.cot-nome'),txts=document.querySelectorAll('.cot-txt');
+  COT.forn=[];for(var i=0;i<txts.length;i++)COT.forn.push({nome:(nomes[i]?nomes[i].value:''),txt:(txts[i]?txts[i].value:'')});
+  if(!COT.forn.length)COT.forn=[{nome:'',txt:''}];
+}
+function cotRender(){
+  var c=document.getElementById('cot-inputs');if(!c)return;var h='';
+  COT.forn.forEach(function(f,i){
+    h+='<div style="border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:10px;background:#fafafa">'+
+       '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">'+
+       '<input class="cot-nome" placeholder="Nome do fornecedor '+(i+1)+'" value="'+(f.nome||'').replace(/"/g,'&quot;')+'" style="flex:1;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:600">'+
+       (COT.forn.length>1?'<button class="btn" style="background:#fff;border:1px solid #eee;color:#b91c1c;padding:8px 10px" onclick="cotDel('+i+')" title="Remover"><i class="ti ti-trash"></i></button>':'')+
+       '</div>'+
+       '<textarea class="cot-txt" placeholder="Cole aqui a mensagem do fornecedor (um item por linha)..." style="width:100%;min-height:120px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box">'+cotEsc(f.txt||'')+'</textarea>'+
+       '</div>';
+  });
+  c.innerHTML=h;
+}
+function cotAdd(){cotSync();COT.forn.push({nome:'',txt:''});cotRender();}
+function cotDel(i){cotSync();COT.forn.splice(i,1);if(!COT.forn.length)COT.forn=[{nome:'',txt:''}];cotRender();}
+function cotLimpar(){COT.forn=[{nome:'',txt:''},{nome:'',txt:''},{nome:'',txt:''}];COT.res=null;cotRender();document.getElementById('cot-result').style.display='none';}
+function cotComparar(){
+  cotSync();
+  var nomes=COT.forn.map(function(f,i){return (f.nome||'').trim()||('Fornecedor '+(i+1));});
+  var map={},order=[];
+  COT.forn.forEach(function(f,fi){
+    cotParse(f.txt).forEach(function(it){
+      var k=cotKey(it.nome);if(!k)return;
+      if(!map[k]){map[k]={nome:it.nome,precos:{}};order.push(k);}
+      if(map[k].precos[fi]==null||it.preco<map[k].precos[fi])map[k].precos[fi]=it.preco;
+    });
+  });
+  COT.res={nomes:nomes,map:map,order:order};
+  cotResultRender();
+}
+function cotResultRender(){
+  var R=COT.res,box=document.getElementById('cot-result'),out=document.getElementById('cot-out');
+  if(!R||!R.order.length){out.innerHTML='<p style="color:#888;font-size:14px">Nenhum item reconhecido. Confira se cada linha tem o item e o preço (ex: <em>Picanha 39,90</em>).</p>';box.style.display='block';return;}
+  var keys=R.order.slice().sort(function(a,b){return R.map[a].nome.localeCompare(R.map[b].nome);});
+  var h='<div class="tbl-wrap"><table><thead><tr><th>Item</th>';
+  R.nomes.forEach(function(n){h+='<th style="text-align:right">'+cotEsc(n)+'</th>';});
+  h+='<th>Melhor</th></tr></thead><tbody>';var lista=[];
+  keys.forEach(function(k){
+    var row=R.map[k],min=Infinity,minFi=-1;
+    R.nomes.forEach(function(_,fi){var p=row.precos[fi];if(p!=null&&p<min){min=p;minFi=fi;}});
+    h+='<tr><td style="font-weight:600">'+cotEsc(row.nome)+'</td>';
+    R.nomes.forEach(function(_,fi){var p=row.precos[fi];
+      if(p==null){h+='<td style="text-align:right;color:#ccc">—</td>';}
+      else{var best=(fi===minFi);h+='<td style="text-align:right'+(best?';background:#dcfce7;color:#166534;font-weight:700':'')+'">'+fmt(p)+'</td>';}
+    });
+    h+='<td><span class="tipo-chip" style="background:#dcfce7;color:#166534">'+cotEsc(R.nomes[minFi])+'</span> <strong>'+fmt(min)+'</strong></td></tr>';
+    lista.push(row.nome+' — '+R.nomes[minFi]+' '+fmt(min));
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="margin-top:16px;border-top:1px solid #eee;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
+     '<div style="font-size:13px;color:#555">'+keys.length+' item(ns) comparado(s)</div>'+
+     '<button class="btn btn-primary" onclick="cotCopiar()"><i class="ti ti-copy"></i> Copiar lista de compra</button></div>';
+  h+='<pre id="cot-lista" style="display:none">'+cotEsc(lista.join('\n'))+'</pre>';
+  out.innerHTML=h;box.style.display='block';
+}
+function cotCopiar(){
+  var el=document.getElementById('cot-lista');if(!el)return;
+  var txt='\uD83D\uDED2 LISTA DE COMPRA\n'+el.textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){alert('Lista copiada! É só colar onde quiser.');},function(){cotCopiaFb(txt);});}
+  else cotCopiaFb(txt);
+}
+function cotCopiaFb(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');alert('Lista copiada!');}catch(e){alert('Copie manualmente:\n\n'+txt);}document.body.removeChild(ta);}
 
 /* ── ENTRADAS ── */
 function addEnt(){
@@ -956,9 +1092,11 @@ function renderSai(){
 /* ── GADO ── */
 function proxReg(){const n=G.length?Math.max(...G.map(g=>parseInt(g.registro)||0))+1:1;const el=document.getElementById('prx-reg');if(el)el.textContent=String(n).padStart(4,'0');}
 function addGad(){
+  if(addGad._busy)return;
   const d=document.getElementById('g-dt').value,qt=parseFloat(document.getElementById('g-qt').value)||1,tp=document.getElementById('g-tp').value;
   const kg=getDV('g-kg'),pr=getDV('g-pr'),fn=document.getElementById('g-fn').value.trim();
   if(!d||!kg||!pr||!fn)return alert('Preencha data, kg, preço e fornecedor.');
+  addGad._busy=true;setTimeout(function(){addGad._busy=false;},400);
   const n=G.length?Math.max(...G.map(g=>parseInt(g.registro)||0))+1:1;
   G.push({id:uid(),registro:String(n).padStart(4,'0'),data:d,qtd:qt,tipo:tp,kg:r2(kg),preco:r2(pr),total:r2(kg*pr),fornecedor:fn.toUpperCase(),status:'PENDENTE',formasPgto:[],cheques:[],cheque:null,pagamento:'PENDENTE',dataPagamento:null});
   save('fz_gado',G);clrV('g-kg');clrV('g-pr');document.getElementById('g-fn').value='';document.getElementById('g-qt').value='1';proxReg();renderGad();
@@ -1086,9 +1224,11 @@ function confirmarCompensacao(){
 }
 function desfazerComp(id){const c=C.find(x=>x.id===id);if(!c)return;c.compensado=false;c.dataCompensacao=null;save('fz_cheques',C);renderChq();}
 function addChq(){
+  if(addChq._busy)return;
   const d=document.getElementById('c-dt').value,n=document.getElementById('c-nm').value.trim(),v=getDV('c-vl');
   const vc=document.getElementById('c-vc').value,cr=document.getElementById('c-cr').value.trim();
   if(!d||!n||v<=0||!vc||!cr)return alert('Preencha todos os campos.');
+  addChq._busy=true;setTimeout(function(){addChq._busy=false;},400);
   C.push({id:uid(),data:d,numero:n,valor:r2(v),vencimento:vc,credor:cr.toUpperCase(),compensado:false,dataCompensacao:null});
   save('fz_cheques',C);document.getElementById('c-nm').value='';clrV('c-vl');document.getElementById('c-cr').value='';renderChq();
 }
