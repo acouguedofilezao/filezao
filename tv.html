@@ -244,6 +244,25 @@ tick(); setInterval(tick,1000);
 carregar();
 setInterval(rotate, ROTACAO_MS);
 setInterval(carregar, REFRESH_MS);
+/* Vigia anti-suspensão (Fire TV): se o aparelho congelar a página, assim que ela
+   voltar (tela acende / ganha foco / reconecta) já busca os dados na hora, sem
+   precisar mexer no cursor. Também detecta quando os timers ficaram parados. */
+(function(){
+  function acordar(){
+    try{ if(typeof tick==='function') tick(); }catch(e){}
+    try{ if(typeof carregar==='function') carregar(); }catch(e){}
+    try{ if(typeof keepAwake==='function') keepAwake(); }catch(e){}
+  }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') acordar(); });
+  window.addEventListener('focus', acordar);
+  window.addEventListener('pageshow', acordar);
+  window.addEventListener('online', acordar);
+  var prev = Date.now();
+  setInterval(function(){
+    var agora = Date.now(), gap = agora - prev; prev = agora;
+    if(gap > 12000){ acordar(); } /* ficou +12s sem rodar = estava suspenso → atualiza já */
+  }, 4000);
+})();
 </script>
 </body>
 </html>
