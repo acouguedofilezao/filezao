@@ -551,7 +551,7 @@ let E=[],S=[],G=[],C=[],pagId=null,pgLC=0,gadoFiltro='todos';
 const fmt=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtKg=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' kg';
 const fd=d=>{if(!d)return'';const[y,m,di]=d.split('-');return`${di}/${m}/${y}`};
-const td=()=>new Date().toISOString().slice(0,10);
+const td=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const addDays=(ds,n)=>{const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
 const r2=v=>Math.round(v*100)/100;
 const uid=()=>Date.now()+'_'+Math.random().toString(36).slice(2,6);
@@ -831,9 +831,13 @@ function impLaunch(){
   if(!rows.length){alert('Marque ao menos um lançamento.');return;}
   var novos=0,atual=0;
   rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});if(idx>=0){E[idx]=r;atual++;}else{E.push(r);novos++;}});
-  save('fz_entradas',E);renderEnt();renderDash();impRender();
-  var st=document.getElementById('imp-status');st.style.color='#1a7a3c';
-  st.innerHTML='<i class="ti ti-circle-check"></i> '+novos+' nova(s)'+(atual?' e '+atual+' atualizada(s)':'')+' \u2014 '+fmt(rows.reduce(function(s,r){return s+r.valor;},0))+' lançado. Veja na aba Entradas.';
+  save('fz_entradas',E);renderEnt();renderDash();
+  var tot=rows.reduce(function(s,r){return s+r.valor;},0);
+  IMP.card=[];IMP.pix=[];IMP.excl=null;
+  var ci=document.getElementById('imp-csv');if(ci)ci.value='';
+  var oi=document.getElementById('imp-ofx');if(oi)oi.value='';
+  impRender();
+  document.getElementById('imp-files').innerHTML='<span style="color:#1a7a3c"><i class="ti ti-circle-check"></i> '+rows.length+' lançamento(s) \u2014 '+fmt(tot)+' lançado. Seleção limpa. Veja na aba Entradas.</span>';
 }
 
 function impBackup(){
