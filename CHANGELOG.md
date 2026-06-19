@@ -1,5 +1,25 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Folha de pagamento (quinzena)
+- Nova aba **"Pagamento funcionários"** no menu, do lado do Fechamento.
+- Escolhe **mês + ano + quinzena** (1ª dia 1 / 2ª dia 15). Já abre no mês atual (horário de Brasília).
+- Para cada funcionário você lança: **faltas**, **extras (R$)**, **vale (R$)** e **compra de carne (R$)**. O sistema calcula o **a pagar** na hora.
+- **Cálculo:** salário ÷ 2 − (faltas × salário ÷ 30) + extras − vale − (carne acima da cortesia).
+- **Cortesia de carne R$200 = 1× por mês** (pool mensal): só desconta o que passar dos 200. A coluna "Cortesia" mostra quanto foi aplicado e **quanto ainda resta no mês** — registrado, então a 2ª quinzena já sabe se você usou.
+- **Alex** entra **sem cortesia** (carne desconta integral). Salários já vêm preenchidos (Alberto 1.770 · André 2.800 · Wilson 2.912 · Magela 3.120 · Gustavo 2.800 com dia extra 150 · Alex 2.000) e são editáveis.
+- **Salvar quinzena** grava o fechamento (guarda no aparelho + espelha no Supabase como backup/sincronia).
+- **⚠️ Rode no Supabase** (pra salvar na nuvem):
+  ```sql
+  create table if not exists folha (
+    id text primary key, funcionario text, mes text, quinzena int,
+    salario numeric, faltas numeric, extras numeric, vale numeric,
+    compra numeric, beneficio numeric, valor numeric, ts timestamptz default now()
+  );
+  alter table folha enable row level security;
+  create policy "folha_all" on folha for all using (true) with check (true);
+  ```
+  (Se ainda não rodar, a folha funciona mesmo assim, guardada neste computador.)
+
 ## 2026-06-19 — Campo de categoria (com trava) + aba lateral fixa
 - **Categoria do produto:** na tela TV / Produtos, cada produto agora tem um **seletor de categoria** (abaixo do nome/foto). Só dá pra escolher entre as **categorias cadastradas** (lista travada — não dá pra digitar livre, evita ficar fora do padrão). Quando importar o `cad` e vier produto novo, ele entra **sem categoria** (o seletor fica destacado em laranja), aí você escolhe a correta.
 - A categoria escolhida manda na TV (agrupamento) e na ordenação, na frente do mapeamento antigo.

@@ -299,6 +299,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <button class="nav-btn" onclick="showSec('cheques',this)"><i class="ti ti-file-invoice"></i><span>Cheques</span></button>
     <div class="nav-section">Financeiro</div>
     <button class="nav-btn" onclick="showSec('fechamento',this)"><i class="ti ti-report-money"></i><span>Fechamento</span></button>
+    <button class="nav-btn" onclick="showSec('pagamento',this)"><i class="ti ti-users"></i><span>Pagamento funcionários</span></button>
     <button class="nav-btn" onclick="showSec('relatorio',this)"><i class="ti ti-chart-bar"></i><span>Relatórios</span></button>
     <button class="nav-btn" onclick="showSec('saldo',this)"><i class="ti ti-building-bank"></i><span>Saldo bancário</span></button>
     <div class="nav-section">Compras</div>
@@ -587,6 +588,22 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     </div>
   </div>
   <div id="fech-r"></div>
+</div>
+
+<div id="sec-pagamento" class="section">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-users"></i> Pagamento de funcionários — quinzena</div>
+    <div class="form-row">
+      <div class="form-group"><label>Mês</label>
+        <select id="fl-ms"><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select>
+      </div>
+      <div class="form-group"><label>Ano</label><input type="number" id="fl-an" value="2026" min="2022" max="2030"></div>
+      <div class="form-group"><label>Quinzena</label><select id="fl-q"><option value="1">1ª (dia 1)</option><option value="2">2ª (dia 15)</option></select></div>
+      <div class="form-group" style="justify-content:flex-end;padding-top:20px"><button class="btn btn-primary" onclick="folhaRender()"><i class="ti ti-calculator"></i> Carregar</button></div>
+    </div>
+    <div style="font-size:11px;color:#999;margin-top:4px">Salário ÷ 2 · falta desconta salário ÷ 30 · vale desconta tudo · carne: cortesia de R$200 por mês (só desconta o que passar) · Alex sem cortesia.</div>
+  </div>
+  <div id="folha-r"></div>
 </div>
 
 <!-- RELATÓRIOS -->
@@ -1171,6 +1188,7 @@ function showSec(id,el){
   else if(id==='tv')tvSelRender();
   else if(id==='log')logRender();
   else if(id==='saldo')saldoRender();
+  else if(id==='pagamento')folhaInit();
 }
 function toggleSidebar(){
   const sb=document.getElementById('sidebar');
@@ -1841,6 +1859,124 @@ function saldoRender(){
   c.innerHTML=h;if(tt)tt.textContent=fmt(tot);
 }
 function saldoSetLabel(k,v){var m=saldoGet();if(m[k]){m[k].label=v;saldoSet(m);saldoCloudSave(m[k]);}}
+
+/* ===== FOLHA DE PAGAMENTO ===== */
+var FOLHA_BENEF=200;
+var FUNC_DEFAULT=[
+ {id:'alberto',nome:'Alberto',salario:1770,diaExtra:0,beneficio:true},
+ {id:'andre',nome:'André',salario:2800,diaExtra:0,beneficio:true},
+ {id:'wilson',nome:'Wilson',salario:2912,diaExtra:0,beneficio:true},
+ {id:'magela',nome:'Magela',salario:3120,diaExtra:0,beneficio:true},
+ {id:'gustavo',nome:'Gustavo',salario:2800,diaExtra:150,beneficio:true},
+ {id:'alex',nome:'Alex',salario:2000,diaExtra:0,beneficio:false}
+];
+function funcGet(){try{var a=JSON.parse(localStorage.getItem('fz_func')||'null');if(a&&a.length)return a;}catch(e){}return FUNC_DEFAULT.map(function(x){var o={};for(var k in x)o[k]=x[k];return o;});}
+function funcSet(a){try{localStorage.setItem('fz_func',JSON.stringify(a));}catch(e){}}
+function folhaRecGet(){try{return JSON.parse(localStorage.getItem('fz_folha')||'[]');}catch(e){return [];}}
+function folhaRecSet(a){try{localStorage.setItem('fz_folha',JSON.stringify(a));}catch(e){}}
+function flMes(){var m=(document.getElementById('fl-ms')||{}).value||'01';var y=(document.getElementById('fl-an')||{}).value||'2026';return y+'-'+m;}
+function flQ(){return parseInt((document.getElementById('fl-q')||{}).value||'1',10);}
+function nomeMes(mes){var m=['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];var p=String(mes).split('-');return (m[parseInt(p[1],10)]||'')+'/'+(p[0]||'');}
+var _folhaSynced=false;
+function folhaInit(){
+  var ms=document.getElementById('fl-ms'),an=document.getElementById('fl-an');
+  if(ms&&ms.dataset.init!=='1'){
+    var d=_fmtSP(new Date()).split(' ')[0].split('/');
+    if(d.length===3){ms.value=d[1];if(an)an.value=d[2];}
+    ms.dataset.init='1';
+  }
+  folhaSync().then(folhaRender);
+}
+async function folhaSync(){
+  if(_folhaSynced){return;}
+  try{
+    var rows=await sbGet('folha','select=*');
+    if(rows&&rows.length){
+      var local=folhaRecGet(),byId={};local.forEach(function(r){byId[r.id]=r;});
+      rows.forEach(function(r){byId[r.id]={id:r.id,func:r.funcionario,mes:r.mes,q:Number(r.quinzena)||1,salario:Number(r.salario)||0,faltas:Number(r.faltas)||0,extras:Number(r.extras)||0,vale:Number(r.vale)||0,compra:Number(r.compra)||0,beneficio:Number(r.beneficio)||0,valor:Number(r.valor)||0,ts:r.ts};});
+      var merged=Object.keys(byId).map(function(k){return byId[k];});folhaRecSet(merged);
+    }
+    _folhaSynced=true;
+  }catch(e){}
+}
+function folhaRender(){
+  var box=document.getElementById('folha-r');if(!box)return;
+  var func=funcGet(),mes=flMes(),q=flQ(),recs=folhaRecGet();
+  var h='<div class="card"><div class="card-title"><i class="ti ti-cash"></i> '+nomeMes(mes)+' &middot; '+(q===1?'1ª quinzena':'2ª quinzena')+'</div>';
+  h+='<div class="tbl-wrap" style="overflow-x:auto"><table style="width:100%;min-width:760px;border-collapse:collapse">';
+  h+='<thead><tr style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:6px 8px">Funcionário</th><th style="padding:6px 4px">Salário</th><th style="padding:6px 4px">Faltas</th><th style="padding:6px 4px">Extras R$</th><th style="padding:6px 4px">Vale R$</th><th style="padding:6px 4px">Carne R$</th><th style="padding:6px 4px">Cortesia</th><th style="text-align:right;padding:6px 8px">A pagar</th></tr></thead><tbody>';
+  func.forEach(function(f){
+    var rec=recs.filter(function(r){return r.func===f.id&&r.mes===mes&&r.q===q;})[0]||{};
+    var usadoOutras=recs.filter(function(r){return r.func===f.id&&r.mes===mes&&r.q!==q;}).reduce(function(a,r){return a+(Number(r.beneficio)||0);},0);
+    var benefDisp=f.beneficio?Math.max(0,FOLHA_BENEF-usadoOutras):0;
+    var inp='border:1px solid #ddd;border-radius:5px;padding:5px 6px;font-size:13px;text-align:right';
+    h+='<tr data-fid="'+f.id+'" data-sal="'+f.salario+'" data-benef="'+benefDisp+'" style="border-top:1px solid #f0f0f0">'
+      +'<td style="text-align:left;padding:7px 8px;font-weight:600">'+cotEsc(f.nome)
+        +(f.diaExtra?'<div style="font-size:10px;color:#999;font-weight:400">dia extra: '+fmt(f.diaExtra)+'</div>':'')
+        +(!f.beneficio?'<div style="font-size:10px;color:#c0392b;font-weight:400">sem cortesia carne</div>':'')+'</td>'
+      +'<td style="padding:5px 4px"><input type="number" step="0.01" value="'+f.salario+'" oninput="folhaSal(\''+f.id+'\',this.value)" style="width:78px;'+inp+'"></td>'
+      +'<td style="padding:5px 4px"><input type="number" step="1" min="0" value="'+(rec.faltas||0)+'" oninput="folhaCalc()" id="fl-falta-'+f.id+'" style="width:46px;'+inp+'"></td>'
+      +'<td style="padding:5px 4px"><input type="number" step="0.01" min="0" value="'+(rec.extras||0)+'" oninput="folhaCalc()" id="fl-extra-'+f.id+'" style="width:70px;'+inp+'"></td>'
+      +'<td style="padding:5px 4px"><input type="number" step="0.01" min="0" value="'+(rec.vale||0)+'" oninput="folhaCalc()" id="fl-vale-'+f.id+'" style="width:70px;'+inp+'"></td>'
+      +'<td style="padding:5px 4px"><input type="number" step="0.01" min="0" value="'+(rec.compra||0)+'" oninput="folhaCalc()" id="fl-compra-'+f.id+'" style="width:70px;'+inp+'"></td>'
+      +'<td style="padding:5px 4px;font-size:11px;color:#888;text-align:center" id="fl-cort-'+f.id+'">—</td>'
+      +'<td style="text-align:right;padding:7px 8px;font-weight:800;color:#0f7a37;white-space:nowrap" id="fl-pagar-'+f.id+'">—</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
+    +'<div style="font-size:15px;font-weight:800">Total a pagar: <span id="fl-total" style="color:#0f7a37">—</span></div>'
+    +'<button class="btn btn-primary" onclick="folhaSalvar()"><i class="ti ti-device-floppy"></i> Salvar quinzena</button></div>';
+  h+='</div>';
+  box.innerHTML=h;
+  folhaCalc();
+}
+function folhaSal(id,v){var a=funcGet();a.forEach(function(f){if(f.id===id)f.salario=Number(v)||0;});funcSet(a);var tr=document.querySelector('tr[data-fid="'+id+'"]');if(tr)tr.setAttribute('data-sal',Number(v)||0);folhaCalc();}
+function folhaCalc(){
+  var box=document.getElementById('folha-r');if(!box)return;var total=0;
+  box.querySelectorAll('tr[data-fid]').forEach(function(tr){
+    var id=tr.getAttribute('data-fid');
+    var sal=Number(tr.getAttribute('data-sal'))||0;
+    var benefDisp=Number(tr.getAttribute('data-benef'))||0;
+    var faltas=Number((document.getElementById('fl-falta-'+id)||{}).value)||0;
+    var extras=Number((document.getElementById('fl-extra-'+id)||{}).value)||0;
+    var vale=Number((document.getElementById('fl-vale-'+id)||{}).value)||0;
+    var compra=Number((document.getElementById('fl-compra-'+id)||{}).value)||0;
+    var benefAplic=Math.min(compra,benefDisp);
+    var descCompra=compra-benefAplic;
+    var pagar=sal/2 - faltas*(sal/30) + extras - vale - descCompra;
+    pagar=Math.round(pagar*100)/100;
+    var pag=document.getElementById('fl-pagar-'+id);if(pag)pag.textContent=fmt(pagar);
+    var cort=document.getElementById('fl-cort-'+id);
+    if(cort){cort.innerHTML=benefDisp>0?('<b>'+fmt(benefAplic)+'</b><br><span style="color:#bbb;font-size:10px">resta '+fmt(Math.max(0,benefDisp-benefAplic))+'/mês</span>'):'<span style="color:#ccc">—</span>';}
+    tr.setAttribute('data-pagar',pagar);tr.setAttribute('data-benefaplic',benefAplic);
+    total+=pagar;
+  });
+  var t=document.getElementById('fl-total');if(t)t.textContent=fmt(Math.round(total*100)/100);
+}
+function folhaToDB(r){return {id:r.id,funcionario:r.func,mes:r.mes,quinzena:r.q,salario:r.salario,faltas:r.faltas,extras:r.extras,vale:r.vale,compra:r.compra,beneficio:r.beneficio,valor:r.valor,ts:r.ts};}
+function folhaSalvar(){
+  var box=document.getElementById('folha-r');if(!box)return;
+  var func=funcGet(),mes=flMes(),q=flQ();
+  var recs=folhaRecGet().filter(function(r){return !(r.mes===mes&&r.q===q);});
+  var novos=[];
+  box.querySelectorAll('tr[data-fid]').forEach(function(tr){
+    var id=tr.getAttribute('data-fid');var f=func.filter(function(x){return x.id===id;})[0]||{};
+    var rec={id:id+'|'+mes+'|'+q,func:id,mes:mes,q:q,
+      salario:Number(tr.getAttribute('data-sal'))||0,
+      faltas:Number((document.getElementById('fl-falta-'+id)||{}).value)||0,
+      extras:Number((document.getElementById('fl-extra-'+id)||{}).value)||0,
+      vale:Number((document.getElementById('fl-vale-'+id)||{}).value)||0,
+      compra:Number((document.getElementById('fl-compra-'+id)||{}).value)||0,
+      beneficio:Number(tr.getAttribute('data-benefaplic'))||0,
+      valor:Number(tr.getAttribute('data-pagar'))||0,ts:new Date().toISOString()};
+    novos.push(rec);
+  });
+  folhaRecSet(recs.concat(novos));
+  try{sbUpsert('folha',novos.map(folhaToDB)).catch(function(){});}catch(e){}
+  logReg('Financeiro','Folha','Salvou '+nomeMes(mes)+' '+(q===1?'1ª':'2ª')+' quinzena','',novos.length+' funcionários');
+  alert('Quinzena salva! A cortesia de carne usada já fica registrada no mês.');
+  folhaRender();
+}
 
 /* ── ENTRADAS ── */
 function addEnt(){
