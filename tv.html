@@ -38,11 +38,24 @@
   .card{background:#161616;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;border:1px solid #262626;box-shadow:0 4px 14px rgba(0,0,0,.4)}
   .card.promo{border:2px solid #ffb300;animation:promoglow 1.6s ease-in-out infinite}
   @keyframes promoglow{0%,100%{box-shadow:0 0 0 2px rgba(255,179,0,.20),0 6px 18px rgba(0,0,0,.5)}50%{box-shadow:0 0 0 5px rgba(255,179,0,.55),0 6px 26px rgba(255,140,0,.4)}}
-  .card.promo .bar{background:#fff3da}
   .card .promo-tag{position:absolute;top:0;right:0;background:linear-gradient(135deg,#ff9800,#FE0000);color:#fff;font-size:1.9vh;font-weight:900;letter-spacing:.5px;padding:.6vh 1.1vw;border-bottom-left-radius:8px;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.45);z-index:2}
-  .card .promo-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;line-height:1}
-  .card .promo-right .oldp{font-size:2.1vh;font-weight:700;color:#999;text-decoration:line-through;margin-bottom:.2vh}
-  .card .promo-right .newp{display:flex;align-items:baseline;gap:.3vw;white-space:nowrap}
+
+  .promofull{height:100%;display:flex;flex-direction:column;position:relative;padding:1.5vh 2vw;border-radius:14px;animation:pfpulse 1.7s ease-in-out infinite}
+  @keyframes pfpulse{0%,100%{box-shadow:inset 0 0 0 .5vh rgba(255,179,0,.5)}50%{box-shadow:inset 0 0 0 1.1vh rgba(255,179,0,.95)}}
+  .promofull .pf-badge{position:absolute;top:1.6vh;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff9800,#FE0000);color:#fff;font-size:3vh;font-weight:900;letter-spacing:2px;padding:1vh 3vw;border-radius:999px;text-transform:uppercase;box-shadow:0 4px 16px rgba(255,140,0,.55);z-index:2}
+  .promofull .pf-body{flex:1;display:flex;align-items:center;gap:3vw;padding-top:6vh}
+  .promofull .pf-photo{flex:1 1 50%;height:80%;border-radius:18px;overflow:hidden;background:#1d1d1d;display:flex;align-items:center;justify-content:center;border:.5vh solid #ffb300;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .promofull .pf-photo img{width:100%;height:100%;object-fit:cover}
+  .promofull .pf-photo .pf-ph{font-size:14vh}
+  .promofull .pf-info{flex:1 1 50%;display:flex;flex-direction:column;justify-content:center;gap:1.2vh;text-align:center}
+  .promofull .pf-cat{font-size:2.6vh;font-weight:800;color:#ffb300;text-transform:uppercase;letter-spacing:1.5px}
+  .promofull .pf-nome{font-size:6.6vh;font-weight:900;text-transform:uppercase;line-height:1.02;text-shadow:0 3px 10px rgba(0,0,0,.5)}
+  .promofull .pf-old{font-size:3.6vh;font-weight:700;color:#aaa;text-decoration:line-through}
+  .promofull .pf-new{display:flex;align-items:baseline;justify-content:center;gap:.6vw;color:#FE0000;margin-top:.4vh}
+  .promofull .pf-cif{font-size:4.5vh;font-weight:800}
+  .promofull .pf-val{font-size:12vh;font-weight:900;line-height:.9}
+  .promofull .pf-un{font-size:4vh;font-weight:700;color:#999}
+  .promofull .pf-ate{font-size:2.8vh;font-weight:700;color:#ffd27a;margin-top:1.2vh}
   .card .photo{flex:1 1 auto;position:relative;background:#1d1d1d;overflow:hidden;display:flex;align-items:center;justify-content:center}
   .card .photo img{width:100%;height:100%;object-fit:cover}
   .card .ph-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;color:#3a3a3a}
@@ -139,21 +152,22 @@ function tick(){var d;try{d=new Date(new Date().toLocaleString('en-US',{timeZone
 var PAGES=[], cur=0;
 
 function hojeBR(){try{var d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());}catch(e){var x=new Date();return x.getFullYear()+'-'+z(x.getMonth()+1)+'-'+z(x.getDate());}}
+function fdBR(s){if(!s)return '';var p=String(s).split('-');return p.length>=3?(p[2]+'/'+p[1]):String(s);}
+function emPromo(p){return !!p.promocao && Number(p.promo_preco)>0 && (!p.promo_ate || String(p.promo_ate)>=hojeBR());}
 function cardHTML(p){
   var nome=(p.nometv||p.nome||'').toUpperCase();
   var nsz=nome.length>30?'2.3vh':(nome.length>22?'2.7vh':(nome.length>16?'3.0vh':'3.4vh'));
   var un=(p.unidade==='UN')?'un':'kg';
   var cat=catOf(p.id,p.nometv||p.nome);
   var foto=(p.foto||'').trim();
-  var promo=!!p.promocao && Number(p.promo_preco)>0 && (!p.promo_ate || String(p.promo_ate)>=hojeBR());
+  var promo=emPromo(p);
+  var preco=promo?Number(p.promo_preco):Number(p.preco);
   var photo = foto
     ? '<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">'
     : fb();
-  var precoHTML = promo
-    ? '<div class="right promo-right"><span class="oldp">R$ '+fmtPreco(p.preco)+'</span><span class="newp"><span class="cif">R$</span><span class="val">'+fmtPreco(p.promo_preco)+'</span><span class="un">/'+un+'</span></span></div>'
-    : '<div class="right"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div>';
   return '<div class="card'+(promo?' promo':'')+'"><div class="photo"><span class="cat">'+esc(cat)+'</span>'+(promo?'<span class="promo-tag">🔥 Promoção</span>':'')+photo+'</div>'+
-    '<div class="bar"><div class="nm" style="font-size:'+nsz+'">'+esc(nome)+'</div>'+precoHTML+'</div></div>';
+    '<div class="bar"><div class="nm" style="font-size:'+nsz+'">'+esc(nome)+'</div>'+
+    '<div class="right"><span class="cif">R$</span><span class="val">'+fmtPreco(preco)+'</span><span class="un">/'+un+'</span></div></div></div>';
 }
 function fb(){return '<div class="ph-fallback"><div class="ic">🥩</div></div>';}
 
@@ -215,15 +229,42 @@ function infoHTML(id){
     +'<div class="qrinline"><img src="'+QR_FIDELIDADE+'" onerror="this.style.display=\'none\'"><span>Aponte a câmera e cadastre-se</span></div>'
     +'<div class="sub" style="font-size:2.1vh;color:#bbb;margin-top:.4vh">Saiba mais com um de nossos atendentes no caixa</div></div>';
 }
-function montarSequencia(pages){
+function promoFullHTML(p){
+  var nome=(p.nometv||p.nome||'').toUpperCase();
+  var un=(p.unidade==='UN')?'un':'kg';
+  var cat=catOf(p.id,p.nometv||p.nome);
+  var foto=(p.foto||'').trim();
+  var img=foto?'<img src="'+esc(foto)+'" onerror="this.style.display=\'none\'">':'<div class="pf-ph">🥩</div>';
+  var ate=p.promo_ate?'<div class="pf-ate">Oferta válida até '+fdBR(p.promo_ate)+'</div>':'';
+  return '<div class="promofull"><div class="pf-badge">🔥 Promoção</div>'
+    +'<div class="pf-body"><div class="pf-photo">'+img+'</div>'
+    +'<div class="pf-info"><div class="pf-cat">'+esc(cat)+'</div>'
+    +'<div class="pf-nome">'+esc(nome)+'</div>'
+    +'<span class="pf-old">de R$ '+fmtPreco(p.preco)+'</span>'
+    +'<div class="pf-new"><span class="pf-cif">R$</span><span class="pf-val">'+fmtPreco(p.promo_preco)+'</span><span class="pf-un">/'+un+'</span></div>'
+    +ate+'</div></div></div>';
+}
+function montarSequencia(pages,promos){
+  promos=promos||[];
   var infoSeq=['fidelidade','instagram','fidelidade','horario','fidelidade','pagamento','fidelidade','endereco'];
-  var seq=[],ii=0;
-  if(!pages.length){for(var k=0;k<infoSeq.length;k++)seq.push({tipo:'info',id:infoSeq[k]});return seq;}
+  var seq=[],ii=0,pi=0,vezPromo=true;
+  function inserir(){
+    if(promos.length&&vezPromo){seq.push({tipo:'promo',prod:promos[pi%promos.length]});pi++;vezPromo=false;}
+    else{seq.push({tipo:'info',id:infoSeq[ii%infoSeq.length]});ii++;vezPromo=true;}
+  }
+  if(!pages.length){
+    for(var a=0;a<promos.length;a++)seq.push({tipo:'promo',prod:promos[a]});
+    for(var k=0;k<infoSeq.length;k++)seq.push({tipo:'info',id:infoSeq[k]});
+    return seq;
+  }
   for(var i=0;i<pages.length;i++){
     seq.push({tipo:'prod',page:pages[i]});
-    if((i+1)%2===0){seq.push({tipo:'info',id:infoSeq[ii%infoSeq.length]});ii++;}
+    if((i+1)%2===0)inserir();
   }
-  if(ii===0){seq.push({tipo:'info',id:'fidelidade'});seq.push({tipo:'info',id:'instagram'});}
+  if(seq.length===pages.length){
+    if(promos.length)seq.push({tipo:'promo',prod:promos[0]});
+    seq.push({tipo:'info',id:'fidelidade'});
+  }
   return seq;
 }
 function showPage(){
@@ -232,6 +273,9 @@ function showPage(){
   if(sl.tipo==='prod'){
     stage.style.display='grid';
     stage.innerHTML=sl.page.map(cardHTML).join('')+qrCardHTML(cur%2===1);
+  }else if(sl.tipo==='promo'){
+    stage.style.display='block';
+    stage.innerHTML=promoFullHTML(sl.prod);
   }else{
     stage.style.display='block';
     stage.innerHTML=infoHTML(sl.id);
@@ -265,10 +309,10 @@ async function carregar(){
     var rows=await r.json();
     rows=rows.filter(function(p){return Number(p.preco)>0;});
     if(!rows.length){
-      PAGES=[];SEQ=montarSequencia([]);if(cur>=SEQ.length)cur=0;showPage();return;
+      PAGES=[];SEQ=montarSequencia([],[]);if(cur>=SEQ.length)cur=0;showPage();return;
     }
     PAGES=montarPaginas(rows);
-    SEQ=montarSequencia(PAGES);
+    SEQ=montarSequencia(PAGES,rows.filter(emPromo));
     if(cur>=SEQ.length)cur=0;
     showPage();
   }catch(e){

@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-18 — Promoção mais bonita: card igual aos outros + tela cheia
+- **Card de promoção corrigido:** agora usa o **mesmo layout dos outros produtos** (foto cheia, preço único = o promocional), só com a **borda dourada pulsando** e o selo "🔥 Promoção". Saiu o visual anterior (preço empilhado) que estava apertando a foto.
+- **Tela cheia de promoção:** todo produto em promoção ganha uma **tela cheia própria** no rodízio, fora da ordem alfabética — foto grande, "de R$X" riscado e o preço promocional gigante, com borda dourada pulsando, pra forçar a venda.
+- **Atualiza sozinho:** quando a promoção vence (ou você desmarca), o produto **para de aparecer em tela cheia** automaticamente (a TV rebusca os dados a cada 1 min) e volta ao preço normal.
+- Sem mudança no banco desta vez (usa as colunas `promocao`/`promo_preco`/`promo_ate` já criadas).
+
 ## 2026-06-18 — Promoção com preço e data de validade (some sozinha)
 - Ao marcar **PROMO** num produto, abre uma telinha pra você definir:
   - **Preço promocional** (campo no estilo caixa registradora).
