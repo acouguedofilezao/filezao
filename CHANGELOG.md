@@ -1,5 +1,20 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Extrato bancário diário + confirmação ao mudar categoria
+- **Histórico diário de saldo:** agora, todo extrato OFX que você importar, o sistema guarda o **saldo daquele dia** (antes guardava só o último de cada conta). Vai montando o dia a dia automaticamente.
+- **Nova aba "🏦 Extrato bancário"** dentro de Relatórios: escolhe o período (igual aos outros relatórios) e ele traz o **saldo de cada dia**, por conta, com **total** quando há mais de uma conta. Nos dias sem importação, repete o último saldo conhecido (marcado com um pontinho · cinza).
+- **Confirmação ao mudar categoria:** ao trocar a categoria de um produto, agora aparece uma **caixa de confirmação** (mostra de qual pra qual) — pra não alterar sem querer.
+- **⚠️ Rode no Supabase** (pra guardar o histórico na nuvem):
+  ```sql
+  create table if not exists saldos_dia (
+    id text primary key, acctid text, banco text,
+    data date, saldo numeric, ts text
+  );
+  alter table saldos_dia enable row level security;
+  create policy "saldos_dia_all" on saldos_dia for all using (true) with check (true);
+  ```
+  (Sem rodar, o histórico já funciona guardado neste computador.)
+
 ## 2026-06-19 — Folha de pagamento (quinzena)
 - Nova aba **"Pagamento funcionários"** no menu, do lado do Fechamento.
 - Escolhe **mês + ano + quinzena** (1ª dia 1 / 2ª dia 15). Já abre no mês atual (horário de Brasília).

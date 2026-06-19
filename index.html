@@ -616,6 +616,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
       <button class="ftab-btn active" onclick="setRel('abate',this)">🐄 Abate Boi/Porco</button>
       <button class="ftab-btn" onclick="setRel('diario',this)">📋 Diário (WhatsApp)</button>
       <button class="ftab-btn" onclick="setRel('gado',this)">🐖 Compras de Gado</button>
+      <button class="ftab-btn" onclick="setRel('extrato',this)">🏦 Extrato bancário</button>
     </div>
   </div>
 
@@ -656,6 +657,19 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
       </div>
     </div>
     <div id="rel-gado-result" style="margin-top:12px"></div>
+  </div>
+
+  <!-- REL 4: Extrato bancário -->
+  <div id="rel-extrato" class="rel-card" style="display:none">
+    <div class="rel-title loc"><i class="ti ti-building-bank"></i> Extrato bancário — saldo dia a dia</div>
+    <div class="form-row rel-sel-grid" style="align-items:flex-end">
+      <div class="form-group"><label>Data início</label><input type="date" id="relx-de"></div>
+      <div class="form-group"><label>Data fim</label><input type="date" id="relx-ate"></div>
+      <div class="form-group" style="justify-content:flex-end;padding-top:20px">
+        <button class="btn btn-primary" onclick="renderRelExtrato()"><i class="ti ti-search"></i> Gerar</button>
+      </div>
+    </div>
+    <div id="rel-extrato-result" style="margin-top:12px"></div>
   </div>
 
 </div>
@@ -1098,9 +1112,13 @@ function promoExpirar(){
 function tvToggle(cod,on){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.exibir=on;tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvCat(cod,v){
   var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;
+  var atual=p.categoria||CATMAP[p.codigo]||'(sem categoria)';
+  var nova=(v||'').trim()||'(sem categoria)';
+  if(atual===nova){return;}
+  if(!confirm('Alterar a categoria de "'+(p.nomeTV||p.nome)+'"?\n\nDe:   '+atual+'\nPara: '+nova)){tvSelRender();return;}
   p.categoria=(v||'').trim();tvSelRender();
   sbUpsert('produtos',[prodToDB(p)]).catch(function(){});
-  logReg('Produtos','Categoria',(p.nomeTV||p.nome)+' \u2192 '+(p.categoria||'(em branco)'),'',p.categoria||'');
+  logReg('Produtos','Categoria',(p.nomeTV||p.nome),atual,nova);
 }
 function tvNome(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.nomeTV=((v||'').trim().toUpperCase())||p.nome;sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvFoto(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.foto=(v||'').trim();tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
@@ -1800,6 +1818,50 @@ function estCopiar(){
 /* ── SALDO BANCÁRIO ── */
 function saldoGet(){try{return JSON.parse(localStorage.getItem('fz_saldos')||'{}');}catch(e){return {};}}
 function saldoSet(m){try{localStorage.setItem('fz_saldos',JSON.stringify(m));}catch(e){}}
+function saldoDiaGet(){try{return JSON.parse(localStorage.getItem('fz_saldos_dia')||'{}');}catch(e){return {};}}
+function saldoDiaSet(m){try{localStorage.setItem('fz_saldos_dia',JSON.stringify(m));}catch(e){}}
+function saldoDiaCloudSave(s){if(!s)return;try{sbUpsert('saldos_dia',[{id:s.acctid+'|'+s.data,acctid:s.acctid,banco:s.banco,data:s.data,saldo:s.saldo,ts:s.ts}]).catch(function(){});}catch(e){}}
+function relxDias(de,ate){var out=[],d=new Date(de+'T12:00:00'),end=new Date(ate+'T12:00:00'),g=0;while(d<=end&&g<400){out.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);g++;}return out;}
+function renderRelExtrato(){
+  var de=(document.getElementById('relx-de')||{}).value,ate=(document.getElementById('relx-ate')||{}).value;
+  var box=document.getElementById('rel-extrato-result');if(!box)return;
+  if(!de||!ate)return alert('Selecione o período.');
+  if(de>ate){var t=de;de=ate;ate=t;}
+  var dd=saldoDiaGet(),sl=saldoGet(),keys=Object.keys(dd);
+  if(!keys.length){box.innerHTML='<p style="color:#999;font-size:14px">Ainda não há histórico diário guardado. A partir dos próximos extratos OFX que você importar, cada dia vai sendo salvo automaticamente.</p>';return;}
+  var contas={};keys.forEach(function(k){var r=dd[k];if(!contas[r.acctid])contas[r.acctid]={acctid:r.acctid,banco:r.banco,label:(sl[r.acctid]&&sl[r.acctid].label)||''};});
+  var lista=Object.keys(contas).map(function(a){return contas[a];});
+  lista.sort(function(a,b){return (a.label||a.acctid).localeCompare(b.label||b.acctid);});
+  function nomeConta(c){return c.label||((c.banco||'')+' · '+c.acctid);}
+  var porConta={};lista.forEach(function(c){porConta[c.acctid]=keys.map(function(k){return dd[k];}).filter(function(r){return r.acctid===c.acctid;}).sort(function(a,b){return a.data<b.data?-1:1;});});
+  function saldoEm(acct,dia){var arr=porConta[acct]||[],best=null;for(var i=0;i<arr.length;i++){if(arr[i].data<=dia)best=arr[i];else break;}return best;}
+  var dias=relxDias(de,ate);
+  // remove dias antes do primeiro registro de qualquer conta
+  var temAlgum=false,linhas=[];
+  dias.forEach(function(dia){
+    var cells=[],tot=0,temTot=false,algum=false;
+    lista.forEach(function(c){var s=saldoEm(c.acctid,dia);if(s){algum=true;tot+=s.saldo;temTot=true;cells.push({s:s,carry:(s.data!==dia)});}else cells.push(null);});
+    if(algum){temAlgum=true;linhas.push({dia:dia,cells:cells,tot:tot,temTot:temTot});}
+  });
+  if(!linhas.length){box.innerHTML='<p style="color:#999;font-size:14px">Nenhum saldo guardado nesse período.</p>';return;}
+  var h='<div class="rel-title loc"><i class="ti ti-building-bank"></i> Saldo diário · '+fd(de)+' a '+fd(ate)+'</div>';
+  h+='<div class="tbl-wrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:'+(160+lista.length*130)+'px"><thead><tr style="font-size:10px;color:#777;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:7px 8px">Dia</th>';
+  lista.forEach(function(c){h+='<th style="text-align:right;padding:7px 8px">'+cotEsc(nomeConta(c))+'</th>';});
+  if(lista.length>1)h+='<th style="text-align:right;padding:7px 8px;border-left:2px solid #eee">Total</th>';
+  h+='</tr></thead><tbody>';
+  linhas.forEach(function(L){
+    h+='<tr style="border-top:1px solid #f1f1f1"><td style="text-align:left;padding:6px 8px;font-weight:600">'+fd(L.dia)+'</td>';
+    L.cells.forEach(function(cell){
+      if(!cell){h+='<td style="text-align:right;padding:6px 8px;color:#ddd">—</td>';return;}
+      h+='<td style="text-align:right;padding:6px 8px;color:'+(cell.s.saldo<0?'#b91c1c':'#166534')+'">'+fmt(cell.s.saldo)+(cell.carry?'<span title="saldo de dia anterior" style="color:#ccc">&nbsp;·</span>':'')+'</td>';
+    });
+    if(lista.length>1)h+='<td style="text-align:right;padding:6px 8px;font-weight:800;border-left:2px solid #eee;color:'+(L.tot<0?'#b91c1c':'#166534')+'">'+(L.temTot?fmt(L.tot):'—')+'</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="font-size:11px;color:#999;margin-top:8px">O ponto cinza ( · ) indica que naquele dia não houve importação, então mostramos o último saldo conhecido daquela conta.</div>';
+  box.innerHTML=h;
+}
 function saldoCapturar(text){
   var acct=((text.match(/<ACCTID>([^<\r\n]*)/)||[])[1]||'').trim();
   var org=((text.match(/<ORG>([^<\r\n]*)/)||[])[1]||'').trim();
@@ -1808,6 +1870,8 @@ function saldoCapturar(text){
   var saldo=parseFloat(lb[1]);if(isNaN(saldo))return;
   var raw=(lb[2]||'').replace(/[^0-9]/g,'').slice(0,14);
   var iso=raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8);
+  var _dd=saldoDiaGet(),_dk=acct+'|'+iso,_dpv=_dd[_dk];
+  if(!_dpv||(''+raw)>=(''+(_dpv.ts||''))){_dd[_dk]={acctid:acct,banco:org,data:iso,saldo:saldo,ts:raw};saldoDiaSet(_dd);saldoDiaCloudSave(_dd[_dk]);}
   var m=saldoGet(),cur=m[acct];
   if(!cur||(''+raw)>=(''+(cur.ts||''))){
     var _novo=(!cur||cur.saldo!==saldo);
@@ -1833,6 +1897,10 @@ async function syncCloudExtras(){
       rs.forEach(function(r){var cur=m[r.acctid];if(!cur||(''+(r.ts||''))>=(''+(cur.ts||'')))m[r.acctid]={acctid:r.acctid,banco:r.banco,saldo:Number(r.saldo),data:r.data,ts:r.ts,imp:(cur&&cur.imp)||null,label:(cur&&cur.label)||r.label||''};});
       saldoSet(m);saldoRender();
     }
+  }catch(e){}
+  try{
+    var rsd=await sbGet('saldos_dia','select=id,acctid,banco,data,saldo,ts');
+    if(rsd&&rsd.length){var dd=saldoDiaGet();rsd.forEach(function(r){var dk=r.acctid+'|'+r.data,pv=dd[dk];if(!pv||(''+(r.ts||''))>=(''+(pv.ts||'')))dd[dk]={acctid:r.acctid,banco:r.banco,data:r.data,saldo:Number(r.saldo),ts:r.ts};});saldoDiaSet(dd);}
   }catch(e){}
   try{
     var rp=await sbGet('produtos','select=*&order=nome.asc');
@@ -2436,6 +2504,7 @@ function setRel(tipo,btn){
   document.getElementById('rel-abate').style.display=tipo==='abate'?'block':'none';
   document.getElementById('rel-diario').style.display=tipo==='diario'?'block':'none';
   document.getElementById('rel-gado').style.display=tipo==='gado'?'block':'none';
+  var rx=document.getElementById('rel-extrato');if(rx)rx.style.display=tipo==='extrato'?'block':'none';
 }
 
 function renderRelDiario(){
