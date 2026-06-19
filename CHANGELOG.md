@@ -1,177 +1,38 @@
-# Filezão — Histórico de Alterações
+# CHANGELOG — Sistema Filezão
 
-## v17 — 17/06/2026
-- Fonte alterada para **Inter** (padrão de apps modernos)
-- Relatório diário com **3 blocos separados para WhatsApp** (Saída, Entrada por dia, Gado)
-- Cores dos blocos: Saída = vermelho, Entrada = verde, Gado = azul
-- Layout **responsivo para celular** (formulários, tabelas, modais)
-- Cheque agora suporta **múltiplos vínculos de gado** no mesmo cheque
-- Ordem dos cheques: pendentes primeiro, compensados do mais recente para o mais antigo
-- Relatório de gado com formato de tabela para WhatsApp
-- Seletor de relatórios (Abate / Diário / Compras de Gado)
+## 2026-06-18 — Importador: baixa de cheque automática + descrição editável
+- **Cheque compensado dá baixa sozinho:** quando um cheque aparece compensado no extrato, o sistema casa pelo **número** (ignorando zeros à esquerda) com o cheque que você lançou e, ao clicar em Lançar, marca ele como **compensado** na tela de Cheques. O cheque deixa de aparecer como "saída" (não conta duas vezes).
+  - Mostra uma seção **CHEQUES** no preview: ✓ "vai dar baixa" (casou), ou "não encontrado" (se o cheque não estiver lançado, aí é só lançar e reimportar).
+  - **Cheque que você já compensou manualmente** antes é **descartado** automaticamente (não aparece pra refazer); fica só um aviso no rodapé de quantos foram descartados.
+- **Descrição da saída editável:** como a descrição que você digita no Pix **não vem no extrato**, agora dá pra **editar o texto da saída** ali na lista antes de lançar (ex.: trocar para "QUEIJO ROCA"). O que você digitar é o que vai pro lançamento.
 
-## v16 — 17/06/2026
-- Integração com **Supabase** (banco de dados em nuvem)
-- Dados salvos online — acessível de qualquer dispositivo
-- Paginação corrigida (carrega todos os registros, não só 1000)
-- Ordenação do mais recente para o mais antigo em Entradas e Saídas
+## 2026-06-18 — Importador de extrato: oculta débitos de dias já fechados
+- No importador do **Sicoob (OFX)**, a lista de **SAÍDAS (débitos)** agora só mostra os débitos de **dias mais novos** que você ainda não trabalhou.
+- A regra (estrita): esconde uma saída **somente se você já lançou algo num dia POSTERIOR** a ela. Assim o último dia que você lançou continua visível (dá pra terminar de marcar), e os anteriores em aberto somem.
+- Como você lança o cartão/pix todo dia, essa "data de corte" avança sozinha; não precisa configurar nada.
+- Link discreto **"mostrar"** (e "ocultar") caso um dia você precise rever os débitos de dias já fechados.
+- **Descrição da saída** corrigida: agora mostra o **destino/favorecido** do Pix/transferência (campo NAME do extrato, ex.: "PANIFICADORA SAO JOSE LTDA"), em vez do tipo genérico ("DÉB.TRANSF..."). Quando não há destinatário no arquivo (ex.: cheque), mantém a descrição do tipo. Removido o prefixo "FAV.:".
 
-## v15 — 17/06/2026
-- Importação de todos os dados da planilha Excel (fev/2022 → jun/2026)
-- 4.504 entradas, 6.068 saídas, 950 compras de gado, 360 cheques
-- Gado: verde = pago dinheiro, amarelo = cheque pendente, branco = em aberto
-- Cheques compensados (verdes na planilha) marcados automaticamente
-- Sistema de versão para forçar reimportação quando necessário
+## 2026-06-18 — Horário de Brasília fixo (TV + sistema)
+- **tv.html:** o relógio agora mostra sempre o **horário de Brasília (UTC−3)**, ignorando o fuso configurado no aparelho (Fire Stick estava em UTC, mostrando 3h a mais).
+- **index.html:** a função de "hoje" (`td()`) e os padrões de data/mês/ano do painel passaram a seguir Brasília também (novo helper `nowBR()`), pra toda a base usar o mesmo horário.
+- Os carimbos de data/hora internos (`ts`) continuam em UTC ISO (padrão técnico), o que é o correto — a mudança é só no que você vê e nos padrões de data.
+- Observação: isso corrige o **fuso**. O relógio absoluto do aparelho precisa estar mais ou menos certo (com internet, ele sincroniza sozinho).
 
-## v14 — 17/06/2026
-- Correção crítica: navegação entre abas funcionando (fix closest nav-btn)
-- Correção de sintaxe JS (template literals corrompidos no fechamento)
-- renderFech reescrito sem template literals para evitar erros
+## 2026-06-18 — Login com segurança real (Supabase Auth + RLS)
 
-## v13 — 17/06/2026
-- Painel: filtro de período com atalhos (Hoje, Ontem, Semana, Mês, Anterior, Retrasado)
-- Data do painel preenche automaticamente ao abrir
+### index.html
+- **Tela de login** ao abrir o sistema (usuário + senha). Sem login válido, nada é carregado.
+- Login por **nome de usuário** (sem precisar e-mail): internamente o usuário `fulano` vira `fulano@filezao.app`.
+- **Sessão persistente**: depois de entrar, a sessão fica salva e é renovada sozinha (token renovado a cada 45 min). Não precisa logar toda hora.
+- **Botão "Sair"** no rodapé da barra lateral, com o nome do usuário logado.
+- O cabeçalho de acesso ao banco (`SB_HDR`) agora envia o **token do usuário logado** em todas as operações — assim o banco passa a respeitar quem está logado.
+- Boot do sistema travado: `init()` só roda depois do login (ou de restaurar uma sessão válida).
 
-## v12 — 17/06/2026
-- Lançamentos do painel virou caixa colapsável (Mostrar/Ocultar)
-- Sobra do mês movida para depois das comissões no Fechamento
-- Dados zerados para testes
+### Supabase (configuração feita por você — ver instruções no chat)
+- **RLS ligado** nas tabelas: dados financeiros e operacionais só para usuários logados.
+- **produtos**: leitura **pública** (para a TV continuar funcionando) + escrita só para logados.
+- **Auto-cadastro desligado**: ninguém se registra sozinho. Os cadastros são criados por você no painel do Supabase.
 
-## v11 — 17/06/2026
-- Correção do cálculo da **Sobra do mês**
-- Fórmula correta: Saldo após comissões − Total gasto com gado
-- Math.floor() na base das comissões (igual à planilha original)
-
-## v10 — 17/06/2026
-- Aba **Relatórios** criada
-- Relatório de Abate (Boi/Vaca e Porco por período)
-- Dados de Maio/2026 pré-carregados da planilha para comparativo
-
-## v9 — 17/06/2026
-- Sistema reescrito do zero para corrigir bug de exclusão
-- Exclusão: lógica nova com `_sel` no objeto (sem Set, sem comparação de tipo)
-- Botão **Editar** em Entradas e Saídas
-- Filtros de Gado: Todos / Em aberto / A pagar esta semana / Pagos
-- Saídas: formas de pagamento reduzidas (Dinheiro, Pix, Boleto, Cartão)
-- Cheques: modal de compensação com campo data de compensação
-- Painel repaginado com cards de métricas, gado a pagar e cheques
-
-## v8 — 17/06/2026
-- Identidade visual aplicada (cores #FE0000, #000000, #F7F7F7)
-- Fechamento repaginado com hierarquia visual clara
-- Tentativas de correção do bug de exclusão
-
-## v7 — 17/06/2026
-- Fonte Locatro aplicada nos elementos de identidade visual
-- Correção de navegação entre abas
-
-## v6 — 17/06/2026
-- Decimal automático modo **caixa registradora** em todos os campos de valor
-- Digita 5000 → exibe 50,00
-- Enter em qualquer campo lança o registro
-- Painel com filtro de período (De / Até) e atalhos rápidos
-
-## v5 — 17/06/2026
-- Caixas de seleção para excluir múltiplos registros
-- Pagamento de gado: validação de que total lançado bate com valor da compra
-- Modal de pagamento com formas livres e acumuláveis (Dinheiro + Pix + Cheque etc.)
-- Fechamento simplificado (sem cálculo de comissão quando negativo)
-
-## v4 — 17/06/2026
-- Dados zerados para início limpo
-- Correção de bug do Set na seleção de registros
-- Campos de valor sem type=number (preparação para decimal automático)
-- Log de data de pagamento no gado
-- Suporte a múltiplos cheques no pagamento de gado
-
-## v3 — 17/06/2026
-- Forma de pagamento adicionada em Saídas
-- Pagamento de gado: suporte a Misto (Dinheiro + Cheque)
-- Múltiplos cheques por pagamento de gado
-- Registro de data de pagamento ao dar baixa no gado
-- Fechamento: apenas Entrada Líquida e Total Gado
-
-## v2 — 17/06/2026
-- Decimal com 2 casas em todos os campos de valor e kg
-- Enter em Entradas lança automaticamente
-- Exclusão via checkbox com barra de seleção
-
-## v1 — 17/06/2026
-- Sistema visual completo: Painel, Entradas, Saídas, Gado, Cheques, Fechamento
-- Fundo branco, menu preto, destaque vermelho #C8102E
-- Decimal automático nos campos monetários
-- Filtros no Gado: Todos / Em aberto / Pagos
-- Formas de pagamento: Dinheiro, Pix, Boleto, Cheque, Misto
-- Cálculo de comissões: Diogo 1,5%, Alberto 1,625%, André 0,875%
-- Armazenamento em localStorage
-
----
-*Sistema desenvolvido para Casa de Carnes Filezão*
-*Banco de dados: Supabase | Hospedagem: GitHub Pages*
-
-## v17.1 — 17/06/2026
-- Fonte Locatro removida completamente do sistema (100% Inter)
-- Relatório diário: formato corrigido para WhatsApp (data + descrição + valor por linha)
-- Blocos dos relatórios com bordas coloridas e altura fixa sem scroll
-- Botão Copiar dentro do cabeçalho colorido de cada bloco
-
-## v17.2 — 17/06/2026
-- Header repaginado com gradiente preto/vermelho e linhas sutis
-- Logo do Filezão embutida no header (fundo preto removido, brilho vermelho)
-- Título FILEZÃO em fonte Locatro (só o header, resto permanece Inter)
-- Divisor vermelho entre logo e texto
-- Navbar mais refinada com fundo escuro e transições suaves
-- Relatório de saídas: altura dinâmica (sem cortar descrições longas)
-- Relatório de gado: adicionado data, fornecedor, status e cheque por compra
-- Fontes: Locatro removida de todo o sistema exceto título do header
-
-## v17.3 — 17/06/2026
-- Menu lateral (sidebar) substituiu navbar horizontal — igual ao OnBeef
-- Botão ◀▶ para esconder/mostrar o menu lateral
-- No mobile: sidebar vira overlay e fecha automaticamente ao navegar
-- Seções do menu agrupadas: Menu (Painel/Entradas/Saídas/Gado/Cheques) e Financeiro (Fechamento/Relatórios)
-
-## v17.4 — 17/06/2026
-- Botão de toggle do menu aumentado (28x64px, mais fácil de clicar no celular)
-- Status "Pronto — X entradas" movido para o rodapé da sidebar (oculta com o menu)
-- Ícone da logo adicionado para tela inicial do iPhone (apple-touch-icon 180x180)
-- Meta tags para PWA no iPhone (barra de status preta, título Filezão)
-
-## v17.5 — 17/06/2026
-- Ícone do app atualizado: logo do boi em transparência + cifrão branco + borda vermelha
-- Fundo preto puro (sem cinza) no ícone da tela inicial do iPhone
-
-## v17.6 — 17/06/2026
-- Tamanho geral das caixas aumentado em todo o sistema
-- Inputs: 36px → 42px de altura, fonte 13 → 14px
-- Botões: padding maior, fonte 13 → 14px
-- Cards: padding 14px → 18px, bordas 10px → 12px
-- Tabelas: células com mais espaço (padding 8px → 10px)
-- Badges, labels, métricas e dash cards proporcionalmente maiores
-- Mobile: breakpoints ajustados para não sobrepor elementos no celular
-
-## v17.7 — 17/06/2026
-- Correção: métricas do painel (Total Entradas/Saídas/Saldo) em coluna única no celular
-- Correção: grid de lançamentos/gado do painel vira coluna única no celular
-- Correção: dash-grid (Dinheiro/Pix/Cartão) em coluna única abaixo de 480px
-- Correção: metric-grid, form-row e abate-grid forçados em 1 coluna no mobile
-- Correção: fechamento (lado a lado) vira coluna no celular
-
-## v17.8 — 17/06/2026
-- Mobile: botão toggle lateral removido, substituído por ícone hamburguer (☰) no header
-- Mobile: sidebar começa fechada por padrão (sem sobrepor conteúdo)
-- Mobile: overlay escuro aparece atrás da sidebar quando aberta, clique fecha
-- Mobile: sidebar usa transform (desliza suavemente) em vez de width
-- Desktop: toggle lateral mantido igual
-
-## v17.9 — 17/06/2026
-- Correção definitiva: botão toggle lateral completamente oculto no celular (display:none + visibility:hidden + pointer-events:none + JS)
-- Sidebar começa fechada no celular via JS no init()
-- Hamburguer (☰) no header funciona como único controle do menu no mobile
-
-## v17.9 — 17/06/2026
-- Hamburguer movido para o lado ESQUERDO do header (antes da logo)
-- Mobile: todas as caixas em coluna única (sem sobreposição)
-- Mobile: painel convertido para display:block (sem grid)
-- Mobile: dash-grid (Dinheiro/Pix/Cartão) em coluna única
-- Hamburguer aparece a partir de 900px (tablets também)
+### Observações
+- A TV (`tv.html`) continua funcionando sem login, pois só lê a tabela `produtos`.

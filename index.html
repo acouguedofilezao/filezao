@@ -194,6 +194,36 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
 </style>
 </head>
 <body>
+<style>
+#authgate{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:#0d0d0d;font-family:'Inter',system-ui,Arial,sans-serif;padding:20px}
+#authgate .box{width:100%;max-width:360px;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.45);overflow:hidden}
+#authgate .top{background:linear-gradient(135deg,#FE0000,#6D0909);color:#fff;padding:26px 24px;text-align:center}
+#authgate .top h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.3px;text-transform:uppercase}
+#authgate .top p{margin:6px 0 0;font-size:12.5px;opacity:.92}
+#authgate .bd{padding:22px 24px 24px}
+#authgate label{display:block;font-size:12px;font-weight:600;color:#444;margin:0 0 5px}
+#authgate input{width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #e3e3e3;border-radius:9px;margin-bottom:14px;outline:none;transition:border-color .15s;text-transform:none !important}
+#authgate input:focus{border-color:#FE0000}
+#authgate button{width:100%;padding:13px;font-size:15px;font-weight:700;color:#fff;background:#FE0000;border:none;border-radius:9px;cursor:pointer;transition:background .15s}
+#authgate button:hover{background:#d80000}
+#authgate button:disabled{opacity:.7;cursor:default}
+#authgate .msg{min-height:18px;margin-top:10px;font-size:13px;color:#c20000;text-align:center;font-weight:600}
+#authgate .hint{margin-top:14px;font-size:11px;color:#9a9a9a;text-align:center;line-height:1.45}
+</style>
+<div id="authgate">
+  <div class="box">
+    <div class="top"><h1>Casa de Carnes Filezão</h1><p>Acesso ao sistema</p></div>
+    <div class="bd">
+      <label for="au-user">Usuário</label>
+      <input id="au-user" type="text" data-nocaps autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="seu usuário" onkeydown="if(event.key==='Enter'){var p=document.getElementById('au-pass');p&&p.focus();}">
+      <label for="au-pass">Senha</label>
+      <input id="au-pass" type="password" data-nocaps autocomplete="current-password" placeholder="sua senha" onkeydown="if(event.key==='Enter')authLogin()">
+      <button id="au-btn" onclick="authLogin()">Entrar</button>
+      <div id="au-msg" class="msg"></div>
+      <div class="hint">Acesso restrito. Para liberar um cadastro, fale com o administrador.</div>
+    </div>
+  </div>
+</div>
 <div class="header">
   <!-- Hamburguer ESQUERDA -->
   <button class="hamburger" id="hamburger" onclick="toggleSidebar()" title="Menu">
@@ -236,6 +266,10 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
   <!-- Status de conexão no fundo da sidebar -->
   <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);margin-top:auto">
     <div class="sync" id="sync" style="width:100%;justify-content:flex-start"><div class="dot" id="sdot"></div><span id="stxt">...</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px">
+      <span id="au-who" style="font-size:11px;color:rgba(255,255,255,0.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <button onclick="authLogout()" title="Sair do sistema" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:6px 10px;cursor:pointer"><i class="ti ti-logout"></i>Sair</button>
+    </div>
   </div>
 </div>
 <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Mostrar/ocultar menu">
@@ -643,14 +677,15 @@ let E=[],S=[],G=[],C=[],PROD=[],LOG=[],pagId=null,pgLC=0,gadoFiltro='todos';
 const fmt=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtKg=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' kg';
 const fd=d=>{if(!d)return'';const[y,m,di]=d.split('-');return`${di}/${m}/${y}`};
-const td=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+function nowBR(){try{return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));}catch(e){return new Date();}}
+const td=()=>{const d=nowBR();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const addDays=(ds,n)=>{const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
 const r2=v=>Math.round(v*100)/100;
 const uid=()=>Date.now()+'_'+Math.random().toString(36).slice(2,6);
 
 const SB_URL='https://vfrgqtuvbflkexapdzho.supabase.co';
 const SB_KEY='sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5';
-const SB_HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};
+let SB_HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'};
 
 function sync(st,msg){document.getElementById('sdot').className='dot'+(st==='s'?' saving':st==='e'?' err':'');document.getElementById('stxt').textContent=msg;}
 function updStatus(){sync('','Pronto — '+(E.length+S.length+G.length+C.length)+' lançamentos');}
@@ -1061,7 +1096,7 @@ function clrV(id){const el=document.getElementById(id);if(!el)return;if(el._di)e
 function setV(id,v){const el=document.getElementById(id);if(!el)return;if(el._di)el.setC(Math.round(v*100));else el.value=v;}
 
 /* ── IMPORTAÇÃO (Sipag CSV + Sicoob OFX) ── */
-var IMP={card:[],pix:[],deb:[],excl:null,bld:'bruto'};
+var IMP={card:[],pix:[],deb:[],chq:[],excl:null,bld:'bruto',showOld:false};
 function impMoney(s){return parseFloat(String(s).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'))||0;}
 function impCsvDate(d){var m=String(d).match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:'';}
 function impTag(b,t){var m=b.match(new RegExp('<'+t+'>([^<\\r\\n]*)'));return m?m[1].trim():'';}
@@ -1086,7 +1121,7 @@ function impDebForma(up){
 }
 function impParseOfx(text){
   var ex={sipag:{n:0,v:0},interno:{n:0,v:0},debito:{n:0,v:0}};
-  var blocks=text.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g)||[],out=[],deb=[];
+  var blocks=text.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g)||[],out=[],deb=[],chq=[];
   blocks.forEach(function(b){
     var amt=parseFloat(impTag(b,'TRNAMT'))||0;
     var dt=impTag(b,'DTPOSTED').slice(0,8),iso=dt.slice(0,4)+'-'+dt.slice(4,6)+'-'+dt.slice(6,8);
@@ -1095,6 +1130,7 @@ function impParseOfx(text){
     if(amt<0){                                                                            // débito = possível saída
       var dv=-amt;
       if(up.indexOf('APLICA')>=0||up.indexOf('RDC')>=0||up.indexOf('RESGATE')>=0||up.indexOf('MESMA TIT')>=0){ex.interno.n++;ex.interno.v+=dv;return;} // movimentação interna
+      if(up.indexOf('CHEQUE')>=0){chq.push({data:iso,numero:impTag(b,'CHECKNUM'),valor:r2(dv),fit:fit});return;} // cheque -> baixa na tela de Cheques
       deb.push({data:iso,memo:memo,name:name,valor:r2(dv),fit:fit,forma:impDebForma(up)});
       return;
     }
@@ -1103,8 +1139,9 @@ function impParseOfx(text){
     var isPix=up.indexOf('PIX')>=0;
     out.push({data:iso,memo:memo,name:name,valor:amt,auto:true,fit:fit,kind:isPix?'pix':'transf'});
   });
-  IMP.excl=ex;
+  IMP.excl=ex;IMP.showOld=false;
   IMP.deb=deb.sort(function(a,b){return a.data<b.data?-1:1;});
+  IMP.chq=chq.sort(function(a,b){return a.data<b.data?-1:1;});
   return out.sort(function(a,b){return a.data<b.data?-1:1;});
 }
 
@@ -1120,8 +1157,12 @@ async function impHandleFile(input,kind){
 
 function impCardVal(o){return o.liquido;}
 
+function impDebDesc(o){var dn=(o.name||'').trim().replace(/^FAV\.:\s*/i,''),dm=(o.memo||'').trim();return dn||dm||'';}
+function chqNorm(x){return (''+(x||'')).replace(/\D/g,'').replace(/^0+/,'');}
+function impChqMatch(n){var k=chqNorm(n);return C.find(function(c){return !c.compensado&&chqNorm(c.numero)===k;});}
+function impChqJaComp(n){var k=chqNorm(n);return C.find(function(c){return c.compensado&&chqNorm(c.numero)===k;});}
 function impRender(){
-  var has=IMP.card.length||IMP.pix.length||IMP.deb.length;
+  var has=IMP.card.length||IMP.pix.length||IMP.deb.length||(IMP.chq&&IMP.chq.length);
   document.getElementById('imp-prev').style.display=has?'block':'none';
   if(!has)return;
   var h='';
@@ -1145,18 +1186,39 @@ function impRender(){
     h+='</tbody></table></div>';
   }
   if(IMP.deb.length){
-    h+='<div style="font-weight:700;font-size:13px;margin:16px 0 6px"><span class="tipo-chip" style="background:#fee2e2;color:#991b1b">SAÍDAS</span> Débitos no extrato <span style="font-weight:500;color:#888;font-size:12px">\u2014 marque os que são gastos do açougue: <a href="#" onclick="impAllDeb(true);return false">marcar todas</a> \u00b7 <a href="#" onclick="impAllDeb(false);return false">limpar</a></span></div><div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Descrição</th><th>Forma</th><th>Valor</th></tr></thead><tbody>';
+    var cut='';E.forEach(function(e){if(e.data&&e.data>cut)cut=e.data;});S.forEach(function(s){if(s.data&&s.data>cut)cut=s.data;});
+    var showOld=!!IMP.showOld,nHid=0,body='';
     IMP.deb.forEach(function(o,i){
+      var fechado=(cut&&o.data<cut);
+      if(fechado&&!showOld){nHid++;return;}
       var done=S.some(function(s){return s.id==='impdeb_'+o.fit;});
       var cell=done?'<span class="tipo-chip" style="background:#dcfce7;color:#166534">já lançado</span>':'<input type="checkbox" class="imp-ck-deb" data-i="'+i+'" onchange="impTotal()">';
-      h+='<tr'+(done?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-size:12px;color:#666">'+(o.memo||o.name||'\u2014')+'</td><td><span class="tipo-chip" style="background:#f3f4f6;color:#555">'+o.forma+'</span></td><td style="font-weight:700;color:#b91c1c">'+fmt(o.valor)+'</td></tr>';});
-    h+='</tbody></table></div>';
+      body+='<tr'+((done||fechado)?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td>'+(done?'<td style="font-size:12px;color:#999">'+(impDebDesc(o)||'—')+'</td>':'<td><input class="imp-deb-desc" data-i="'+i+'" value="'+cotEsc(o.descUser!=null?o.descUser:impDebDesc(o)).replace(/"/g,'&quot;')+'" onchange="IMP.deb[+this.dataset.i].descUser=this.value" style="width:100%;border:1px solid #eee;border-radius:5px;padding:4px 6px;font-size:12px"></td>')+'<td><span class="tipo-chip" style="background:#f3f4f6;color:#555">'+o.forma+'</span></td><td style="font-weight:700;color:#b91c1c">'+fmt(o.valor)+'</td></tr>';
+    });
+    h+='<div style="font-weight:700;font-size:13px;margin:16px 0 6px"><span class="tipo-chip" style="background:#fee2e2;color:#991b1b">SAÍDAS</span> Débitos no extrato <span style="font-weight:500;color:#888;font-size:12px">\u2014 marque os que são gastos do açougue: <a href="#" onclick="impAllDeb(true);return false">marcar todas</a> \u00b7 <a href="#" onclick="impAllDeb(false);return false">limpar</a></span></div>';
+    if(body)h+='<div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Descrição</th><th>Forma</th><th>Valor</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    else h+='<div style="font-size:13px;color:#999;padding:6px 0">Nenhum débito novo para lançar (os de dias já lançados ficam ocultos).</div>';
+    if(nHid>0&&!showOld)h+='<div style="font-size:12px;margin-top:6px"><a href="#" onclick="IMP.showOld=true;impRender();return false">+ '+nHid+' de dias já lançados (ocultos) \u2014 mostrar</a></div>';
+    if(showOld)h+='<div style="font-size:12px;margin-top:6px"><a href="#" onclick="IMP.showOld=false;impRender();return false">ocultar débitos de dias já lançados</a></div>';
+  }
+  var nJaChq=0;
+  if(IMP.chq&&IMP.chq.length){
+    var cbody='';
+    IMP.chq.forEach(function(o,i){
+      if(impChqJaComp(o.numero)){nJaChq++;return;} // já compensado por você -> descarta
+      var m=impChqMatch(o.numero),cell,info;
+      if(m){cell='<input type="checkbox" class="imp-ck-chq" data-i="'+i+'" checked>';info='<span style="color:#166534">✓ '+(m.credor||'cheque')+' — vai dar baixa</span>';}
+      else{cell='<span class="tipo-chip" style="background:#fef3c7;color:#92400e">não encontrado</span>';info='<span style="color:#92400e">não está nos cheques lançados</span>';}
+      cbody+='<tr><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-weight:700">'+chqNorm(o.numero)+'</td><td style="font-size:12px;color:#666">'+info+'</td><td style="font-weight:700">'+fmt(o.valor)+'</td></tr>';
+    });
+    if(cbody)h+='<div style="font-weight:700;font-size:13px;margin:16px 0 6px"><span class="tipo-chip" style="background:#e0e7ff;color:#3730a3">CHEQUES</span> Compensados no extrato <span style="font-weight:500;color:#888;font-size:12px">— dão baixa automática na tela de Cheques</span></div><div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Nº</th><th>Situação</th><th>Valor</th></tr></thead><tbody>'+cbody+'</tbody></table></div>';
   }
   var e=IMP.excl,parts=[];
   if(e){
     if(e.sipag.n)parts.push(e.sipag.n+' créditos Sipag ('+fmt(e.sipag.v)+') \u2014 já vêm pelo cartão');
     if(e.interno.n)parts.push(e.interno.n+' internas/aplicação ('+fmt(e.interno.v)+')');
   }
+  if(nJaChq)parts.push(nJaChq+' cheque(s) já compensado(s)');
   if(parts.length)h+='<div style="background:#f3f4f6;border-radius:8px;padding:10px 12px;font-size:12px;color:#666;margin-top:12px">Descartado automaticamente: '+parts.join(' \u00b7 ')+'</div>';
   document.getElementById('imp-preview').innerHTML=h;
   impTotal();
@@ -1166,7 +1228,7 @@ function impAll(v){document.querySelectorAll('.imp-ck-pix').forEach(function(ck)
 function impAllDeb(v){document.querySelectorAll('.imp-ck-deb').forEach(function(ck){ck.checked=v;});impTotal();}
 function impSelectedSai(){
   var rows=[];
-  document.querySelectorAll('.imp-ck-deb:checked').forEach(function(ck){var o=IMP.deb[+ck.dataset.i];rows.push({id:'impdeb_'+o.fit,data:o.data,descricao:(o.memo||o.name||'DÉBITO').toUpperCase(),valor:r2(o.valor),formaPgto:o.forma});});
+  document.querySelectorAll('.imp-ck-deb:checked').forEach(function(ck){var o=IMP.deb[+ck.dataset.i];rows.push({id:'impdeb_'+o.fit,data:o.data,descricao:((o.descUser!=null?o.descUser:impDebDesc(o))||'DÉBITO').toUpperCase(),valor:r2(o.valor),formaPgto:o.forma});});
   return rows;
 }
 
@@ -1190,18 +1252,22 @@ function impTotal(){
 
 function impLaunch(){
   var rows=impSelected(),sai=impSelectedSai();
-  if(!rows.length&&!sai.length){alert('Marque ao menos um lançamento.');return;}
+  var ckChq=document.querySelectorAll('.imp-ck-chq:checked');
+  if(!rows.length&&!sai.length&&!ckChq.length){alert('Marque ao menos um lançamento.');return;}
   rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});if(idx>=0){E[idx]=r;}else{E.push(r);}});
   sai.forEach(function(r){var idx=S.findIndex(function(x){return x.id===r.id;});if(idx>=0){S[idx]=r;}else{S.push(r);}});
   if(rows.length){save('fz_entradas',E);renderEnt();}
   if(sai.length){save('fz_saidas',S);renderSai();}
+  var chqB=0;
+  ckChq.forEach(function(ck){var o=IMP.chq[+ck.dataset.i];var c=impChqMatch(o.numero);if(c){c.compensado=true;c.dataCompensacao=o.data;logReg('Cheques','Compensou (extrato)','Nº '+c.numero+' · '+(c.credor||''),'',fmt(c.valor)+' em '+fd(o.data));chqB++;}});
+  if(chqB){save('fz_cheques',C);renderChq();}
   renderDash();
   var totE=rows.reduce(function(s,r){return s+r.valor;},0),totS=sai.reduce(function(s,r){return s+r.valor;},0);
-  IMP.card=[];IMP.pix=[];IMP.deb=[];IMP.excl=null;
+  IMP.card=[];IMP.pix=[];IMP.deb=[];IMP.chq=[];IMP.excl=null;IMP.showOld=false;
   var ci=document.getElementById('imp-csv');if(ci)ci.value='';
   var oi=document.getElementById('imp-ofx');if(oi)oi.value='';
   impRender();
-  var p=[];if(rows.length)p.push(rows.length+' entrada(s) '+fmt(totE));if(sai.length)p.push(sai.length+' saída(s) '+fmt(totS));
+  var p=[];if(rows.length)p.push(rows.length+' entrada(s) '+fmt(totE));if(sai.length)p.push(sai.length+' saída(s) '+fmt(totS));if(chqB)p.push(chqB+' cheque(s) compensado(s)');
   document.getElementById('imp-files').innerHTML='<span style="color:#1a7a3c"><i class="ti ti-circle-check"></i> Lançado: '+p.join(' \u00b7 ')+'. Seleção limpa.</span>';
 }
 
@@ -2331,7 +2397,7 @@ function dashQ(tipo,btn){
 function renderDash(){
   let de=document.getElementById('dash-de').value,ate=document.getElementById('dash-ate').value;
   // Se datas vazias, usa hoje
-  if(!de||!ate){const h=new Date().toISOString().slice(0,10);de=de||h;ate=ate||h;document.getElementById('dash-de').value=de;document.getElementById('dash-ate').value=ate;}
+  if(!de||!ate){const h=td();de=de||h;ate=ate||h;document.getElementById('dash-de').value=de;document.getElementById('dash-ate').value=ate;}
   const eD=E.filter(e=>e.data>=de&&e.data<=ate),sD=S.filter(s=>s.data>=de&&s.data<=ate);
   const tE=r2(eD.reduce((s,e)=>s+e.valor,0)),tS=r2(sD.reduce((s,e)=>s+e.valor,0)),sal=r2(tE-tS);
   const din=r2(eD.filter(e=>e.tipo==='DINHEIRO').reduce((s,e)=>s+e.valor,0));
@@ -2434,11 +2500,11 @@ async function init(){
     E=_DE;S=_DS;G=_DG;C=_DC;
   }
   syncCloudExtras();
-  const today=td(),m=new Date().getMonth()+1;
+  const today=td(),m=nowBR().getMonth()+1;
   ['e-dt','s-dt','g-dt','c-dt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
   document.getElementById('dash-de').value=today;
   document.getElementById('dash-ate').value=today;
-  document.getElementById('f-an').value=new Date().getFullYear();
+  document.getElementById('f-an').value=nowBR().getFullYear();
   document.getElementById('f-ms').value=String(m).padStart(2,'0');
   document.getElementById('rel-de').value=today.slice(0,7)+'-01';
   document.getElementById('rel-ate').value=today;
@@ -2468,7 +2534,67 @@ async function init(){
   renderDash();
 }
 ;
-init();
+/* ===================== AUTENTICAÇÃO (Supabase Auth + RLS) ===================== */
+var AUTH_DOMAIN='@filezao.app';   /* sufixo oculto: usuário "diogo" => diogo@filezao.app */
+var AUTH_LS='fz_auth';
+function authSave(s){try{localStorage.setItem(AUTH_LS,JSON.stringify(s));}catch(e){}}
+function authLoad(){try{return JSON.parse(localStorage.getItem(AUTH_LS)||'null');}catch(e){return null;}}
+function authClear(){try{localStorage.removeItem(AUTH_LS);}catch(e){}}
+function authSetToken(tok){SB_HDR['Authorization']='Bearer '+(tok||SB_KEY);}
+async function authPost(grant,body){
+  var r=await fetch(SB_URL+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  var data=await r.json().catch(function(){return {};});
+  if(!r.ok)throw new Error((data&&(data.error_description||data.msg||data.error))||('HTTP '+r.status));
+  return data;
+}
+var _authBooted=false;
+function authBootApp(){
+  if(_authBooted)return; _authBooted=true;
+  var g=document.getElementById('authgate'); if(g)g.style.display='none';
+  var s=authLoad(), w=document.getElementById('au-who'); if(w&&s&&s.user)w.textContent='@'+s.user;
+  init();
+}
+async function authLogin(){
+  var u=(document.getElementById('au-user').value||'').trim().toLowerCase();
+  var p=document.getElementById('au-pass').value||'';
+  var msg=document.getElementById('au-msg'), btn=document.getElementById('au-btn');
+  if(!u||!p){msg.textContent='Preencha usuário e senha.';return;}
+  msg.textContent=''; btn.disabled=true; btn.textContent='Entrando...';
+  try{
+    var email=(u.indexOf('@')>=0)?u:(u+AUTH_DOMAIN);
+    var d=await authPost('password',{email:email,password:p});
+    authSetToken(d.access_token);
+    authSave({access_token:d.access_token,refresh_token:d.refresh_token,user:u,ts:Date.now()});
+    authBootApp();
+  }catch(e){
+    msg.textContent='Usuário ou senha incorretos.';
+    btn.disabled=false; btn.textContent='Entrar';
+  }
+}
+async function authTryRestore(){
+  var s=authLoad(); if(!s||!s.refresh_token)return false;
+  try{
+    var d=await authPost('refresh_token',{refresh_token:s.refresh_token});
+    authSetToken(d.access_token);
+    authSave({access_token:d.access_token,refresh_token:d.refresh_token,user:s.user,ts:Date.now()});
+    return true;
+  }catch(e){authClear();return false;}
+}
+function authLogout(){
+  if(!confirm('Deseja sair do sistema?'))return;
+  authClear(); authSetToken(null); location.reload();
+}
+/* mantém a sessão viva (renova o token a cada 45 min) */
+setInterval(function(){authTryRestore();},45*60*1000);
+/* Boot: tenta restaurar a sessão; se conseguir, abre o sistema; senão, mostra o login */
+(async function(){
+  var ok=await authTryRestore();
+  if(ok){authBootApp();}
+  else{
+    var g=document.getElementById('authgate'); if(g)g.style.display='flex';
+    var f=document.getElementById('au-user'); if(f)setTimeout(function(){f.focus();},60);
+  }
+})();
 </script>
 </body>
 </html>
