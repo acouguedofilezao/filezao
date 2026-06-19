@@ -137,7 +137,7 @@ const DUR={prod:8000,promo:6500,lanc:6500,info:8000};   // tempo por tipo de tel
 const REFRESH_MS=60000;   // rebusca os dados a cada 1min
 
 var CATMAP={"1":"CARNES BOVINAS","2":"CARNES BOVINAS","3":"CARNES BOVINAS","4":"CARNES BOVINAS","5":"CARNES BOVINAS","6":"CARNES BOVINAS","8":"CARNES BOVINAS","9":"CARNES BOVINAS","10":"CARNES BOVINAS","11":"CARNES BOVINAS","12":"CARNES BOVINAS","13":"CARNES BOVINAS","14":"CARNES BOVINAS","15":"CARNES BOVINAS","16":"CARNES BOVINAS","17":"CARNES BOVINAS","18":"CARNES BOVINAS","19":"CARNES BOVINAS","21":"CARNES BOVINAS","22":"TEMPERADOS E RECHEADOS","23":"CARNES BOVINAS","24":"CARNES SUINAS","25":"CARNES SUINAS","27":"CARNES SUINAS","28":"CARNES SUINAS","29":"CARNES SUINAS","30":"CARNES SUINAS","31":"CARNES SUINAS","32":"CARNES SUINAS","33":"CARNES SUINAS","34":"CARNES BOVINAS","35":"CARNES SUINAS","36":"CARNES SUINAS","37":"FRANGOS E AVES","38":"FRANGOS E AVES","39":"FRANGOS E AVES","40":"FRANGOS E AVES","41":"FRANGOS E AVES","42":"FRANGOS E AVES","44":"TEMPERADOS E RECHEADOS","45":"TEMPERADOS E RECHEADOS","46":"FRANGOS E AVES","47":"CARNES SUINAS","48":"CARNES SUINAS","49":"FRANGOS E AVES","50":"EMBUTIDOS","51":"FRANGOS E AVES","58":"TEMPERADOS E RECHEADOS","59":"LATICÍNIOS","60":"LINGUIÇAS","62":"LINGUIÇAS","63":"LINGUIÇAS","64":"LINGUIÇAS","67":"CARNES BOVINAS","68":"CARNES BOVINAS","69":"CARNES SUINAS","70":"CARNES SUINAS","71":"LINGUIÇAS","73":"LINGUIÇAS","75":"CARNES BOVINAS","76":"CARNES BOVINAS","77":"CARNES SUINAS","78":"CARNES SUINAS","80":"TEMPERADOS E RECHEADOS","81":"CARNES SUINAS","82":"TEMPERADOS E RECHEADOS","83":"TEMPERADOS E RECHEADOS","84":"FRANGOS E AVES","87":"TEMPERADOS E RECHEADOS","89":"TEMPERADOS E RECHEADOS","91":"CARNES SUINAS","92":"KITS","93":"KITS","95":"LATICÍNIOS","96":"KITS","102":"KITS","104":"TEMPERADOS E RECHEADOS","109":"LINGUIÇAS","110":"KITS","111":"LINGUIÇAS","112":"FRANGOS E AVES","113":"LINGUIÇAS","199":"ESPETINHOS","200":"ESPETINHOS","206":"TEMPERADOS E RECHEADOS","212":"MERCEARIA","213":"KITS","216":"CARNES SUINAS","234":"TEMPERADOS E RECHEADOS","237":"KITS","238":"CARNES BOVINAS","255":"CARNES BOVINAS","256":"LINGUIÇAS","260":"KITS","263":"FRANGOS E AVES","264":"TEMPERADOS E RECHEADOS","268":"LINGUIÇAS","272":"TEMPERADOS E RECHEADOS","273":"LATICÍNIOS","274":"TEMPERADOS E RECHEADOS","275":"TEMPERADOS E RECHEADOS","276":"TEMPERADOS E RECHEADOS","286":"LINGUIÇAS","287":"LINGUIÇAS","288":"CARCAÇAS","289":"CARCAÇAS","291":"KITS","292":"FRANGOS E AVES","293":"FRANGOS E AVES","294":"USO INTERNO","295":"USO INTERNO","296":"USO INTERNO","297":"USO INTERNO","303":"OUTROS","304":"USO INTERNO","311":"USO INTERNO","312":"USO INTERNO","313":"KITS","314":"ESPETINHOS","338":"ESPETINHOS","344":"CARCAÇAS","345":"CARCAÇAS","349":"KITS","356":"FRANGOS E AVES","357":"CARNES BOVINAS","358":"CARNES BOVINAS","359":"LINGUIÇAS","360":"TEMPERADOS E RECHEADOS","361":"KITS","362":"CARNES SUINAS","366":"TEMPERADOS E RECHEADOS","371":"KITS","372":"KITS","373":"KITS","374":"KITS","375":"KITS","376":"KITS","377":"KITS","378":"KITS","379":"KITS","380":"KITS","381":"KITS","382":"KITS","383":"KITS","384":"KITS","385":"KITS","386":"FRANGOS E AVES","387":"KITS","388":"KITS","389":"KITS","390":"KITS","391":"KITS","392":"KITS","393":"KITS","395":"OUTROS","396":"LATICÍNIOS","397":"LATICÍNIOS","400":"TEMPERADOS E RECHEADOS"};
-var CAT_ORDER=['CARNES BOVINAS','CARNES SUINAS','FRANGOS E AVES','LINGUIÇAS','EMBUTIDOS','TEMPERADOS E RECHEADOS','ESPETINHOS','KITS','LATICÍNIOS','MERCEARIA','CARCAÇAS','OUTROS','USO INTERNO'];
+var CAT_ORDER=['CARNES BOVINAS','CARNES SUINAS','FRANGOS E AVES','PEIXES','LINGUIÇAS','EMBUTIDOS','TEMPERADOS E RECHEADOS','ESPETINHOS','PÃO DE ALHO','KIT - HAMBURGUER','KIT - PERSONALIZADO','KITS','MOLHOS & PIMENTAS','LATICÍNIOS','DOCES','BEBIDAS','MERCEARIA','EMBALAGENS','INSUMOS PARA PRODUÇÃO','CARCAÇAS','USO INTERNO','OUTROS'];
 function canonCat(nome){var s=(nome||'').toUpperCase();
   if(/BOVIN/.test(s))return 'CARNES BOVINAS';
   if(/SUIN|SUÍN|PORCO|PERNIL|LOMBO|COSTELINHA|BACON|TOUCINHO|JOELHO/.test(s))return 'CARNES SUINAS';
@@ -153,6 +153,7 @@ function canonCat(nome){var s=(nome||'').toUpperCase();
   return 'OUTROS';
 }
 function catOf(cod,nome){return CATMAP[String(cod)]||canonCat(nome)||'OUTROS';}
+function catProd(p){return (p.categoria&&String(p.categoria).trim())||catOf(p.id,p.nometv||p.nome);}
 function catRank(c){var i=CAT_ORDER.indexOf(c);return i<0?98:i;}
 
 function fmtPreco(v){v=Number(v)||0;return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -171,7 +172,7 @@ function cardHTML(p){
   var nome=(p.nometv||p.nome||'').toUpperCase();
   var nsz=nome.length>30?'2.3vh':(nome.length>22?'2.7vh':(nome.length>16?'3.0vh':'3.4vh'));
   var un=(p.unidade==='UN')?'un':'kg';
-  var cat=catOf(p.id,p.nometv||p.nome);
+  var cat=catProd(p);
   var foto=(p.foto||'').trim();
   var promo=emPromo(p);
   var preco=promo?Number(p.promo_preco):Number(p.preco);
@@ -245,7 +246,7 @@ function infoHTML(id){
 function promoFullHTML(p){
   var nome=(p.nometv||p.nome||'').toUpperCase();
   var un=(p.unidade==='UN')?'un':'kg';
-  var cat=catOf(p.id,p.nometv||p.nome);
+  var cat=catProd(p);
   var foto=(p.foto||'').trim();
   var img=foto?'<img src="'+esc(foto)+'" onerror="this.style.display=\'none\'">':'<div class="pf-ph">🥩</div>';
   var ate=p.promo_ate?'<div class="pf-ate">Oferta válida até '+fdBR(p.promo_ate)+'</div>':'';
@@ -260,7 +261,7 @@ function promoFullHTML(p){
 function lancFullHTML(p){
   var nome=(p.nometv||p.nome||'').toUpperCase();
   var un=(p.unidade==='UN')?'un':'kg';
-  var cat=catOf(p.id,p.nometv||p.nome);
+  var cat=catProd(p);
   var foto=(p.foto||'').trim();
   var img=foto?'<img src="'+esc(foto)+'" onerror="this.style.display=\'none\'">':'<div class="pf-ph">🥩</div>';
   var preco=Number(p.preco)>0?'<div class="pf-price"><span class="pf-cif">R$</span><span class="pf-val">'+fmtPreco(p.preco)+'</span><span class="pf-un">/'+un+'</span></div>':'';
@@ -320,7 +321,7 @@ function rotate(){
 
 function montarPaginas(rows){
   rows.sort(function(a,b){
-    var ca=catOf(a.id,a.nometv||a.nome), cb=catOf(b.id,b.nometv||b.nome);
+    var ca=catProd(a), cb=catProd(b);
     if(ca!==cb)return catRank(ca)-catRank(cb);
     var na=(a.nometv||a.nome||'').toUpperCase(), nb=(b.nometv||b.nome||'').toUpperCase();
     return na<nb?-1:na>nb?1:0;
@@ -342,7 +343,7 @@ async function carregarFotos(){
 async function carregar(){
   try{
     var base='id,nometv,nome,unidade,preco,promocao,promo_preco,promo_ate';
-    var url=SB_URL+'/rest/v1/produtos?select='+base+',lancamento&exibir=eq.true';
+    var url=SB_URL+'/rest/v1/produtos?select='+base+',lancamento,categoria&exibir=eq.true';
     var r=await fetch(url,{headers:HDR});
     if(!r.ok){url=SB_URL+'/rest/v1/produtos?select='+base+'&exibir=eq.true';r=await fetch(url,{headers:HDR});}
     if(!r.ok)throw new Error('HTTP '+r.status);

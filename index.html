@@ -31,7 +31,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;c
 .hamburger{display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:8px;cursor:pointer;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;margin-right:4px}
 .hamburger:hover{background:rgba(254,0,0,0.3);border-color:#FE0000}
 /* ── LAYOUT LATERAL ── */
-.app-body{display:flex;min-height:calc(100vh - 91px)}
+.app-body{display:flex;height:calc(100vh - 91px);overflow:hidden}
 .sidebar{width:220px;min-width:220px;background:#0d0d0d;border-right:1px solid rgba(254,0,0,0.15);display:flex;flex-direction:column;transition:all .25s;overflow:hidden;position:relative}
 .sidebar.collapsed{width:0;min-width:0}
 .sidebar-toggle{position:fixed;top:50%;left:220px;transform:translateY(-50%);z-index:100;width:28px;height:64px;background:#1a1a1a;border:1px solid rgba(254,0,0,0.4);border-left:none;border-radius:0 10px 10px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);transition:left .25s,background .15s;font-size:13px;box-shadow:3px 0 10px rgba(0,0,0,0.3)}
@@ -795,8 +795,17 @@ async function sbGet(table,params){
 }
 async function sbUpsert(table,rows){
   if(!rows||!rows.length)return;
-  var r=await fetch(SB_URL+'/rest/v1/'+table,{method:'POST',headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates'},body:JSON.stringify(rows)});
-  if(!r.ok){var t=await r.text();throw new Error('UPSERT '+table+' '+r.status+' '+t);}
+  var hdr={...SB_HDR,'Prefer':'resolution=merge-duplicates'};
+  var r=await fetch(SB_URL+'/rest/v1/'+table,{method:'POST',headers:hdr,body:JSON.stringify(rows)});
+  if(r.ok)return;
+  var t=await r.text();
+  if(table==='produtos'&&/categoria|lancamento|PGRST204|column/i.test(t)){
+    var rows2=rows.map(function(o){var c={};for(var k in o){if(k==='categoria'||k==='lancamento')continue;c[k]=o[k];}return c;});
+    var r2=await fetch(SB_URL+'/rest/v1/'+table,{method:'POST',headers:hdr,body:JSON.stringify(rows2)});
+    if(r2.ok)return;
+    var t2=await r2.text();throw new Error('UPSERT '+table+' '+r2.status+' '+t2);
+  }
+  throw new Error('UPSERT '+table+' '+r.status+' '+t);
 }
 async function sbPatch(table,id,data){
   var r=await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:SB_HDR,body:JSON.stringify(data)});
@@ -878,8 +887,8 @@ function save(k,d){
 function load(k){return null;} // não usa mais localStorage
 
 /* ===================== PRODUTOS / TV ===================== */
-function prodToDB(p){return {id:p.codigo,nome:p.nome,nometv:p.nomeTV||p.nome,unidade:p.unidade,preco:p.preco,exibir:!!p.exibir,promocao:!!p.promocao,promo_preco:(p.promoPreco&&p.promoPreco>0?p.promoPreco:null),promo_ate:(p.promoAte||null),lancamento:!!p.lancamento,ordem:p.ordem||0,foto:p.foto||null,ts:new Date().toISOString()};}
-function prodFromDB(r){return {codigo:String(r.id),nome:r.nome||'',nomeTV:r.nometv||r.nome||'',unidade:r.unidade||'KG',preco:Number(r.preco)||0,exibir:!!r.exibir,promocao:!!r.promocao,promoPreco:Number(r.promo_preco)||0,promoAte:r.promo_ate||'',lancamento:!!r.lancamento,ordem:Number(r.ordem)||0,foto:r.foto||''};}
+function prodToDB(p){return {id:p.codigo,nome:p.nome,nometv:p.nomeTV||p.nome,unidade:p.unidade,preco:p.preco,exibir:!!p.exibir,promocao:!!p.promocao,promo_preco:(p.promoPreco&&p.promoPreco>0?p.promoPreco:null),promo_ate:(p.promoAte||null),lancamento:!!p.lancamento,categoria:((p.categoria&&String(p.categoria).trim())||null),ordem:p.ordem||0,foto:p.foto||null,ts:new Date().toISOString()};}
+function prodFromDB(r){return {codigo:String(r.id),nome:r.nome||'',nomeTV:r.nometv||r.nome||'',unidade:r.unidade||'KG',preco:Number(r.preco)||0,exibir:!!r.exibir,promocao:!!r.promocao,promoPreco:Number(r.promo_preco)||0,promoAte:r.promo_ate||'',lancamento:!!r.lancamento,categoria:r.categoria||'',ordem:Number(r.ordem)||0,foto:r.foto||''};}
 // Parser do arquivo de cadastro da balança (posição fixa, 39 chars):
 // [0:6]=código  [6]=P(peso/KG) ou U(unidade/UN)  [7:29]=nome(22)  [29:36]=preço centavos  [36:39]=validade
 function prodParseBalanca(txt){
@@ -896,7 +905,8 @@ function prodParseBalanca(txt){
   return out;
 }
 var CATMAP={"1":"CARNES BOVINAS","2":"CARNES BOVINAS","3":"CARNES BOVINAS","4":"CARNES BOVINAS","5":"CARNES BOVINAS","6":"CARNES BOVINAS","8":"CARNES BOVINAS","9":"CARNES BOVINAS","10":"CARNES BOVINAS","11":"CARNES BOVINAS","12":"CARNES BOVINAS","13":"CARNES BOVINAS","14":"CARNES BOVINAS","15":"CARNES BOVINAS","16":"CARNES BOVINAS","17":"CARNES BOVINAS","18":"CARNES BOVINAS","19":"CARNES BOVINAS","21":"CARNES BOVINAS","22":"TEMPERADOS E RECHEADOS","23":"CARNES BOVINAS","24":"CARNES SUINAS","25":"CARNES SUINAS","27":"CARNES SUINAS","28":"CARNES SUINAS","29":"CARNES SUINAS","30":"CARNES SUINAS","31":"CARNES SUINAS","32":"CARNES SUINAS","33":"CARNES SUINAS","34":"CARNES BOVINAS","35":"CARNES SUINAS","36":"CARNES SUINAS","37":"FRANGOS E AVES","38":"FRANGOS E AVES","39":"FRANGOS E AVES","40":"FRANGOS E AVES","41":"FRANGOS E AVES","42":"FRANGOS E AVES","44":"TEMPERADOS E RECHEADOS","45":"TEMPERADOS E RECHEADOS","46":"FRANGOS E AVES","47":"CARNES SUINAS","48":"CARNES SUINAS","49":"FRANGOS E AVES","50":"EMBUTIDOS","51":"FRANGOS E AVES","58":"TEMPERADOS E RECHEADOS","59":"LATICÍNIOS","60":"LINGUIÇAS","62":"LINGUIÇAS","63":"LINGUIÇAS","64":"LINGUIÇAS","67":"CARNES BOVINAS","68":"CARNES BOVINAS","69":"CARNES SUINAS","70":"CARNES SUINAS","71":"LINGUIÇAS","73":"LINGUIÇAS","75":"CARNES BOVINAS","76":"CARNES BOVINAS","77":"CARNES SUINAS","78":"CARNES SUINAS","80":"TEMPERADOS E RECHEADOS","81":"CARNES SUINAS","82":"TEMPERADOS E RECHEADOS","83":"TEMPERADOS E RECHEADOS","84":"FRANGOS E AVES","87":"TEMPERADOS E RECHEADOS","89":"TEMPERADOS E RECHEADOS","91":"CARNES SUINAS","92":"KITS","93":"KITS","95":"LATICÍNIOS","96":"KITS","102":"KITS","104":"TEMPERADOS E RECHEADOS","109":"LINGUIÇAS","110":"KITS","111":"LINGUIÇAS","112":"FRANGOS E AVES","113":"LINGUIÇAS","199":"ESPETINHOS","200":"ESPETINHOS","206":"TEMPERADOS E RECHEADOS","212":"MERCEARIA","213":"KITS","216":"CARNES SUINAS","234":"TEMPERADOS E RECHEADOS","237":"KITS","238":"CARNES BOVINAS","255":"CARNES BOVINAS","256":"LINGUIÇAS","260":"KITS","263":"FRANGOS E AVES","264":"TEMPERADOS E RECHEADOS","268":"LINGUIÇAS","272":"TEMPERADOS E RECHEADOS","273":"LATICÍNIOS","274":"TEMPERADOS E RECHEADOS","275":"TEMPERADOS E RECHEADOS","276":"TEMPERADOS E RECHEADOS","286":"LINGUIÇAS","287":"LINGUIÇAS","288":"CARCAÇAS","289":"CARCAÇAS","291":"KITS","292":"FRANGOS E AVES","293":"FRANGOS E AVES","294":"USO INTERNO","295":"USO INTERNO","296":"USO INTERNO","297":"USO INTERNO","303":"OUTROS","304":"USO INTERNO","311":"USO INTERNO","312":"USO INTERNO","313":"KITS","314":"ESPETINHOS","338":"ESPETINHOS","344":"CARCAÇAS","345":"CARCAÇAS","349":"KITS","356":"FRANGOS E AVES","357":"CARNES BOVINAS","358":"CARNES BOVINAS","359":"LINGUIÇAS","360":"TEMPERADOS E RECHEADOS","361":"KITS","362":"CARNES SUINAS","366":"TEMPERADOS E RECHEADOS","371":"KITS","372":"KITS","373":"KITS","374":"KITS","375":"KITS","376":"KITS","377":"KITS","378":"KITS","379":"KITS","380":"KITS","381":"KITS","382":"KITS","383":"KITS","384":"KITS","385":"KITS","386":"FRANGOS E AVES","387":"KITS","388":"KITS","389":"KITS","390":"KITS","391":"KITS","392":"KITS","393":"KITS","395":"OUTROS","396":"LATICÍNIOS","397":"LATICÍNIOS","400":"TEMPERADOS E RECHEADOS"};
-var CAT_ORDER=['CARNES BOVINAS','CARNES SUINAS','FRANGOS E AVES','LINGUIÇAS','EMBUTIDOS','TEMPERADOS E RECHEADOS','ESPETINHOS','KITS','LATICÍNIOS','MERCEARIA','CARCAÇAS','OUTROS','USO INTERNO'];
+var CAT_ORDER=['CARNES BOVINAS','CARNES SUINAS','FRANGOS E AVES','PEIXES','LINGUIÇAS','EMBUTIDOS','TEMPERADOS E RECHEADOS','ESPETINHOS','PÃO DE ALHO','KIT - HAMBURGUER','KIT - PERSONALIZADO','KITS','MOLHOS & PIMENTAS','LATICÍNIOS','DOCES','BEBIDAS','MERCEARIA','EMBALAGENS','INSUMOS PARA PRODUÇÃO','CARCAÇAS','USO INTERNO','OUTROS'];
+var CATEGORIAS=CAT_ORDER.filter(function(c){return c!=='OUTROS';});
 function prodCanonCat(nome){var s=(nome||'').toUpperCase();
   if(/BOVIN/.test(s))return 'CARNES BOVINAS';
   if(/SUIN|SUÍN|PORCO|PERNIL|LOMBO|COSTELINHA|BACON|TOUCINHO|JOELHO/.test(s))return 'CARNES SUINAS';
@@ -911,7 +921,7 @@ function prodCanonCat(nome){var s=(nome||'').toUpperCase();
   if(/BOBINA|SACOLA|ETIQUETA|EMBALAGEM|TAPETE|RETALHO|PERCA|PERDA/.test(s))return 'USO INTERNO';
   return 'OUTROS';
 }
-function prodCat(p){return CATMAP[p.codigo]||prodCanonCat(p.nome||p.nomeTV)||'OUTROS';}
+function prodCat(p){return (p.categoria&&String(p.categoria).trim())||CATMAP[p.codigo]||prodCanonCat(p.nome||p.nomeTV)||'OUTROS';}
 function catRank(c){var i=CAT_ORDER.indexOf(c);return i<0?98:i;}
 var PRODIMP=null;
 function prodDiff(novos){
@@ -985,12 +995,13 @@ function tvFillCatFilter(){
 }
 function tvSelRow(p){
   var nm=p.nomeTV||p.nome;
+  var catEff=p.categoria||CATMAP[p.codigo]||'';
   var h='<tr'+(p.promocao?' style="background:#fff4e0"':(p.lancamento?' style="background:#e0fbf1"':(p.exibir?' style="background:#f0faf4"':'')))+'>';
   h+='<td style="width:36px"><input type="checkbox" data-nocaps '+(p.exibir?'checked':'')+' onchange="tvToggle(\''+p.codigo+'\',this.checked)" style="width:20px;height:20px;cursor:pointer"></td>';
   h+='<td style="width:50px;text-align:center"><label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-size:9px;font-weight:800;color:'+(p.promocao?'#FE0000':'#ccc')+'"><input type="checkbox" data-nocaps '+(p.promocao?'checked':'')+' onchange="tvPromo(\''+p.codigo+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#FE0000">PROMO</label>'+(p.promocao&&p.promoPreco>0?'<div style="font-size:9px;color:#FE0000;font-weight:800;margin-top:2px;line-height:1.2">'+fmt(p.promoPreco)+'<br><span style="color:#b8860b">até '+(p.promoAte?fd(p.promoAte):'—')+'</span></div>':'')+'</td>';
   h+='<td style="width:50px;text-align:center"><label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-size:9px;font-weight:800;color:'+(p.lancamento?'#0a8f4f':'#ccc')+'"><input type="checkbox" data-nocaps '+(p.lancamento?'checked':'')+' onchange="tvLanc(\''+p.codigo+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#16a35a">NOVO</label></td>';
   h+='<td style="width:46px;color:#999;font-size:12px;font-weight:700;text-align:center">'+cotEsc(p.codigo)+'</td>';
-  h+='<td><input value="'+cotEsc(nm)+'" onchange="tvNome(\''+p.codigo+'\',this.value)" style="width:100%;border:1px solid #eee;border-radius:5px;padding:5px 7px;font-size:13px">'+(p.nome!==nm?'<div style="font-size:10px;color:#bbb;margin-top:1px">balança: '+cotEsc(p.nome)+'</div>':'')+'<div style="display:flex;align-items:center;gap:7px;margin-top:5px">'+(p.foto?'<img src="'+cotEsc(p.foto)+'" style="width:34px;height:34px;border-radius:6px;object-fit:cover;border:1px solid #eee;flex:0 0 auto">':'<span style="width:34px;height:34px;border-radius:6px;background:#f4f4f4;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto">🥩</span>')+'<label style="font-size:11px;color:#0369a1;cursor:pointer;border:1px solid #cfe3f5;background:#eff6ff;border-radius:6px;padding:4px 9px;white-space:nowrap">'+(p.foto?'Trocar foto':'Adicionar foto')+'<input type="file" accept="image/*" data-nocaps onchange="tvFotoFile(\''+p.codigo+'\',this)" style="display:none"></label>'+(p.foto?'<button onclick="tvFotoDel(\''+p.codigo+'\')" style="font-size:11px;color:#FE0000;background:none;border:none;cursor:pointer;padding:0">remover</button>':'')+'</div></td>';
+  h+='<td><input value="'+cotEsc(nm)+'" onchange="tvNome(\''+p.codigo+'\',this.value)" style="width:100%;border:1px solid #eee;border-radius:5px;padding:5px 7px;font-size:13px">'+(p.nome!==nm?'<div style="font-size:10px;color:#bbb;margin-top:1px">balança: '+cotEsc(p.nome)+'</div>':'')+'<div style="display:flex;align-items:center;gap:7px;margin-top:5px">'+(p.foto?'<img src="'+cotEsc(p.foto)+'" style="width:34px;height:34px;border-radius:6px;object-fit:cover;border:1px solid #eee;flex:0 0 auto">':'<span style="width:34px;height:34px;border-radius:6px;background:#f4f4f4;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto">🥩</span>')+'<label style="font-size:11px;color:#0369a1;cursor:pointer;border:1px solid #cfe3f5;background:#eff6ff;border-radius:6px;padding:4px 9px;white-space:nowrap">'+(p.foto?'Trocar foto':'Adicionar foto')+'<input type="file" accept="image/*" data-nocaps onchange="tvFotoFile(\''+p.codigo+'\',this)" style="display:none"></label>'+(p.foto?'<button onclick="tvFotoDel(\''+p.codigo+'\')" style="font-size:11px;color:#FE0000;background:none;border:none;cursor:pointer;padding:0">remover</button>':'')+'</div>'+'<div style="margin-top:6px;display:flex;align-items:center;gap:6px"><span style="font-size:10px;color:#999;font-weight:700">CATEGORIA</span><select data-nocaps onchange="tvCat(\''+p.codigo+'\',this.value)" style="font-size:11px;border:1px solid '+(catEff&&CATEGORIAS.indexOf(catEff)>=0?'#ddd':'#f0a000')+';background:'+(catEff&&CATEGORIAS.indexOf(catEff)>=0?'#fff':'#fff8ec')+';border-radius:5px;padding:3px 6px;max-width:230px;flex:1"><option value="">— selecione —</option>'+CATEGORIAS.map(function(c){return '<option value="'+cotEsc(c)+'"'+(catEff===c?' selected':'')+'>'+cotEsc(c)+'</option>';}).join('')+'</select></div></td>';
   h+='<td style="color:#888;font-size:12px;width:38px">'+p.unidade+'</td>';
   h+='<td style="text-align:right;font-weight:700;width:82px">'+(p.preco>0?fmt(p.preco):'<span style="color:#bbb">—</span>')+'</td></tr>';
   return h;
@@ -1068,6 +1079,12 @@ function promoExpirar(){
   if(mud.length){mud.forEach(function(p){sbUpsert('produtos',[prodToDB(p)]).catch(function(){});logReg('Produtos','Promoção','Venceu · '+(p.nomeTV||p.nome),'','preço normal');});tvSelRender();}
 }
 function tvToggle(cod,on){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.exibir=on;tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
+function tvCat(cod,v){
+  var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;
+  p.categoria=(v||'').trim();tvSelRender();
+  sbUpsert('produtos',[prodToDB(p)]).catch(function(){});
+  logReg('Produtos','Categoria',(p.nomeTV||p.nome)+' \u2192 '+(p.categoria||'(em branco)'),'',p.categoria||'');
+}
 function tvNome(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.nomeTV=((v||'').trim().toUpperCase())||p.nome;sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvFoto(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.foto=(v||'').trim();tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvFotoFile(cod,input){

@@ -1,5 +1,16 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Campo de categoria (com trava) + aba lateral fixa
+- **Categoria do produto:** na tela TV / Produtos, cada produto agora tem um **seletor de categoria** (abaixo do nome/foto). Só dá pra escolher entre as **categorias cadastradas** (lista travada — não dá pra digitar livre, evita ficar fora do padrão). Quando importar o `cad` e vier produto novo, ele entra **sem categoria** (o seletor fica destacado em laranja), aí você escolhe a correta.
+- A categoria escolhida manda na TV (agrupamento) e na ordenação, na frente do mapeamento antigo.
+- **Aba lateral fixa:** a barra do menu agora fica **fixa** na tela — quando o relatório é grande, o conteúdo rola por dentro e o menu continua sempre visível (não estica mais junto com a página).
+- **Salvamento à prova de erro:** se as colunas novas ainda não existirem no banco, o sistema salva o resto mesmo assim (não falha calado).
+- **⚠️ Rode no Supabase (quando as gravações estiverem ok):**
+  ```sql
+  ALTER TABLE produtos ADD COLUMN IF NOT EXISTS categoria text;
+  ALTER TABLE produtos ADD COLUMN IF NOT EXISTS lancamento boolean DEFAULT false;
+  ```
+
 ## 2026-06-19 — Tempo de cada tela ajustado (ciclo mais curto)
 - Antes toda tela ficava 10s. Agora o tempo é **por tipo**: tabela de produtos **8s** (dá pra ler), promoção/lançamento **6,5s** (é só uma carne + preço, lê num olhar), institucional **8s** (tempo de escanear o QR). 
 - Com isso o ciclo encurtou ~24% — o cliente que fica 1–2 min no açougue e olha de relance pega muito mais coisa, e a promoção (o que vende) volta mais rápido.
