@@ -1,5 +1,15 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-18 — Promoção com preço e data de validade (some sozinha)
+- Ao marcar **PROMO** num produto, abre uma telinha pra você definir:
+  - **Preço promocional** (campo no estilo caixa registradora).
+  - **Data de validade** ("válida até", inclusive).
+- Na TV, o produto em promoção mostra o **preço normal riscado** + o **promocional em destaque**, com selo "🔥 Promoção" e borda dourada pulsando, pra forçar a venda.
+- **Vence sozinha:** no dia seguinte ao fim da data, a TV já volta a mostrar o preço normal automaticamente, e quando você abre o sistema ele **desmarca** a promoção vencida sozinho (e registra no log "Promoção · Venceu").
+- Validações: avisa se a data já passou e confirma caso o preço promocional não seja menor que o normal. Cada ativação/encerramento/vencimento fica no Registro de alterações.
+- Na tela de Seleção TV, a linha do produto em promoção mostra o preço promo e o "até dd/mm" embaixo do PROMO.
+- **Pré-requisito (uma vez só):** criar as colunas no banco antes de subir (ver instruções no chat). A TV foi feita pra não quebrar mesmo sem as colunas.
+
 ## 2026-06-18 — Promoção em destaque na TV + ajustes (fidelidade, rádio)
 - **Campo "Promoção" na Seleção TV:** na tela onde você marca os produtos que aparecem na TV, agora tem uma coluna **PROMO**. Ao marcar, o produto aparece na TV com **destaque chamativo**: selo "🔥 Promoção", borda dourada pulsando e a faixa do preço realçada — pra "forçar a venda". A linha do produto em promoção também fica destacada (laranja) no painel de seleção.
   - **Pré-requisito (uma vez só):** precisa criar a coluna `promocao` no banco antes de subir (ver instruções no chat). A TV foi feita pra **não quebrar** mesmo se a coluna ainda não existir.

@@ -40,6 +40,9 @@
   @keyframes promoglow{0%,100%{box-shadow:0 0 0 2px rgba(255,179,0,.20),0 6px 18px rgba(0,0,0,.5)}50%{box-shadow:0 0 0 5px rgba(255,179,0,.55),0 6px 26px rgba(255,140,0,.4)}}
   .card.promo .bar{background:#fff3da}
   .card .promo-tag{position:absolute;top:0;right:0;background:linear-gradient(135deg,#ff9800,#FE0000);color:#fff;font-size:1.9vh;font-weight:900;letter-spacing:.5px;padding:.6vh 1.1vw;border-bottom-left-radius:8px;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.45);z-index:2}
+  .card .promo-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;line-height:1}
+  .card .promo-right .oldp{font-size:2.1vh;font-weight:700;color:#999;text-decoration:line-through;margin-bottom:.2vh}
+  .card .promo-right .newp{display:flex;align-items:baseline;gap:.3vw;white-space:nowrap}
   .card .photo{flex:1 1 auto;position:relative;background:#1d1d1d;overflow:hidden;display:flex;align-items:center;justify-content:center}
   .card .photo img{width:100%;height:100%;object-fit:cover}
   .card .ph-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;color:#3a3a3a}
@@ -135,19 +138,22 @@ function tick(){var d;try{d=new Date(new Date().toLocaleString('en-US',{timeZone
 
 var PAGES=[], cur=0;
 
+function hojeBR(){try{var d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());}catch(e){var x=new Date();return x.getFullYear()+'-'+z(x.getMonth()+1)+'-'+z(x.getDate());}}
 function cardHTML(p){
   var nome=(p.nometv||p.nome||'').toUpperCase();
   var nsz=nome.length>30?'2.3vh':(nome.length>22?'2.7vh':(nome.length>16?'3.0vh':'3.4vh'));
   var un=(p.unidade==='UN')?'un':'kg';
   var cat=catOf(p.id,p.nometv||p.nome);
   var foto=(p.foto||'').trim();
-  var promo=!!p.promocao;
+  var promo=!!p.promocao && Number(p.promo_preco)>0 && (!p.promo_ate || String(p.promo_ate)>=hojeBR());
   var photo = foto
     ? '<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">'
     : fb();
+  var precoHTML = promo
+    ? '<div class="right promo-right"><span class="oldp">R$ '+fmtPreco(p.preco)+'</span><span class="newp"><span class="cif">R$</span><span class="val">'+fmtPreco(p.promo_preco)+'</span><span class="un">/'+un+'</span></span></div>'
+    : '<div class="right"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div>';
   return '<div class="card'+(promo?' promo':'')+'"><div class="photo"><span class="cat">'+esc(cat)+'</span>'+(promo?'<span class="promo-tag">🔥 Promoção</span>':'')+photo+'</div>'+
-    '<div class="bar"><div class="nm" style="font-size:'+nsz+'">'+esc(nome)+'</div>'+
-    '<div class="right"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div></div></div>';
+    '<div class="bar"><div class="nm" style="font-size:'+nsz+'">'+esc(nome)+'</div>'+precoHTML+'</div></div>';
 }
 function fb(){return '<div class="ph-fallback"><div class="ic">🥩</div></div>';}
 
