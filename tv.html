@@ -423,12 +423,71 @@ function loadRadios(){
 mUpd();
 loadRadios();
 
+/* ===== Locução / anúncios da loja ===== */
+var FALA_IDX=0;
+var FALA_INTERVALO=5*60*1000;   /* a cada 5 minutos */
+var FALA_PRIMEIRA=60*1000;      /* primeira após 1 min */
+var _falaVoz=null,_falando=false;
+var ANUNCIO_URL='anuncio.mp3';
+var _anuncioAudio=null;
+function falaFrases(){
+  var anos;try{anos=(typeof agoraBR==='function'?agoraBR():new Date()).getFullYear()-1997;}catch(e){anos=(new Date()).getFullYear()-1997;}
+  return [
+    'Casa de Carnes Filezão, o seu açougue favorito! Aqui você sempre encontra novidades: cortes diferentes, produtos exclusivos e lançamentos que você não acha em qualquer lugar. Esse é o nosso diferencial, há '+anos+' anos.',
+    'Novidade é aqui na Casa de Carnes Filezão! Estamos sempre trazendo cortes especiais e produtos novos pra você experimentar. Venha conferir as novidades da Filezão, o seu açougue favorito!',
+    'Na Casa de Carnes Filezão você encontra sempre algo novo. São '+anos+' anos inovando e trazendo o que há de melhor em carnes. Fique de olho nas nossas novidades!'
+  ];
+}
+function falaTTS(volta){
+  if(!('speechSynthesis' in window)){volta();return;}
+  var frases=falaFrases();var txt=frases[FALA_IDX%frases.length]||'';FALA_IDX++;
+  if(!txt){volta();return;}
+  var u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';if(_falaVoz)u.voice=_falaVoz;u.rate=0.97;u.pitch=1.0;u.volume=1.0;
+  u.onend=volta;u.onerror=volta;
+  try{window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){volta();}
+}
+function falaPickVoz(){
+  if(!('speechSynthesis' in window))return null;
+  var vs=window.speechSynthesis.getVoices()||[];
+  var pt=vs.filter(function(v){return /pt[-_]?br/i.test(v.lang||'')||/portug/i.test(v.name||'');});
+  if(!pt.length)pt=vs.filter(function(v){return /^pt/i.test(v.lang||'');});
+  var pref=pt.filter(function(v){return /google|luciana|maria|francisca|female|natural/i.test(v.name||'');});
+  return pref[0]||pt[0]||null;
+}
+function falaAnuncio(){
+  if(_falando)return;
+  var eraRadio=false;try{eraRadio=!!(mplaying&&mplayer&&!mplayer.paused);if(eraRadio)mplayer.pause();}catch(e){}
+  _falando=true;
+  function volta(){if(!_falando)return;_falando=false;try{if(eraRadio){var p=mplayer.play();if(p&&p.catch)p.catch(function(){});}}catch(e){}}
+  /* rede de segurança: se nada disparar, volta a rádio em 90s */
+  setTimeout(volta,90000);
+  try{
+    if(!_anuncioAudio){_anuncioAudio=new Audio(ANUNCIO_URL);_anuncioAudio.preload='auto';_anuncioAudio.volume=1;}
+    _anuncioAudio.onended=volta;
+    _anuncioAudio.onerror=function(){falaTTS(volta);};
+    try{_anuncioAudio.currentTime=0;}catch(e){}
+    var pr=_anuncioAudio.play();
+    if(pr&&pr.then){pr.then(function(){}).catch(function(){falaTTS(volta);});}
+  }catch(e){falaTTS(volta);}
+}
+function falaInit(){
+  if('speechSynthesis' in window){
+    var setVoz=function(){_falaVoz=falaPickVoz();};
+    setVoz();
+    try{window.speechSynthesis.onvoiceschanged=setVoz;}catch(e){}
+  }
+  setTimeout(falaAnuncio,FALA_PRIMEIRA);
+  setInterval(falaAnuncio,FALA_INTERVALO);
+}
+falaInit();
+
 var _wakeLock=null;
 function keepAwake(){var v=document.getElementById('nosleep');if(v){var pp=v.play();if(pp&&pp.catch)pp.catch(function(){});}if('wakeLock' in navigator && !_wakeLock){try{navigator.wakeLock.request('screen').then(function(w){_wakeLock=w;w.addEventListener('release',function(){_wakeLock=null;});}).catch(function(){});}catch(e){}}}
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){_wakeLock=null;keepAwake();}});
 document.addEventListener('click',keepAwake);document.addEventListener('keydown',keepAwake);
 document.addEventListener('keydown',function(e){var k=e.key||e.keyCode;if(k==='MediaPlayPause'||k==='MediaPlay'||k==='MediaPause'||k==='Pause'||k===179||k===415||k===19){if(typeof toggleMusic==='function')toggleMusic();}else if(k==='MediaTrackNext'||k==='MediaNextTrack'||k===176||k===425){if(typeof nextStation==='function')nextStation();}});
 keepAwake();
+setInterval(keepAwake,60000);
 (function(){var t=document.getElementById('tickertrack');if(t){var u=('Preços sujeitos a alteração \u00A0\u00A0\u2022\u00A0\u00A0 ').repeat(8);t.innerHTML='<span>'+u+'</span><span>'+u+'</span>';}})();
 tick(); setInterval(tick,1000);
 carregarFotos().then(carregar);

@@ -1,5 +1,21 @@
 # CHANGELOG — Sistema Filezão
 
+# CHANGELOG — Sistema Filezão
+
+## 2026-06-19 — TV: anúncio em MP3 (voz igual em todas) + reforço anti-desligamento
+- A TV agora toca o arquivo **`anuncio.mp3`** (colocado na pasta do repositório, do lado do `tv.html`) — assim **todas as TVs tocam exatamente a mesma voz**. A cada ~5 min pausa a rádio, toca o anúncio e volta a rádio.
+- Texto agora é sobre **novidades** (o diferencial do açougue), não sobre ofertas.
+- Se o `anuncio.mp3` ainda não existir, ela usa a voz do navegador como reserva (também falando de novidades).
+- **Anti-desligamento reforçado:** o "manter tela ligada" (wake lock + vídeo invisível) agora é re-acionado a cada 1 minuto, ajudando a não cair pra tela azul.
+
+## 2026-06-19 — TV: locução/anúncio falado
+- A TV agora **fala um anúncio de tempos em tempos** (voz em português do navegador). A cada ~5 minutos ela **pausa a rádio**, fala a mensagem e **volta a rádio** automaticamente. A primeira fala sai ~1 min depois de ligar.
+- **Intercala 3 frases** (baseadas no rodapé: "Casa de Carnes Filezão, o seu açougue favorito... X anos de tradição...") pra não ficar repetitivo. Os anos são calculados sozinhos.
+- Se o aparelho não tiver voz em português, ele usa a melhor voz disponível. (Tem como trocar por uma voz gravada se preferir.)
+
+## 2026-06-19 — Folha: abre já na quinzena certa
+- Ao abrir a tela de Pagamento, ela já vem no **mês atual** e na **quinzena conforme o dia**: dia 1 a 14 → 1ª quinzena; dia 15 em diante → 2ª quinzena. Vira o mês, volta pra 1ª. (Você ainda pode trocar manualmente pra ver/lançar outra.)
+
 ## 2026-06-19 — Folha: trava contra saída duplicada
 - Ao salvar a quinzena, se **já existir uma saída com o nome do funcionário naquela data** (dia 1 ou 15), o sistema **não lança de novo** — e abre uma caixa de diálogo avisando quais funcionários foram barrados e por quê.
 - A quinzena é salva normalmente; só a saída duplicada é bloqueada. Pra relançar, é só excluir a saída antiga na aba Saídas e salvar de novo.
