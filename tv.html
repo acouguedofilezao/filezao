@@ -268,29 +268,24 @@ function lancFullHTML(p){
     +'<div class="pf-txt"><div class="pf-cat">'+esc(cat)+'</div>'
     +'<div class="pf-nome">'+esc(nome)+'</div>'
     +preco
-    +'<div class="pf-ate">Acabou de chegar na Filezão!</div></div></div></div>';
+    +'<div class="pf-ate">Novidade exclusiva da Filezão</div></div></div></div>';
 }
 function montarSequencia(pages,fulls){
   fulls=fulls||[];
   var infoSeq=['fidelidade','instagram','fidelidade','horario','fidelidade','pagamento','fidelidade','endereco'];
-  var seq=[],ii=0,pi=0,vezFull=true;
-  function inserir(){
-    if(fulls.length&&vezFull){seq.push(fulls[pi%fulls.length]);pi++;vezFull=false;}
-    else{seq.push({tipo:'info',id:infoSeq[ii%infoSeq.length]});ii++;vezFull=true;}
-  }
+  var seq=[],pi=0,ii=0;
   if(!pages.length){
     for(var a=0;a<fulls.length;a++)seq.push(fulls[a]);
     for(var k=0;k<infoSeq.length;k++)seq.push({tipo:'info',id:infoSeq[k]});
+    if(!seq.length)seq.push({tipo:'info',id:'fidelidade'});
     return seq;
   }
   for(var i=0;i<pages.length;i++){
     seq.push({tipo:'prod',page:pages[i]});
-    if((i+1)%2===0)inserir();
+    if(fulls.length){seq.push(fulls[pi%fulls.length]);pi++;}
+    if((i+1)%2===0){seq.push({tipo:'info',id:infoSeq[ii%infoSeq.length]});ii++;}
   }
-  if(seq.length===pages.length){
-    if(fulls.length)seq.push(fulls[0]);
-    seq.push({tipo:'info',id:'fidelidade'});
-  }
+  if(ii===0)seq.push({tipo:'info',id:infoSeq[0]});
   return seq;
 }
 function showPage(){
