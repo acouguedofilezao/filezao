@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Tempo de cada tela ajustado (ciclo mais curto)
+- Antes toda tela ficava 10s. Agora o tempo é **por tipo**: tabela de produtos **8s** (dá pra ler), promoção/lançamento **6,5s** (é só uma carne + preço, lê num olhar), institucional **8s** (tempo de escanear o QR). 
+- Com isso o ciclo encurtou ~24% — o cliente que fica 1–2 min no açougue e olha de relance pega muito mais coisa, e a promoção (o que vende) volta mais rápido.
+- Esses tempos ficam num lugar só no código (`DUR`), fácil de calibrar — se quiser mais rápido/devagar em algum, é só pedir.
+
 ## 2026-06-19 — Ajuste fino na frequência da promoção/lançamento
 - Tava aparecendo demais (depois de toda página). Coloquei no **meio-termo**: promoção/lançamento a cada **2 páginas** de produtos, com as telas institucionais a cada 3. Aparece com bom destaque, mas sem cansar.
 
