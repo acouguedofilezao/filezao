@@ -426,10 +426,10 @@ loadRadios();
 /* ===== Locução / anúncios da loja ===== */
 var FALA_IDX=0;
 var FALA_INTERVALO=5*60*1000;   /* a cada 5 minutos */
-var FALA_PRIMEIRA=60*1000;      /* primeira após 1 min */
+var FALA_PRIMEIRA=25*1000;      /* primeira após 25s */
 var _falaVoz=null,_falando=false;
-var ANUNCIO_URL='anuncio.mp3';
-var _anuncioAudio=null;
+var ANUNCIO_URL='anuncio.mp3?v=2';
+var _anuncioAudio=null,_anuncioUnlocked=false;
 function falaFrases(){
   var anos;try{anos=(typeof agoraBR==='function'?agoraBR():new Date()).getFullYear()-1997;}catch(e){anos=(new Date()).getFullYear()-1997;}
   return [
@@ -479,6 +479,19 @@ function falaInit(){
   setTimeout(falaAnuncio,FALA_PRIMEIRA);
   setInterval(falaAnuncio,FALA_INTERVALO);
 }
+function falaUnlock(){
+  try{
+    if(!_anuncioAudio){_anuncioAudio=new Audio(ANUNCIO_URL);_anuncioAudio.preload='auto';_anuncioAudio.volume=1;}
+    if(_anuncioUnlocked)return;
+    _anuncioAudio.muted=true;
+    var p=_anuncioAudio.play();
+    if(p&&p.then){p.then(function(){try{_anuncioAudio.pause();_anuncioAudio.currentTime=0;}catch(e){}_anuncioAudio.muted=false;_anuncioUnlocked=true;}).catch(function(){try{_anuncioAudio.muted=false;}catch(e){}});}
+    else{_anuncioUnlocked=true;}
+  }catch(e){}
+}
+document.addEventListener('click',falaUnlock);
+document.addEventListener('keydown',falaUnlock);
+document.addEventListener('touchstart',falaUnlock);
 falaInit();
 
 var _wakeLock=null;
