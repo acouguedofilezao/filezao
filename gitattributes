@@ -1,0 +1,3 @@
+# Faz o CHANGELOG.md juntar automaticamente os dois lados num merge,
+# em vez de dar conflito (ele só acumula anotações, então pode juntar tudo).
+CHANGELOG.md merge=union

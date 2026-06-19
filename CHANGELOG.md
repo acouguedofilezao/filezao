@@ -1,6 +1,42 @@
 # CHANGELOG — Sistema Filezão
 
- HEAD
+## 2026-06-18 — Script de sincronização à prova de erro + ajuste no login
+- **Correção importante:** as primeiras versões deste script novo fechavam sozinhas no Windows por dois motivos — quebras de linha do Linux (LF) e textos com parênteses dentro de blocos `if(...)`, que o cmd interpretava como fim do bloco. Agora o script está em **CRLF**, **só ASCII** e foi reescrito com etiquetas/`goto` (sem blocos de parênteses), então roda normal e para no fim em "Pressione qualquer tecla".
+- **`sincronizar_filezao.bat` repaginado (resolve "não está subindo a versão do PC"):**
+  - Mostra a **pasta** onde está rodando e a **data/hora de cada arquivo** (index.html, tv.html, CHANGELOG.md) — se um arquivo estiver com data antiga ou faltando, você vê na hora que ele não foi colado na pasta certa.
+  - Passou a usar **`git add -A`** (captura qualquer alteração, não depende de padrão de nome).
+  - Mostra o que o Git **detectou de mudança** (`git status`) antes de salvar.
+  - Confere se está **dentro do repositório certo** (avisa se o .bat foi parar em outra pasta).
+  - No fim, mostra **qual versão (commit) subiu** e lembra do Ctrl+F5 e do "Atualizado" no rodapé.
+  - Quando não há nada novo, explica que o arquivo novo provavelmente não está na pasta e mostra o caminho exato pra colar.
+- **Login:** o rodapé agora mostra só **"Acesso restrito"** (removido o "Cadastros são liberados só pelo administrador").
+- **Confirmação:** o log de importação cobre **cartão e Pix** também (entram como "Entradas · Importou" com o tipo), além dos débitos do Sicoob e cheques — tudo no mesmo fluxo.
+
+## 2026-06-18 — Registro de alterações agora grava as IMPORTAÇÕES + aba da TV renomeada
+- **Importações por arquivo passam a ser registradas** no "Registro de alterações" (antes só os lançamentos manuais entravam). Agora dá pra auditar qualquer dado importado e achar onde um lançamento entrou errado:
+  - **Extrato Sicoob (financeiro):** cada **entrada** e **saída** lançada pela importação vira um registro (ação azul "Importou", com data, tipo/descrição e valor). Se a importação atualizou um lançamento que já existia, mostra o valor antigo → novo.
+  - **Produtos (balança):** além do resumo (+novos/alterados/removidos), agora registra **item por item** — preço novo, **mudança de preço** (antes → depois), renomeação e remoção. É onde costuma esconder erro de preço.
+  - **Saldo bancário:** quando o extrato traz um saldo novo/diferente, fica registrado (banco, conta e valor).
+  - **Restaurar backup:** passa a registrar que houve uma restauração (e quantos lançamentos vieram), gravando antes de a página recarregar.
+  - Por baixo, foi criado um gravador em lote (`logRegBulk`) pra registrar vários itens de uma vez sem pesar no banco. Usa a mesma tabela `logs` que já existe — **não precisa mexer em nada no Supabase**.
+- **Aba da TV renomeada:** o título da aba do navegador da tela de preços (`tv.html`) passou de "Casa de Carnes Filezão — Tabela de Preços" para **"#TABELA DE PREÇOS FILEZÃO"**, no mesmo padrão da aba do sistema ("#GESTÃO FILEZÃO").
+
+## 2026-06-18 — Tela de login nova (visual profissional, mesma segurança)
+- **Visual repaginado:** fundo escuro com brilho vermelho da marca, cartão centralizado com cabeçalho vermelho, a **logo do boi** (puxada automaticamente do cabeçalho do sistema), título "CASA DE CARNES FILEZÃO" e subtítulo "SISTEMA DE GESTÃO".
+- **Campos com ícone:** usuário (boneco) e senha (cadeado), com destaque vermelho ao clicar.
+- **Mostrar/ocultar senha:** botão de olho dentro do campo de senha (vira olho cortado quando a senha está visível).
+- **Aviso de Caps Lock:** se o Caps Lock estiver ligado enquanto digita usuário/senha, aparece um aviso ("Caps Lock está ligado") pra evitar erro de senha à toa.
+- **Botão "Entrar" com estado:** mostra rodinha + "Entrando..." enquanto verifica, e volta ao normal se der erro (não trava nem deixa clicar duas vezes).
+- **Mensagens de erro mais claras:** diferencia "Usuário ou senha incorretos." de "Sem conexão com o servidor..." (quando o problema é internet/Supabase fora do ar). Ao errar a senha, o campo é focado e selecionado pra você só redigitar.
+- **Enter funciona:** Enter no usuário pula pra senha; Enter na senha já tenta entrar.
+- **Segurança:** NÃO mudou nada por baixo — continua Supabase Auth + RLS. Quem confere usuário e senha é o servidor (não dá pra burlar pelo navegador/F12), e só entra quem tem cadastro criado por você. A mudança foi só na aparência e na experiência da tela.
+
+## 2026-06-18 — Campo "Atualizado/Publicado" (saber se o HTML novo já subiu)
+- Agora aparece a **data/hora em que a versão do HTML que você está vendo foi publicada** (vem direto do GitHub — automático e preciso).
+- **Sistema (index.html):** "Atualizado: dd/mm/aaaa hh:mm" no rodapé da barra lateral.
+- **TV (tv.html):** "Publicado dd/mm hh:mm" no rodapé (separado do "Atualizado", que é a hora do último puxão de preços).
+- Pra que serve: depois de rodar o script, você atualiza a página (F5); se a hora for recente, é a versão nova; se for antiga, ainda não subiu (espera ~2 min e atualiza de novo).
+
 ## 2026-06-18 — Importador: baixa de cheque automática + descrição editável
 - **Cheque compensado dá baixa sozinho:** quando um cheque aparece compensado no extrato, o sistema casa pelo **número** (ignorando zeros à esquerda) com o cheque que você lançou e, ao clicar em Lançar, marca ele como **compensado** na tela de Cheques. O cheque deixa de aparecer como "saída" (não conta duas vezes).
   - Mostra uma seção **CHEQUES** no preview: ✓ "vai dar baixa" (casou), ou "não encontrado" (se o cheque não estiver lançado, aí é só lançar e reimportar).
@@ -35,28 +71,5 @@
 - **produtos**: leitura **pública** (para a TV continuar funcionando) + escrita só para logados.
 - **Auto-cadastro desligado**: ninguém se registra sozinho. Os cadastros são criados por você no painel do Supabase.
 
-
-## 2026-06-18 — Horário de Brasília fixo (TV + sistema)
-- **tv.html:** o relógio agora mostra sempre o **horário de Brasília (UTC−3)**, ignorando o fuso configurado no aparelho (Fire Stick estava em UTC, mostrando 3h a mais).
-- **index.html:** a função de "hoje" (`td()`) e os padrões de data/mês/ano do painel passaram a seguir Brasília também (novo helper `nowBR()`), pra toda a base usar o mesmo horário.
-- Os carimbos de data/hora internos (`ts`) continuam em UTC ISO (padrão técnico), o que é o correto — a mudança é só no que você vê e nos padrões de data.
-- Observação: isso corrige o **fuso**. O relógio absoluto do aparelho precisa estar mais ou menos certo (com internet, ele sincroniza sozinho).
-
-## 2026-06-18 — Login com segurança real (Supabase Auth + RLS)
-
-### index.html
-- **Tela de login** ao abrir o sistema (usuário + senha). Sem login válido, nada é carregado.
-- Login por **nome de usuário** (sem precisar e-mail): internamente o usuário `fulano` vira `fulano@filezao.app`.
-- **Sessão persistente**: depois de entrar, a sessão fica salva e é renovada sozinha (token renovado a cada 45 min). Não precisa logar toda hora.
-- **Botão "Sair"** no rodapé da barra lateral, com o nome do usuário logado.
-- O cabeçalho de acesso ao banco (`SB_HDR`) agora envia o **token do usuário logado** em todas as operações — assim o banco passa a respeitar quem está logado.
-- Boot do sistema travado: `init()` só roda depois do login (ou de restaurar uma sessão válida).
-
-### Supabase (configuração feita por você — ver instruções no chat)
-- **RLS ligado** nas tabelas: dados financeiros e operacionais só para usuários logados.
-- **produtos**: leitura **pública** (para a TV continuar funcionando) + escrita só para logados.
-- **Auto-cadastro desligado**: ninguém se registra sozinho. Os cadastros são criados por você no painel do Supabase.
-
- f74eb3e0d921c72b6a075a0e5ab946706eb928d3
 ### Observações
 - A TV (`tv.html`) continua funcionando sem login, pois só lê a tabela `produtos`.

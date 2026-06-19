@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Casa de Carnes Filezão — Tabela de Preços</title>
+<title>#TABELA DE PREÇOS FILEZÃO</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -72,7 +72,7 @@
   </header>
   <main><div id="stage"></div></main>
   <footer>
-    <div class="foot-info"><div class="dots" id="dots"></div><span>Atualizado <span id="upd">—</span></span></div>
+    <div class="foot-info"><div class="dots" id="dots"></div><span>Atualizado <span id="upd">—</span> · Publicado <span id="pub">—</span></span></div>
     <div class="ticker"><div class="ticker-track" id="tickertrack"></div></div>
   </footer>
 
@@ -242,6 +242,8 @@ keepAwake();
 (function(){var t=document.getElementById('tickertrack');if(t){var u=('Preços sujeitos a alteração \u00A0\u00A0\u2022\u00A0\u00A0 ').repeat(8);t.innerHTML='<span>'+u+'</span><span>'+u+'</span>';}})();
 tick(); setInterval(tick,1000);
 carregar();
+function mostrarPub(){var el=document.getElementById('pub');if(!el)return;fetch(location.href,{method:'HEAD',cache:'no-store'}).then(function(r){var lm=r.headers.get('last-modified');if(lm){var d=new Date(lm);try{el.textContent=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d);}catch(e){el.textContent=d.toLocaleString('pt-BR');}}else{el.textContent='\u2014';}}).catch(function(){el.textContent='\u2014';});}
+mostrarPub();
 setInterval(rotate, ROTACAO_MS);
 setInterval(carregar, REFRESH_MS);
 </script>

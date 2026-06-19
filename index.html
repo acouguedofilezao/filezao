@@ -195,32 +195,84 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
 </head>
 <body>
 <style>
-#authgate{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:#0d0d0d;font-family:'Inter',system-ui,Arial,sans-serif;padding:20px}
-#authgate .box{width:100%;max-width:360px;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.45);overflow:hidden}
-#authgate .top{background:linear-gradient(135deg,#FE0000,#6D0909);color:#fff;padding:26px 24px;text-align:center}
-#authgate .top h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.3px;text-transform:uppercase}
-#authgate .top p{margin:6px 0 0;font-size:12.5px;opacity:.92}
-#authgate .bd{padding:22px 24px 24px}
-#authgate label{display:block;font-size:12px;font-weight:600;color:#444;margin:0 0 5px}
-#authgate input{width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #e3e3e3;border-radius:9px;margin-bottom:14px;outline:none;transition:border-color .15s;text-transform:none !important}
-#authgate input:focus{border-color:#FE0000}
-#authgate button{width:100%;padding:13px;font-size:15px;font-weight:700;color:#fff;background:#FE0000;border:none;border-radius:9px;cursor:pointer;transition:background .15s}
-#authgate button:hover{background:#d80000}
-#authgate button:disabled{opacity:.7;cursor:default}
-#authgate .msg{min-height:18px;margin-top:10px;font-size:13px;color:#c20000;text-align:center;font-weight:600}
-#authgate .hint{margin-top:14px;font-size:11px;color:#9a9a9a;text-align:center;line-height:1.45}
+#authgate{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:#0a0a0a;font-family:'Inter',system-ui,Arial,sans-serif;padding:18px;overflow:auto}
+#authgate .bg{position:fixed;inset:0;z-index:0;background:
+  radial-gradient(1100px 700px at 18% -10%,rgba(254,0,0,.22),transparent 60%),
+  radial-gradient(900px 600px at 110% 115%,rgba(109,9,9,.42),transparent 60%),
+  linear-gradient(160deg,#161616 0%,#0a0a0a 55%,#000 100%)}
+#authgate .bg:before{content:"";position:absolute;inset:0;opacity:.05;background:repeating-linear-gradient(135deg,#fff 0 1px,transparent 1px 22px)}
+#authgate .bg:after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 38%,transparent 55%,rgba(0,0,0,.78) 100%)}
+#authgate .box{position:relative;z-index:1;width:100%;max-width:382px;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);overflow:hidden;animation:auIn .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes auIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+#authgate .top{position:relative;background:linear-gradient(135deg,#FE0000,#6D0909);color:#fff;padding:30px 24px 30px;text-align:center}
+#authgate .top:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:16px;background:#fff;border-radius:18px 18px 0 0}
+#authgate .logo{width:76px;height:76px;margin:0 auto 12px;border-radius:50%;background:rgba(0,0,0,.26);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.38),inset 0 0 0 1px rgba(255,255,255,.10);overflow:hidden}
+#authgate .logo img{width:60px;height:60px;object-fit:contain;display:block}
+#authgate .top h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;line-height:1.15;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+#authgate .top p{margin:6px 0 0;font-size:12px;font-weight:700;opacity:.92;letter-spacing:1.5px}
+#authgate .bd{position:relative;padding:10px 26px 24px}
+#authgate label{display:block;font-size:12px;font-weight:700;color:#333;margin:0 0 6px;letter-spacing:.2px}
+#authgate .field{position:relative;margin-bottom:15px}
+#authgate .field .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#bcbcbc;pointer-events:none}
+#authgate input{width:100%;box-sizing:border-box;padding:13px 13px 13px 40px;font-size:15px;border:1.6px solid #e5e5e5;border-radius:11px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;text-transform:none !important;background:#fafafa;color:#111}
+#authgate input::placeholder{color:#b3b3b3}
+#authgate input:focus{border-color:#FE0000;background:#fff;box-shadow:0 0 0 3px rgba(254,0,0,.13)}
+#authgate .field.pw input{padding-right:46px}
+#authgate .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:none;background:transparent;color:#9a9a9a;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;padding:0}
+#authgate .eye:hover{color:#FE0000;background:rgba(254,0,0,.07)}
+#authgate .eye svg{width:19px;height:19px}
+#authgate .caps{display:none;margin:-5px 0 13px;font-size:11.5px;font-weight:700;color:#b8860b;align-items:center;gap:6px}
+#authgate .caps.on{display:flex}
+#authgate button.go{width:100%;padding:14px;font-size:15.5px;font-weight:800;letter-spacing:.5px;color:#fff;background:#FE0000;border:none;border-radius:11px;cursor:pointer;transition:background .15s,transform .05s,box-shadow .15s;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 8px 20px rgba(254,0,0,.28)}
+#authgate button.go:hover{background:#e60000}
+#authgate button.go:active{transform:translateY(1px)}
+#authgate button.go:disabled{opacity:.78;cursor:default;box-shadow:none}
+#authgate .spin{width:17px;height:17px;border:2.5px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:auSpin .7s linear infinite;display:none}
+#authgate button.go.loading .spin{display:inline-block}
+@keyframes auSpin{to{transform:rotate(360deg)}}
+#authgate .msg{min-height:18px;margin-top:13px;font-size:13px;color:#c20000;text-align:center;font-weight:700;line-height:1.4}
+#authgate .foot{margin-top:18px;padding-top:15px;border-top:1px solid #efefef;text-align:center}
+#authgate .foot .lock{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#8a8a8a;font-weight:600;line-height:1.5}
+#authgate .foot .lock svg{width:13px;height:13px;flex:0 0 13px;color:#FE0000}
+#authgate .foot .cr{margin-top:7px;font-size:11px;color:#c2c2c2;letter-spacing:.4px}
 </style>
 <div id="authgate">
+  <div class="bg"></div>
   <div class="box">
-    <div class="top"><h1>Casa de Carnes Filezão</h1><p>Acesso ao sistema</p></div>
+    <div class="top">
+      <div class="logo"><img id="au-logo" alt="Filezão"></div>
+      <h1>Casa de Carnes Filezão</h1>
+      <p>SISTEMA DE GESTÃO</p>
+    </div>
     <div class="bd">
       <label for="au-user">Usuário</label>
-      <input id="au-user" type="text" data-nocaps autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="seu usuário" onkeydown="if(event.key==='Enter'){var p=document.getElementById('au-pass');p&&p.focus();}">
+      <div class="field">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input id="au-user" type="text" data-nocaps autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="seu usuário" onkeyup="authCaps(event)" onkeydown="if(event.key==='Enter'){var p=document.getElementById('au-pass');p&&p.focus();}">
+      </div>
       <label for="au-pass">Senha</label>
-      <input id="au-pass" type="password" data-nocaps autocomplete="current-password" placeholder="sua senha" onkeydown="if(event.key==='Enter')authLogin()">
-      <button id="au-btn" onclick="authLogin()">Entrar</button>
+      <div class="field pw">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input id="au-pass" type="password" data-nocaps autocomplete="current-password" placeholder="sua senha" onkeyup="authCaps(event)" onkeydown="if(event.key==='Enter')authLogin()">
+        <button type="button" class="eye" id="au-eye" onclick="authTogglePass()" aria-label="Mostrar ou ocultar senha" title="Mostrar/ocultar senha">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="caps" id="au-caps">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 10h4v6h8v-6h4L12 2Zm-4 16h8v4H8v-4Z"/></svg>
+        Caps Lock está ligado
+      </div>
+      <button class="go" id="au-btn" onclick="authLogin()">
+        <span class="spin"></span><span class="lbl">Entrar</span>
+      </button>
       <div id="au-msg" class="msg"></div>
-      <div class="hint">Acesso restrito. Para liberar um cadastro, fale com o administrador.</div>
+      <div class="foot">
+        <span class="lock">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Acesso restrito
+        </span>
+        <div class="cr">© 2022–2026 · Filezão</div>
+      </div>
     </div>
   </div>
 </div>
@@ -266,6 +318,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
   <!-- Status de conexão no fundo da sidebar -->
   <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);margin-top:auto">
     <div class="sync" id="sync" style="width:100%;justify-content:flex-start"><div class="dot" id="sdot"></div><span id="stxt">...</span></div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:8px">Atualizado: <span id="build-ts">—</span></div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px">
       <span id="au-who" style="font-size:11px;color:rgba(255,255,255,0.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
       <button onclick="authLogout()" title="Sair do sistema" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:6px 10px;cursor:pointer"><i class="ti ti-logout"></i>Sair</button>
@@ -894,13 +947,14 @@ async function prodImpApply(){
   try{
     var byCod={};PROD.forEach(function(p){byCod[p.codigo]=p;});
     var ups=[];
-    d.add.forEach(function(n){var p={codigo:n.codigo,nome:n.nome,nomeTV:n.nome,unidade:n.unidade,preco:n.preco,exibir:false,ordem:0,foto:''};PROD.push(p);byCod[n.codigo]=p;ups.push(p);});
-    d.upd.forEach(function(u){var p=byCod[u.n.codigo];if(!p)return;var padrao=(!p.nomeTV||p.nomeTV===p.nome);p.preco=u.n.preco;p.unidade=u.n.unidade;if(p.nome!==u.n.nome){if(padrao)p.nomeTV=u.n.nome;p.nome=u.n.nome;}ups.push(p);});
+    var _plg=[{area:'Produtos',acao:'Importou',detalhe:'Arquivo da balança',antes:'',depois:'+'+d.add.length+' novos · '+d.upd.length+' alterados · '+d.rem.length+' removidos'}];
+    d.add.forEach(function(n){var p={codigo:n.codigo,nome:n.nome,nomeTV:n.nome,unidade:n.unidade,preco:n.preco,exibir:false,ordem:0,foto:''};PROD.push(p);byCod[n.codigo]=p;ups.push(p);_plg.push({area:'Produtos',acao:'Importou',detalhe:(n.nome||n.codigo)+' (novo)',antes:'',depois:fmt(n.preco)+' /'+(n.unidade||'')});});
+    d.upd.forEach(function(u){var p=byCod[u.n.codigo];if(!p)return;var op=p.preco,on=p.nome;var padrao=(!p.nomeTV||p.nomeTV===p.nome);p.preco=u.n.preco;p.unidade=u.n.unidade;if(p.nome!==u.n.nome){if(padrao)p.nomeTV=u.n.nome;p.nome=u.n.nome;}ups.push(p);if(op!==u.n.preco){_plg.push({area:'Produtos',acao:'Importou',detalhe:(u.n.nome||u.n.codigo),antes:fmt(op),depois:fmt(u.n.preco)});}else if(on!==u.n.nome){_plg.push({area:'Produtos',acao:'Importou',detalhe:'Renomeou ('+u.n.codigo+')',antes:on,depois:u.n.nome});}});
     for(var i=0;i<d.rem.length;i++){await sbDelete('produtos',d.rem[i].codigo);}
-    var remc={};d.rem.forEach(function(p){remc[p.codigo]=1;});PROD=PROD.filter(function(p){return !remc[p.codigo];});
+    var remc={};d.rem.forEach(function(p){remc[p.codigo]=1;_plg.push({area:'Produtos',acao:'Importou',detalhe:(p.nome||p.codigo)+' (removido)',antes:(p.preco!=null?fmt(p.preco):''),depois:''});});PROD=PROD.filter(function(p){return !remc[p.codigo];});
     for(var j=0;j<ups.length;j+=200){await sbUpsert('produtos',ups.slice(j,j+200).map(prodToDB));}
     PROD.sort(function(a,b){return (a.nomeTV||a.nome).localeCompare(b.nomeTV||b.nome);});
-    logReg('Produtos','Importou','Arquivo da balança','','+'+d.add.length+' novos · '+d.upd.length+' alterados · '+d.rem.length+' removidos');
+    logRegBulk(_plg);
     sync('','Produtos atualizados: +'+d.add.length+' alterados '+d.upd.length+' removidos '+d.rem.length);
     fzToast('Importação concluída','s');prodImpCancel();tvSelRender();
   }catch(e){sync('e','Erro: '+e.message);fzToast('Erro ao salvar: '+e.message,'e');}
@@ -989,6 +1043,17 @@ function logReg(area,acao,detalhe,antes,depois){
   var x={id:uid(),ts:new Date().toISOString(),area:area,acao:acao,detalhe:detalhe||'',antes:antes||'',depois:depois||''};
   LOG.unshift(x);if(LOG.length>2000)LOG=LOG.slice(0,2000);
   try{sbUpsert('logs',[logToDB(x)]).catch(function(){});}catch(e){}
+  var sec=document.getElementById('sec-log');if(sec&&sec.classList.contains('active'))logRender();
+}
+function logRegBulk(list){
+  if(!list||!list.length)return;
+  var rows=[];
+  list.forEach(function(o){
+    var x={id:uid(),ts:new Date().toISOString(),area:o.area,acao:o.acao,detalhe:o.detalhe||'',antes:o.antes||'',depois:o.depois||''};
+    LOG.unshift(x);rows.push(logToDB(x));
+  });
+  if(LOG.length>2000)LOG=LOG.slice(0,2000);
+  try{sbUpsert('logs',rows).catch(function(){});}catch(e){}
   var sec=document.getElementById('sec-log');if(sec&&sec.classList.contains('active'))logRender();
 }
 function logFmtTS(iso){if(!iso)return '';var d=new Date(iso);if(isNaN(d))return '';function z(n){return (n<10?'0':'')+n;}return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+':'+z(d.getMinutes());}
@@ -1254,8 +1319,10 @@ function impLaunch(){
   var rows=impSelected(),sai=impSelectedSai();
   var ckChq=document.querySelectorAll('.imp-ck-chq:checked');
   if(!rows.length&&!sai.length&&!ckChq.length){alert('Marque ao menos um lançamento.');return;}
-  rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});if(idx>=0){E[idx]=r;}else{E.push(r);}});
-  sai.forEach(function(r){var idx=S.findIndex(function(x){return x.id===r.id;});if(idx>=0){S[idx]=r;}else{S.push(r);}});
+  var _lg=[];
+  rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});var ov=(idx>=0&&E[idx])?E[idx].valor:null;if(idx>=0){E[idx]=r;}else{E.push(r);}_lg.push({area:'Entradas',acao:'Importou',detalhe:fd(r.data)+' · '+(r.tipo||''),antes:(ov!=null?fmt(ov):''),depois:fmt(r.valor)});});
+  sai.forEach(function(r){var idx=S.findIndex(function(x){return x.id===r.id;});var ov=(idx>=0&&S[idx])?S[idx].valor:null;if(idx>=0){S[idx]=r;}else{S.push(r);}_lg.push({area:'Saídas',acao:'Importou',detalhe:fd(r.data)+' · '+(r.descricao||'').toUpperCase(),antes:(ov!=null?fmt(ov):''),depois:fmt(r.valor)});});
+  if(_lg.length)logRegBulk(_lg);
   if(rows.length){save('fz_entradas',E);renderEnt();}
   if(sai.length){save('fz_saidas',S);renderSai();}
   var chqB=0;
@@ -1293,6 +1360,8 @@ async function impRestore(input){
     if(data.cheques&&data.cheques.length)await sbUpsert('cheques',data.cheques.map(chqToDB));
     if(data.cotacoes&&data.cotacoes.length){var cur=cotLogGet(),ids={};cur.forEach(function(x){ids[x.id]=1;});data.cotacoes.forEach(function(x){if(!ids[x.id])cur.push(x);});cur.sort(function(a,b){return b.id-a.id;});cotLogSet(cur);}
     if(data.saldos){var sm=saldoGet();Object.keys(data.saldos).forEach(function(k){if(!sm[k])sm[k]=data.saldos[k];else if(!sm[k].label&&data.saldos[k].label)sm[k].label=data.saldos[k].label;});saldoSet(sm);}
+    var _rl={id:uid(),ts:new Date().toISOString(),area:'Sistema',acao:'Importou',detalhe:'Restaurou backup',antes:'',depois:(data.entradas||[]).length+' entr · '+(data.saidas||[]).length+' saíd · '+(data.gado||[]).length+' gado · '+(data.cheques||[]).length+' cheq'};
+    LOG.unshift(_rl);try{await sbUpsert('logs',[logToDB(_rl)]);}catch(e){}
     alert('Backup restaurado! A página vai recarregar pra atualizar tudo.');
     location.reload();
   }catch(err){alert('Erro ao restaurar: '+err.message);}
@@ -1648,8 +1717,10 @@ function saldoCapturar(text){
   var iso=raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8);
   var m=saldoGet(),cur=m[acct];
   if(!cur||(''+raw)>=(''+(cur.ts||''))){
+    var _novo=(!cur||cur.saldo!==saldo);
     m[acct]={acctid:acct,banco:org,saldo:saldo,data:iso,ts:raw,imp:Date.now(),label:(cur&&cur.label)||''};
     saldoSet(m);saldoCloudSave(m[acct]);
+    if(_novo){try{logReg('Saldo bancário','Importou',(org||'')+' · conta '+acct,(cur?fmt(cur.saldo):''),fmt(saldo)+' em '+fd(iso));}catch(e){}}
   }
 }
 function saldoCloudSave(s){if(!s)return;try{sbUpsert('saldos',[{acctid:s.acctid,banco:s.banco,saldo:s.saldo,data:s.data,ts:s.ts,label:s.label||''}]).catch(function(){});}catch(e){}}
@@ -2554,21 +2625,51 @@ function authBootApp(){
   var s=authLoad(), w=document.getElementById('au-who'); if(w&&s&&s.user)w.textContent='@'+s.user;
   init();
 }
+function authTogglePass(){
+  var p=document.getElementById('au-pass'), b=document.getElementById('au-eye');
+  if(!p)return;
+  var willShow=(p.type==='password');
+  p.type=willShow?'text':'password';
+  if(b)b.innerHTML=willShow
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a13.2 13.2 0 0 1-1.67 2.68"/><path d="M6.06 6.06A13.4 13.4 0 0 0 2 11s3.5 7 10 7a9 9 0 0 0 4.94-1.06"/><path d="m1 1 22 22"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  p.focus();
+}
+function authCaps(ev){
+  var c=document.getElementById('au-caps');
+  if(!c||!ev||!ev.getModifierState)return;
+  if(ev.getModifierState('CapsLock'))c.classList.add('on'); else c.classList.remove('on');
+}
+function authLogoInit(){
+  var l=document.getElementById('au-logo'); if(!l||l.getAttribute('src'))return;
+  var h=document.querySelector('.header-logo-wrap img');
+  if(h&&h.getAttribute('src'))l.src=h.getAttribute('src');
+}
 async function authLogin(){
   var u=(document.getElementById('au-user').value||'').trim().toLowerCase();
   var p=document.getElementById('au-pass').value||'';
   var msg=document.getElementById('au-msg'), btn=document.getElementById('au-btn');
-  if(!u||!p){msg.textContent='Preencha usuário e senha.';return;}
-  msg.textContent=''; btn.disabled=true; btn.textContent='Entrando...';
+  var lbl=btn.querySelector('.lbl');
+  function setLbl(t){ if(lbl)lbl.textContent=t; }
+  if(!u||!p){msg.textContent='Preencha o usuário e a senha.';return;}
+  msg.textContent=''; btn.disabled=true; btn.classList.add('loading'); setLbl('Entrando...');
   try{
     var email=(u.indexOf('@')>=0)?u:(u+AUTH_DOMAIN);
     var d=await authPost('password',{email:email,password:p});
+    if(!d||!d.access_token)throw new Error('sem token');
     authSetToken(d.access_token);
     authSave({access_token:d.access_token,refresh_token:d.refresh_token,user:u,ts:Date.now()});
-    authBootApp();
+    authBootApp();  /* sucesso: abre o sistema (não reabilita o botão) */
   }catch(e){
-    msg.textContent='Usuário ou senha incorretos.';
-    btn.disabled=false; btn.textContent='Entrar';
+    var em=((e&&e.message)||'').toLowerCase();
+    var rede=(em.indexOf('fetch')>=0||em.indexOf('network')>=0||em.indexOf('load failed')>=0||em.indexOf('timeout')>=0);
+    if(rede){
+      msg.textContent='Sem conexão com o servidor. Confira a internet e tente de novo.';
+    }else{
+      msg.textContent='Usuário ou senha incorretos.';
+      var pf=document.getElementById('au-pass'); if(pf){pf.focus(); try{pf.select();}catch(_){}}
+    }
+    btn.disabled=false; btn.classList.remove('loading'); setLbl('Entrar');
   }
 }
 async function authTryRestore(){
@@ -2584,14 +2685,18 @@ function authLogout(){
   if(!confirm('Deseja sair do sistema?'))return;
   authClear(); authSetToken(null); location.reload();
 }
+function mostrarVersao(){var el=document.getElementById('build-ts');if(!el)return;fetch(location.href,{method:'HEAD',cache:'no-store'}).then(function(r){var lm=r.headers.get('last-modified');if(lm){var d=new Date(lm);try{el.textContent=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d);}catch(e){el.textContent=d.toLocaleString('pt-BR');}}else{el.textContent='\u2014';}}).catch(function(){el.textContent='\u2014';});}
+mostrarVersao();
 /* mantém a sessão viva (renova o token a cada 45 min) */
 setInterval(function(){authTryRestore();},45*60*1000);
 /* Boot: tenta restaurar a sessão; se conseguir, abre o sistema; senão, mostra o login */
 (async function(){
+  authLogoInit();
   var ok=await authTryRestore();
   if(ok){authBootApp();}
   else{
     var g=document.getElementById('authgate'); if(g)g.style.display='flex';
+    authLogoInit();
     var f=document.getElementById('au-user'); if(f)setTimeout(function(){f.focus();},60);
   }
 })();

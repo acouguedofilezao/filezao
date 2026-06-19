@@ -1,73 +1,101 @@
 @echo off
-title Filezao - Sincronizando...
+chcp 65001 >nul
+title SISTEMA FILEZAO - Sincronizacao
+cd /d "%~dp0"
 
-:: Caminho do Git que vem com o GitHub Desktop
-set GIT="C:\Users\Diogo\AppData\Local\GitHubDesktop\app-3.4.20\resources\app\git\cmd\git.exe"
-
-:: Verificar versões comuns do GitHub Desktop
-if not exist %GIT% set GIT="C:\Users\Diogo\AppData\Local\GitHubDesktop\app-3.4.19\resources\app\git\cmd\git.exe"
-if not exist %GIT% set GIT="C:\Users\Diogo\AppData\Local\GitHubDesktop\app-3.4.18\resources\app\git\cmd\git.exe"
-if not exist %GIT% set GIT="C:\Users\Diogo\AppData\Local\GitHubDesktop\app-3.4.17\resources\app\git\cmd\git.exe"
-if not exist %GIT% set GIT="C:\Users\Diogo\AppData\Local\GitHubDesktop\app-3.4.15\resources\app\git\cmd\git.exe"
-if not exist %GIT% set GIT="C:\Users\Diogo\AppData\Local\GitHubDesktop\app-3.4.12\resources\app\git\cmd\git.exe"
-if not exist %GIT% set GIT="C:\Users\Diogo\AppData\Local\GitHubDesktop\app-3.4.9\resources\app\git\cmd\git.exe"
-
-:: Tentar achar automaticamente
-if not exist %GIT% (
-    for /d %%i in ("C:\Users\Diogo\AppData\Local\GitHubDesktop\app-*") do (
-        if exist "%%i\resources\app\git\cmd\git.exe" (
-            set GIT="%%i\resources\app\git\cmd\git.exe"
-        )
-    )
-)
-
-if not exist %GIT% (
-    echo.
-    echo [ERRO] Git nao encontrado!
-    echo Abra o GitHub Desktop e tente novamente.
-    echo.
-    pause
-    exit /b
-)
-
-cd /d "C:\Users\Diogo\OneDrive\Documentos\GitHub\filezao"
-
-echo.
 echo ========================================
-echo   SISTEMA FILEZAO - Sincronizacao
+echo    SISTEMA FILEZAO - Sincronizacao
 echo ========================================
 echo.
-echo Verificando alteracoes...
+echo Rodando na pasta:
+echo   %cd%
+echo.
 
-%GIT% add index.html CHANGELOG.md SISTEMA_FILEZAO_README.md 2>nul
-%GIT% add *.html *.md 2>nul
-
-%GIT% diff --cached --quiet
-if %errorlevel% == 0 (
-    echo.
-    echo [!] Nenhuma alteracao encontrada.
-    echo     Salve o index.html na pasta e tente novamente.
-    echo.
-    pause
-    exit /b
-)
-
-echo Enviando para o GitHub...
-
-set "datahora=%date:~0,10% %time:~0,5%"
-%GIT% commit -m "Atualizacao %datahora%"
-%GIT% push
-
-if %errorlevel% == 0 (
-    echo.
-    echo ========================================
-    echo   SITE ATUALIZADO COM SUCESSO!
-    echo   Aguarde 1-2 minutos e recarregue:
-    echo   acouguedofilezao.github.io/filezao
-    echo ========================================
-) else (
-    echo.
-    echo [ERRO] Falha ao enviar. Verifique sua conexao.
-)
+set "GIT="
+for /f "delims=" %%i in ('where git 2^>nul') do if not defined GIT set "GIT=%%i"
+if defined GIT goto GITOK
+for /f "delims=" %%d in ('dir /b /ad /o-n "%LOCALAPPDATA%\GitHubDesktop\app-*" 2^>nul') do if not defined GIT if exist "%LOCALAPPDATA%\GitHubDesktop\%%d\resources\app\git\cmd\git.exe" set "GIT=%LOCALAPPDATA%\GitHubDesktop\%%d\resources\app\git\cmd\git.exe"
+:GITOK
+if defined GIT goto HAVEGIT
+echo [ERRO] Nao encontrei o Git. Abra o GitHub Desktop uma vez e tente de novo.
 echo.
 pause
+exit /b 1
+:HAVEGIT
+
+"%GIT%" rev-parse --is-inside-work-tree >nul 2>nul
+if not errorlevel 1 goto REPOOK
+echo [ERRO] Esta pasta NAO e o repositorio do sistema.
+echo Este atalho precisa ficar DENTRO da pasta do GitHub do filezao.
+echo.
+pause
+exit /b 1
+:REPOOK
+
+echo Arquivos nesta pasta - data e hora da ultima alteracao:
+for %%f in (index.html tv.html CHANGELOG.md) do call :MOSTRA "%%f"
+echo.
+
+echo Procurando alteracoes...
+"%GIT%" add -A
+echo.
+echo O Git detectou estas mudancas:
+"%GIT%" status -s
+echo.
+
+"%GIT%" diff --cached --quiet
+if not errorlevel 1 goto NADANOVO
+"%GIT%" commit -m "Atualizacao %date% %time%" >nul
+echo  -^> Alteracoes salvas. Commit feito.
+goto PULL
+:NADANOVO
+echo  -^> Nenhuma alteracao NOVA nesta pasta para salvar.
+echo     Se voce esperava enviar uma versao nova, ela provavelmente
+echo     NAO foi colada nesta pasta. Veja as datas dos arquivos acima.
+:PULL
+echo.
+
+echo Trazendo atualizacoes do GitHub...
+"%GIT%" pull --no-rebase --no-edit
+if not errorlevel 1 goto PUSH
+echo.
+echo [ATENCAO] Conflito ao juntar as versoes.
+echo Abra o GitHub Desktop, resolva e clique em Push.
+echo.
+pause
+exit /b 1
+:PUSH
+echo.
+
+echo Enviando para o GitHub...
+"%GIT%" push
+if not errorlevel 1 goto OK
+echo.
+echo [ERRO] Falha ao enviar. Veja a mensagem acima.
+echo.
+pause
+exit /b 1
+:OK
+echo.
+echo  ==========================================
+echo    Tudo sincronizado!
+echo  ==========================================
+echo.
+echo Ultima versao publicada agora:
+"%GIT%" log -1 --oneline
+echo.
+echo - O site atualiza em 1 a 2 minutos.
+echo - No navegador, atualize com Ctrl + F5.
+echo - Confira o Atualizado no rodape do sistema: se a hora for recente, subiu.
+echo.
+echo Se acima apareceu Nenhuma alteracao NOVA, cole os arquivos novos
+echo nesta pasta e rode de novo:
+echo   %cd%
+echo.
+pause
+exit /b 0
+
+:MOSTRA
+if exist %1 echo   %~t1  -  %~1
+if not exist %1 echo   FALTANDO  -  %~1
+exit /b
