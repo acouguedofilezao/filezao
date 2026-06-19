@@ -1,5 +1,13 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Folha: trava contra saída duplicada
+- Ao salvar a quinzena, se **já existir uma saída com o nome do funcionário naquela data** (dia 1 ou 15), o sistema **não lança de novo** — e abre uma caixa de diálogo avisando quais funcionários foram barrados e por quê.
+- A quinzena é salva normalmente; só a saída duplicada é bloqueada. Pra relançar, é só excluir a saída antiga na aba Saídas e salvar de novo.
+
+## 2026-06-19 — Folha: forma de pagamento por funcionário
+- A **forma de pagamento agora é por funcionário** (cada linha tem o seu seletor, embaixo do nome): Dinheiro, Pix, Boleto ou Cartão. O sistema **lembra** a forma de cada um pra próxima quinzena.
+- Ao salvar, a saída de cada funcionário sai com a forma escolhida pra ele.
+
 ## 2026-06-19 — Folha: formato caixa registradora + Enter + saída automática
 - **Campos de dinheiro na folha** (salário, extras, vale, carne) agora são **caixa registradora**: você digita da esquerda pra direita e já vem com os centavos (,00) — igual o resto do sistema. (Faltas continua sendo número de dias.)
 - **Enter lança:** apertando Enter em qualquer campo, a quinzena é salva (com trava anti-duplicidade, igual as telas de Entradas/Saídas).

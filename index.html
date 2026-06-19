@@ -1939,15 +1939,16 @@ function saldoSetLabel(k,v){var m=saldoGet();if(m[k]){m[k].label=v;saldoSet(m);s
 /* ===== FOLHA DE PAGAMENTO ===== */
 var FOLHA_BENEF=200;
 var FUNC_DEFAULT=[
- {id:'alberto',nome:'Alberto',salario:1770,diaExtra:0,beneficio:true},
- {id:'andre',nome:'André',salario:2800,diaExtra:0,beneficio:true},
- {id:'wilson',nome:'Wilson',salario:2912,diaExtra:0,beneficio:true},
- {id:'magela',nome:'Magela',salario:3120,diaExtra:0,beneficio:true},
- {id:'gustavo',nome:'Gustavo',salario:2800,diaExtra:150,beneficio:true},
- {id:'alex',nome:'Alex',salario:2000,diaExtra:0,beneficio:false}
+ {id:'alberto',nome:'Alberto',salario:1770,diaExtra:0,beneficio:true,forma:'DINHEIRO'},
+ {id:'andre',nome:'André',salario:2800,diaExtra:0,beneficio:true,forma:'DINHEIRO'},
+ {id:'wilson',nome:'Wilson',salario:2912,diaExtra:0,beneficio:true,forma:'DINHEIRO'},
+ {id:'magela',nome:'Magela',salario:3120,diaExtra:0,beneficio:true,forma:'DINHEIRO'},
+ {id:'gustavo',nome:'Gustavo',salario:2800,diaExtra:150,beneficio:true,forma:'DINHEIRO'},
+ {id:'alex',nome:'Alex',salario:2000,diaExtra:0,beneficio:false,forma:'DINHEIRO'}
 ];
-function funcGet(){try{var a=JSON.parse(localStorage.getItem('fz_func')||'null');if(a&&a.length)return a;}catch(e){}return FUNC_DEFAULT.map(function(x){var o={};for(var k in x)o[k]=x[k];return o;});}
+function funcGet(){var a=null;try{a=JSON.parse(localStorage.getItem('fz_func')||'null');}catch(e){}if(!a||!a.length)a=FUNC_DEFAULT.map(function(x){var o={};for(var k in x)o[k]=x[k];return o;});a.forEach(function(f){if(!f.forma)f.forma='DINHEIRO';});return a;}
 function funcSet(a){try{localStorage.setItem('fz_func',JSON.stringify(a));}catch(e){}}
+function folhaFormaSave(id){var v=(document.getElementById('fl-fp-'+id)||{}).value||'DINHEIRO';var a=funcGet();a.forEach(function(f){if(f.id===id)f.forma=v;});funcSet(a);}
 function folhaRecGet(){try{return JSON.parse(localStorage.getItem('fz_folha')||'[]');}catch(e){return [];}}
 function folhaRecSet(a){try{localStorage.setItem('fz_folha',JSON.stringify(a));}catch(e){}}
 function flMes(){var m=(document.getElementById('fl-ms')||{}).value||'01';var y=(document.getElementById('fl-an')||{}).value||'2026';return y+'-'+m;}
@@ -1986,11 +1987,15 @@ function folhaRender(){
     var rec=recs.filter(function(r){return r.func===f.id&&r.mes===mes&&r.q===q;})[0]||{};
     var usadoOutras=recs.filter(function(r){return r.func===f.id&&r.mes===mes&&r.q!==q;}).reduce(function(a,r){return a+(Number(r.beneficio)||0);},0);
     var benefDisp=f.beneficio?Math.max(0,FOLHA_BENEF-usadoOutras):0;
+    var fpv=rec.forma||f.forma||'DINHEIRO';
+    function opt(v,l){return '<option value="'+v+'"'+(fpv===v?' selected':'')+'>'+l+'</option>';}
     function money(idf,val,w){return '<input type="text" data-money="1" data-init="'+val+'" id="fl-'+idf+'-'+f.id+'" style="width:'+(w||78)+'px;'+inp+'">';}
     h+='<tr data-fid="'+f.id+'" data-benef="'+benefDisp+'" style="border-top:1px solid #f0f0f0">'
       +'<td style="text-align:left;padding:7px 8px;font-weight:600">'+cotEsc(f.nome)
         +(f.diaExtra?'<div style="font-size:10px;color:#999;font-weight:400">dia extra: '+fmt(f.diaExtra)+'</div>':'')
-        +(!f.beneficio?'<div style="font-size:10px;color:#c0392b;font-weight:400">sem cortesia carne</div>':'')+'</td>'
+        +(!f.beneficio?'<div style="font-size:10px;color:#c0392b;font-weight:400">sem cortesia carne</div>':'')
+        +'<div style="margin-top:4px;display:flex;align-items:center;gap:5px"><span style="font-size:9px;color:#aaa;font-weight:700">PGTO</span><select id="fl-fp-'+f.id+'" onchange="folhaFormaSave(\''+f.id+'\')" style="font-size:11px;border:1px solid #ddd;border-radius:5px;padding:2px 5px;font-weight:500">'+opt('DINHEIRO','Dinheiro')+opt('PIX','Pix')+opt('BOLETO','Boleto')+opt('CARTÃO','Cartão')+'</select></div>'
+        +'</td>'
       +'<td style="padding:5px 4px">'+money('sal',f.salario,80)+'</td>'
       +'<td style="padding:5px 4px"><input type="number" step="1" min="0" value="'+(rec.faltas||0)+'" oninput="folhaCalc()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();folhaSalvar();}" id="fl-falta-'+f.id+'" style="width:46px;'+inp+'"></td>'
       +'<td style="padding:5px 4px">'+money('extra',rec.extras||0,70)+'</td>'
@@ -2002,10 +2007,8 @@ function folhaRender(){
   h+='</tbody></table></div>';
   h+='<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
     +'<div style="font-size:15px;font-weight:800">Total a pagar: <span id="fl-total" style="color:#0f7a37">—</span></div>'
-    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label style="font-size:12px;color:#666">Forma de pagamento</label>'
-    +'<select id="fl-fp" style="border:1px solid #ddd;border-radius:7px;padding:7px 10px;font-size:13px"><option value="DINHEIRO">Dinheiro</option><option value="PIX">Pix</option><option value="BOLETO">Boleto</option><option value="CARTÃO">Cartão</option></select>'
-    +'<button class="btn btn-primary" onclick="folhaSalvar()"><i class="ti ti-device-floppy"></i> Salvar quinzena</button></div></div>';
-  h+='<div style="font-size:11px;color:#999;margin-top:8px">Ao salvar, cada funcionário com valor a pagar vira uma <b>saída</b> automática (nome = descrição, data e forma de pagamento). Aperte <b>Enter</b> pra salvar.</div>';
+    +'<button class="btn btn-primary" onclick="folhaSalvar()"><i class="ti ti-device-floppy"></i> Salvar quinzena</button></div>';
+  h+='<div style="font-size:11px;color:#999;margin-top:8px">Ao salvar, cada funcionário com valor a pagar vira uma <b>saída</b> automática (nome, data e a forma de pagamento de cada um). Aperte <b>Enter</b> pra salvar.</div>';
   h+='</div>';
   box.innerHTML=h;
   box.querySelectorAll('input[data-money]').forEach(function(el){
@@ -2045,7 +2048,6 @@ function folhaSalvar(){
   var box=document.getElementById('folha-r');if(!box)return;
   var func=funcGet(),mes=flMes(),q=flQ();
   var dataPg=mes+'-'+(q===1?'01':'15');
-  var fp=(document.getElementById('fl-fp')||{}).value||'DINHEIRO';
   var recs=folhaRecGet().filter(function(r){return !(r.mes===mes&&r.q===q);});
   var novos=[];
   box.querySelectorAll('tr[data-fid]').forEach(function(tr){
@@ -2057,22 +2059,28 @@ function folhaSalvar(){
       vale:getDV('fl-vale-'+id),
       compra:getDV('fl-compra-'+id),
       beneficio:Number(tr.getAttribute('data-benefaplic'))||0,
+      forma:(document.getElementById('fl-fp-'+id)||{}).value||'DINHEIRO',
       valor:Number(tr.getAttribute('data-pagar'))||0,ts:new Date().toISOString()};
     novos.push(rec);
   });
   folhaRecSet(recs.concat(novos));
   try{sbUpsert('folha',novos.map(folhaToDB)).catch(function(){});}catch(e){}
-  var nSai=0;
+  var nSai=0,bloqueados=[];
   novos.forEach(function(r){
+    if(r.valor<=0)return;
     var f=func.filter(function(x){return x.id===r.func;})[0]||{};
+    var nome=(f.nome||r.func).toUpperCase();
     var sid='folha_'+r.func+'_'+mes+'_'+q;
     var ix=S.findIndex(function(x){return x.id===sid;});
     if(ix>=0)S.splice(ix,1);
-    if(r.valor>0){S.push({id:sid,data:dataPg,descricao:(f.nome||r.func).toUpperCase(),valor:r2(r.valor),formaPgto:fp});nSai++;}
+    var dup=S.find(function(x){return x.id!==sid&&x.data===dataPg&&(x.descricao||'').toUpperCase()===nome;});
+    if(dup){bloqueados.push(nome);return;}
+    S.push({id:sid,data:dataPg,descricao:nome,valor:r2(r.valor),formaPgto:(r.forma||'DINHEIRO')});nSai++;
   });
   save('fz_saidas',S);renderSai();renderDash();
-  logReg('Financeiro','Folha','Salvou '+nomeMes(mes)+' '+(q===1?'1ª':'2ª')+' quinzena · '+nSai+' saída(s)','',novos.length+' funcionários');
+  logReg('Financeiro','Folha','Salvou '+nomeMes(mes)+' '+(q===1?'1ª':'2ª')+' quinzena · '+nSai+' saída(s)'+(bloqueados.length?' · '+bloqueados.length+' bloqueada(s)':''),'',novos.length+' funcionários');
   toast('Quinzena salva — '+nSai+' saída(s) lançada(s)');
+  if(bloqueados.length){alert('⚠ '+bloqueados.length+' saída(s) NÃO foram lançadas para não duplicar.\n\nJá existe saída na data '+fd(dataPg)+' com o nome de:\n\n• '+bloqueados.join('\n• ')+'\n\nA quinzena foi salva normalmente. Se quiser relançar essas saídas, exclua a saída antiga na aba Saídas e salve a quinzena de novo.');}
   folhaRender();
 }
 
