@@ -1,5 +1,8 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Ajuste fino na frequência da promoção/lançamento
+- Tava aparecendo demais (depois de toda página). Coloquei no **meio-termo**: promoção/lançamento a cada **2 páginas** de produtos, com as telas institucionais a cada 3. Aparece com bom destaque, mas sem cansar.
+
 ## 2026-06-19 — Promoção/lançamento aparecendo mais + texto novo
 - **Aparecem mais vezes:** mudei o rodízio pra mostrar uma tela de **promoção/lançamento depois de CADA página de produtos** (antes era a cada 2, alternando com institucional). Agora, num ciclo, cada promoção e cada lançamento aparece ~2× (antes 1×), sem deixar de mostrar as carnes e as telas de fidelidade/instagram (essas entram a cada 2 páginas).
 - **Texto do lançamento:** troquei "Acabou de chegar na Filezão" por **"Novidade exclusiva da Filezão"** — mais moderno e mais certo (não "chegou", é feito aí).
