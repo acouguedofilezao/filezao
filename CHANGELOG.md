@@ -1,5 +1,12 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Folha: formato caixa registradora + Enter + saída automática
+- **Campos de dinheiro na folha** (salário, extras, vale, carne) agora são **caixa registradora**: você digita da esquerda pra direita e já vem com os centavos (,00) — igual o resto do sistema. (Faltas continua sendo número de dias.)
+- **Enter lança:** apertando Enter em qualquer campo, a quinzena é salva (com trava anti-duplicidade, igual as telas de Entradas/Saídas).
+- **Mensagem de confirmação** discreta no topo da tela ("✓ Quinzena salva...") ao salvar. Coloquei também nas telas de **Entradas** e **Saídas**.
+- **Saída automática:** ao salvar a quinzena, cada funcionário com valor a pagar vira uma **saída** automaticamente — descrição = nome do funcionário, data = dia 1 ou 15, valor a pagar, e a **forma de pagamento** (novo seletor na tela, ao lado do botão Salvar). Re-salvar a mesma quinzena **atualiza** as saídas, não duplica.
+  - ⚠️ Como o salário agora entra sozinho na Saída, não precisa mais lançar à mão.
+
 ## 2026-06-19 — Extrato bancário diário + confirmação ao mudar categoria
 - **Histórico diário de saldo:** agora, todo extrato OFX que você importar, o sistema guarda o **saldo daquele dia** (antes guardava só o último de cada conta). Vai montando o dia a dia automaticamente.
 - **Nova aba "🏦 Extrato bancário"** dentro de Relatórios: escolhe o período (igual aos outros relatórios) e ele traz o **saldo de cada dia**, por conta, com **total** quando há mais de uma conta. Nos dias sem importação, repete o último saldo conhecido (marcado com um pontinho · cinza).

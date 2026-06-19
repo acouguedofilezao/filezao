@@ -1270,6 +1270,14 @@ function mkDInput(el,onEnter){
 function getDV(id){const el=document.getElementById(id);if(!el)return 0;return el._di?el.getVal():(parseFloat(el.value)||0);}
 function clrV(id){const el=document.getElementById(id);if(!el)return;if(el._di)el.clr();else el.value='';}
 function setV(id,v){const el=document.getElementById(id);if(!el)return;if(el._di)el.setC(Math.round(v*100));else el.value=v;}
+function toast(msg,tipo){
+  var t=document.getElementById('fz-toast');
+  if(!t){t=document.createElement('div');t.id='fz-toast';t.style.cssText='position:fixed;top:16px;left:50%;z-index:99999;padding:11px 22px;border-radius:11px;font-size:14px;font-weight:700;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.22);opacity:0;transform:translateX(-50%) translateY(-16px);transition:opacity .22s,transform .22s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(t);}
+  t.style.background=(tipo==='erro'?'#b91c1c':'#16a34a');
+  t.textContent=(tipo==='erro'?'⚠ ':'✓ ')+msg;
+  t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(t._tm);t._tm=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-16px)';},2200);
+}
 
 /* ── IMPORTAÇÃO (Sipag CSV + Sicoob OFX) ── */
 var IMP={card:[],pix:[],deb:[],chq:[],excl:null,bld:'bruto',showOld:false};
@@ -1970,6 +1978,7 @@ async function folhaSync(){
 function folhaRender(){
   var box=document.getElementById('folha-r');if(!box)return;
   var func=funcGet(),mes=flMes(),q=flQ(),recs=folhaRecGet();
+  var inp='border:1px solid #ddd;border-radius:5px;padding:5px 6px;font-size:13px;text-align:right';
   var h='<div class="card"><div class="card-title"><i class="ti ti-cash"></i> '+nomeMes(mes)+' &middot; '+(q===1?'1ª quinzena':'2ª quinzena')+'</div>';
   h+='<div class="tbl-wrap" style="overflow-x:auto"><table style="width:100%;min-width:760px;border-collapse:collapse">';
   h+='<thead><tr style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.4px"><th style="text-align:left;padding:6px 8px">Funcionário</th><th style="padding:6px 4px">Salário</th><th style="padding:6px 4px">Faltas</th><th style="padding:6px 4px">Extras R$</th><th style="padding:6px 4px">Vale R$</th><th style="padding:6px 4px">Carne R$</th><th style="padding:6px 4px">Cortesia</th><th style="text-align:right;padding:6px 8px">A pagar</th></tr></thead><tbody>';
@@ -1977,72 +1986,93 @@ function folhaRender(){
     var rec=recs.filter(function(r){return r.func===f.id&&r.mes===mes&&r.q===q;})[0]||{};
     var usadoOutras=recs.filter(function(r){return r.func===f.id&&r.mes===mes&&r.q!==q;}).reduce(function(a,r){return a+(Number(r.beneficio)||0);},0);
     var benefDisp=f.beneficio?Math.max(0,FOLHA_BENEF-usadoOutras):0;
-    var inp='border:1px solid #ddd;border-radius:5px;padding:5px 6px;font-size:13px;text-align:right';
-    h+='<tr data-fid="'+f.id+'" data-sal="'+f.salario+'" data-benef="'+benefDisp+'" style="border-top:1px solid #f0f0f0">'
+    function money(idf,val,w){return '<input type="text" data-money="1" data-init="'+val+'" id="fl-'+idf+'-'+f.id+'" style="width:'+(w||78)+'px;'+inp+'">';}
+    h+='<tr data-fid="'+f.id+'" data-benef="'+benefDisp+'" style="border-top:1px solid #f0f0f0">'
       +'<td style="text-align:left;padding:7px 8px;font-weight:600">'+cotEsc(f.nome)
         +(f.diaExtra?'<div style="font-size:10px;color:#999;font-weight:400">dia extra: '+fmt(f.diaExtra)+'</div>':'')
         +(!f.beneficio?'<div style="font-size:10px;color:#c0392b;font-weight:400">sem cortesia carne</div>':'')+'</td>'
-      +'<td style="padding:5px 4px"><input type="number" step="0.01" value="'+f.salario+'" oninput="folhaSal(\''+f.id+'\',this.value)" style="width:78px;'+inp+'"></td>'
-      +'<td style="padding:5px 4px"><input type="number" step="1" min="0" value="'+(rec.faltas||0)+'" oninput="folhaCalc()" id="fl-falta-'+f.id+'" style="width:46px;'+inp+'"></td>'
-      +'<td style="padding:5px 4px"><input type="number" step="0.01" min="0" value="'+(rec.extras||0)+'" oninput="folhaCalc()" id="fl-extra-'+f.id+'" style="width:70px;'+inp+'"></td>'
-      +'<td style="padding:5px 4px"><input type="number" step="0.01" min="0" value="'+(rec.vale||0)+'" oninput="folhaCalc()" id="fl-vale-'+f.id+'" style="width:70px;'+inp+'"></td>'
-      +'<td style="padding:5px 4px"><input type="number" step="0.01" min="0" value="'+(rec.compra||0)+'" oninput="folhaCalc()" id="fl-compra-'+f.id+'" style="width:70px;'+inp+'"></td>'
+      +'<td style="padding:5px 4px">'+money('sal',f.salario,80)+'</td>'
+      +'<td style="padding:5px 4px"><input type="number" step="1" min="0" value="'+(rec.faltas||0)+'" oninput="folhaCalc()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();folhaSalvar();}" id="fl-falta-'+f.id+'" style="width:46px;'+inp+'"></td>'
+      +'<td style="padding:5px 4px">'+money('extra',rec.extras||0,70)+'</td>'
+      +'<td style="padding:5px 4px">'+money('vale',rec.vale||0,70)+'</td>'
+      +'<td style="padding:5px 4px">'+money('compra',rec.compra||0,70)+'</td>'
       +'<td style="padding:5px 4px;font-size:11px;color:#888;text-align:center" id="fl-cort-'+f.id+'">—</td>'
       +'<td style="text-align:right;padding:7px 8px;font-weight:800;color:#0f7a37;white-space:nowrap" id="fl-pagar-'+f.id+'">—</td></tr>';
   });
   h+='</tbody></table></div>';
-  h+='<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
+  h+='<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
     +'<div style="font-size:15px;font-weight:800">Total a pagar: <span id="fl-total" style="color:#0f7a37">—</span></div>'
-    +'<button class="btn btn-primary" onclick="folhaSalvar()"><i class="ti ti-device-floppy"></i> Salvar quinzena</button></div>';
+    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label style="font-size:12px;color:#666">Forma de pagamento</label>'
+    +'<select id="fl-fp" style="border:1px solid #ddd;border-radius:7px;padding:7px 10px;font-size:13px"><option value="DINHEIRO">Dinheiro</option><option value="PIX">Pix</option><option value="BOLETO">Boleto</option><option value="CARTÃO">Cartão</option></select>'
+    +'<button class="btn btn-primary" onclick="folhaSalvar()"><i class="ti ti-device-floppy"></i> Salvar quinzena</button></div></div>';
+  h+='<div style="font-size:11px;color:#999;margin-top:8px">Ao salvar, cada funcionário com valor a pagar vira uma <b>saída</b> automática (nome = descrição, data e forma de pagamento). Aperte <b>Enter</b> pra salvar.</div>';
   h+='</div>';
   box.innerHTML=h;
+  box.querySelectorAll('input[data-money]').forEach(function(el){
+    mkDInput(el,folhaSalvar);
+    var iv=parseFloat(el.getAttribute('data-init'))||0;el.setC(Math.round(iv*100));
+    el.addEventListener('keyup',folhaCalc);
+    el.addEventListener('input',folhaCalc);
+    if(el.id.indexOf('fl-sal-')===0)el.addEventListener('blur',function(){folhaSalSave(el.id.slice(7));});
+  });
   folhaCalc();
 }
-function folhaSal(id,v){var a=funcGet();a.forEach(function(f){if(f.id===id)f.salario=Number(v)||0;});funcSet(a);var tr=document.querySelector('tr[data-fid="'+id+'"]');if(tr)tr.setAttribute('data-sal',Number(v)||0);folhaCalc();}
+function folhaSalSave(id){var v=getDV('fl-sal-'+id);var a=funcGet();a.forEach(function(f){if(f.id===id)f.salario=v;});funcSet(a);}
 function folhaCalc(){
   var box=document.getElementById('folha-r');if(!box)return;var total=0;
   box.querySelectorAll('tr[data-fid]').forEach(function(tr){
     var id=tr.getAttribute('data-fid');
-    var sal=Number(tr.getAttribute('data-sal'))||0;
+    var sal=getDV('fl-sal-'+id);
     var benefDisp=Number(tr.getAttribute('data-benef'))||0;
-    var faltas=Number((document.getElementById('fl-falta-'+id)||{}).value)||0;
-    var extras=Number((document.getElementById('fl-extra-'+id)||{}).value)||0;
-    var vale=Number((document.getElementById('fl-vale-'+id)||{}).value)||0;
-    var compra=Number((document.getElementById('fl-compra-'+id)||{}).value)||0;
+    var faltas=getDV('fl-falta-'+id);
+    var extras=getDV('fl-extra-'+id);
+    var vale=getDV('fl-vale-'+id);
+    var compra=getDV('fl-compra-'+id);
     var benefAplic=Math.min(compra,benefDisp);
     var descCompra=compra-benefAplic;
-    var pagar=sal/2 - faltas*(sal/30) + extras - vale - descCompra;
-    pagar=Math.round(pagar*100)/100;
+    var pagar=r2(sal/2 - faltas*(sal/30) + extras - vale - descCompra);
     var pag=document.getElementById('fl-pagar-'+id);if(pag)pag.textContent=fmt(pagar);
     var cort=document.getElementById('fl-cort-'+id);
     if(cort){cort.innerHTML=benefDisp>0?('<b>'+fmt(benefAplic)+'</b><br><span style="color:#bbb;font-size:10px">resta '+fmt(Math.max(0,benefDisp-benefAplic))+'/mês</span>'):'<span style="color:#ccc">—</span>';}
     tr.setAttribute('data-pagar',pagar);tr.setAttribute('data-benefaplic',benefAplic);
     total+=pagar;
   });
-  var t=document.getElementById('fl-total');if(t)t.textContent=fmt(Math.round(total*100)/100);
+  var t=document.getElementById('fl-total');if(t)t.textContent=fmt(r2(total));
 }
 function folhaToDB(r){return {id:r.id,funcionario:r.func,mes:r.mes,quinzena:r.q,salario:r.salario,faltas:r.faltas,extras:r.extras,vale:r.vale,compra:r.compra,beneficio:r.beneficio,valor:r.valor,ts:r.ts};}
 function folhaSalvar(){
+  if(folhaSalvar._busy)return;folhaSalvar._busy=true;setTimeout(function(){folhaSalvar._busy=false;},500);
   var box=document.getElementById('folha-r');if(!box)return;
   var func=funcGet(),mes=flMes(),q=flQ();
+  var dataPg=mes+'-'+(q===1?'01':'15');
+  var fp=(document.getElementById('fl-fp')||{}).value||'DINHEIRO';
   var recs=folhaRecGet().filter(function(r){return !(r.mes===mes&&r.q===q);});
   var novos=[];
   box.querySelectorAll('tr[data-fid]').forEach(function(tr){
-    var id=tr.getAttribute('data-fid');var f=func.filter(function(x){return x.id===id;})[0]||{};
+    var id=tr.getAttribute('data-fid');
     var rec={id:id+'|'+mes+'|'+q,func:id,mes:mes,q:q,
-      salario:Number(tr.getAttribute('data-sal'))||0,
-      faltas:Number((document.getElementById('fl-falta-'+id)||{}).value)||0,
-      extras:Number((document.getElementById('fl-extra-'+id)||{}).value)||0,
-      vale:Number((document.getElementById('fl-vale-'+id)||{}).value)||0,
-      compra:Number((document.getElementById('fl-compra-'+id)||{}).value)||0,
+      salario:getDV('fl-sal-'+id),
+      faltas:getDV('fl-falta-'+id),
+      extras:getDV('fl-extra-'+id),
+      vale:getDV('fl-vale-'+id),
+      compra:getDV('fl-compra-'+id),
       beneficio:Number(tr.getAttribute('data-benefaplic'))||0,
       valor:Number(tr.getAttribute('data-pagar'))||0,ts:new Date().toISOString()};
     novos.push(rec);
   });
   folhaRecSet(recs.concat(novos));
   try{sbUpsert('folha',novos.map(folhaToDB)).catch(function(){});}catch(e){}
-  logReg('Financeiro','Folha','Salvou '+nomeMes(mes)+' '+(q===1?'1ª':'2ª')+' quinzena','',novos.length+' funcionários');
-  alert('Quinzena salva! A cortesia de carne usada já fica registrada no mês.');
+  var nSai=0;
+  novos.forEach(function(r){
+    var f=func.filter(function(x){return x.id===r.func;})[0]||{};
+    var sid='folha_'+r.func+'_'+mes+'_'+q;
+    var ix=S.findIndex(function(x){return x.id===sid;});
+    if(ix>=0)S.splice(ix,1);
+    if(r.valor>0){S.push({id:sid,data:dataPg,descricao:(f.nome||r.func).toUpperCase(),valor:r2(r.valor),formaPgto:fp});nSai++;}
+  });
+  save('fz_saidas',S);renderSai();renderDash();
+  logReg('Financeiro','Folha','Salvou '+nomeMes(mes)+' '+(q===1?'1ª':'2ª')+' quinzena · '+nSai+' saída(s)','',novos.length+' funcionários');
+  toast('Quinzena salva — '+nSai+' saída(s) lançada(s)');
   folhaRender();
 }
 
@@ -2054,7 +2084,7 @@ function addEnt(){
   addEnt._busy=true;setTimeout(function(){addEnt._busy=false;},400);
   E.push({id:uid(),data:d,tipo:t,valor:r2(v)});
   logReg('Entradas','Adicionou',fd(d)+' · '+t,'',fmt(r2(v)));
-  save('fz_entradas',E);clrV('e-vl');document.getElementById('e-vl').focus();renderEnt();renderDash();
+  save('fz_entradas',E);clrV('e-vl');document.getElementById('e-vl').focus();renderEnt();renderDash();toast('Entrada lançada');
 }
 function editEnt(id){
   const e=E.find(x=>x.id===id);if(!e)return;
@@ -2101,7 +2131,7 @@ function addSai(){
   if(!d||!dc||v<=0)return alert('Preencha todos os campos.');
   S.push({id:uid(),data:d,descricao:dc.toUpperCase(),valor:r2(v),formaPgto:fp});
   logReg('Saídas','Adicionou',fd(d)+' · '+dc.toUpperCase(),'',fmt(r2(v)));
-  save('fz_saidas',S);document.getElementById('s-dc').value='';clrV('s-vl');renderSai();renderDash();
+  save('fz_saidas',S);document.getElementById('s-dc').value='';clrV('s-vl');renderSai();renderDash();toast('Saída lançada');
 }
 function editSai(id){
   const s=S.find(x=>x.id===id);if(!s)return;
