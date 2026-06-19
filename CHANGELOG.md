@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-18 — Script extrai o .zip sozinho (fluxo "Baixar tudo" + rodar)
+- O `sincronizar_filezao.bat` agora, ao rodar, **procura o .zip mais recente na pasta Downloads** (o que o botão "Baixar tudo" gera), **extrai sozinho** e copia os arquivos (`*.html` e `*.md`) pra pasta do sistema — depois sobe pro GitHub normalmente. Não precisa mais extrair na mão.
+- Segurança: só age em .zip que contenha o `index.html` (assinatura do sistema); se o .zip não for do sistema, ele ignora e usa o que já está na pasta. Não mexe em mais nada do Downloads.
+- O próprio `.bat` **não** é sobrescrito automaticamente (de propósito, pra não corromper o script enquanto roda) — atualizações do `.bat` continuam manuais (são raras).
+- Usa o PowerShell do Windows pra extrair (já vem no Windows).
+
 ## 2026-06-18 — Promoção mais bonita: card igual aos outros + tela cheia
 - **Card de promoção corrigido:** agora usa o **mesmo layout dos outros produtos** (foto cheia, preço único = o promocional), só com a **borda dourada pulsando** e o selo "🔥 Promoção". Saiu o visual anterior (preço empilhado) que estava apertando a foto.
 - **Tela cheia de promoção:** todo produto em promoção ganha uma **tela cheia própria** no rodízio, fora da ordem alfabética — foto grande, "de R$X" riscado e o preço promocional gigante, com borda dourada pulsando, pra forçar a venda.

@@ -2,6 +2,8 @@
 chcp 65001 >nul
 title SISTEMA FILEZAO - Sincronizacao
 cd /d "%~dp0"
+set "GIT_PAGER=cat"
+set "PAGER=cat"
 
 echo ========================================
 echo    SISTEMA FILEZAO - Sincronizacao
@@ -32,6 +34,10 @@ pause
 exit /b 1
 :REPOOK
 
+echo Procurando o arquivo baixado (.zip do botao "Baixar tudo") em Downloads...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='SilentlyContinue'; $dl=Join-Path $env:USERPROFILE 'Downloads'; $repo='%cd%'; Add-Type -AssemblyName System.IO.Compression.FileSystem; $zips=Get-ChildItem -LiteralPath $dl -Filter *.zip | Sort-Object LastWriteTime -Descending; $zip=$null; foreach($z in $zips){ try { $a=[System.IO.Compression.ZipFile]::OpenRead($z.FullName); $has=($a.Entries | Where-Object { $_.Name -eq 'index.html' } | Select-Object -First 1); $a.Dispose(); if($has){ $zip=$z; break } } catch {} }; if(-not $zip){ Write-Host '  Nenhum .zip do sistema em Downloads - vou usar o que ja esta na pasta.'; exit }; Write-Host ('  Usando: ' + $zip.Name); $tmp=Join-Path $env:TEMP 'filezao_unzip'; if(Test-Path $tmp){ Remove-Item $tmp -Recurse -Force }; New-Item -ItemType Directory -Path $tmp | Out-Null; try { Expand-Archive -LiteralPath $zip.FullName -DestinationPath $tmp -Force } catch { Write-Host ('  [aviso] falha ao extrair: ' + $_.Exception.Message); exit }; $n=0; Get-ChildItem -Path $tmp -Recurse -File -Include *.html,*.md | ForEach-Object { Copy-Item $_.FullName -Destination $repo -Force; Write-Host ('  atualizado: ' + $_.Name); $n++ }; Remove-Item $tmp -Recurse -Force; Write-Host ('  ' + $n + ' arquivo(s) trazido(s) do .zip.') "
+echo.
+
 echo Arquivos nesta pasta - data e hora da ultima alteracao:
 for %%f in (index.html tv.html CHANGELOG.md) do call :MOSTRA "%%f"
 echo.
@@ -40,7 +46,7 @@ echo Procurando alteracoes...
 "%GIT%" add -A
 echo.
 echo O Git detectou estas mudancas:
-"%GIT%" status -s
+"%GIT%" --no-pager status -s
 echo.
 
 "%GIT%" diff --cached --quiet
@@ -49,9 +55,9 @@ if not errorlevel 1 goto NADANOVO
 echo  -^> Alteracoes salvas. Commit feito.
 goto PULL
 :NADANOVO
-echo  -^> Nenhuma alteracao NOVA nesta pasta para salvar.
-echo     Se voce esperava enviar uma versao nova, ela provavelmente
-echo     NAO foi colada nesta pasta. Veja as datas dos arquivos acima.
+echo  -^> Nenhuma alteracao NOVA para salvar.
+echo     Se voce baixou uma versao nova, confira se clicou em "Baixar tudo"
+echo     e se o .zip esta na pasta Downloads. Veja as datas dos arquivos acima.
 :PULL
 echo.
 
@@ -82,15 +88,10 @@ echo    Tudo sincronizado!
 echo  ==========================================
 echo.
 echo Ultima versao publicada agora:
-"%GIT%" log -1 --oneline
+"%GIT%" --no-pager log -1 --oneline
 echo.
 echo - O site atualiza em 1 a 2 minutos.
-echo - No navegador, atualize com Ctrl + F5.
-echo - Confira o Atualizado no rodape do sistema: se a hora for recente, subiu.
-echo.
-echo Se acima apareceu Nenhuma alteracao NOVA, cole os arquivos novos
-echo nesta pasta e rode de novo:
-echo   %cd%
+echo - Na TV / navegador, atualize com Ctrl + F5.
 echo.
 pause
 exit /b 0
