@@ -1,5 +1,24 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Economia de dados na TV (resolve o "limite excedido" do Supabase)
+- **Causa do limite:** o que estourou foi o **Egress** (dados que saem do Supabase), não o tamanho do banco. A TV rebaixava as **fotos** (base64) de todos os produtos **a cada 60 segundos, 24h por dia** — isso queimava ~3 GB/dia e estourava os 5 GB grátis em 2 dias.
+- **Correção:** a atualização de 60s agora puxa **só os preços** (poucos KB). As **fotos são baixadas uma vez** no início e só voltam a ser baixadas quando entra um **produto novo** na TV (mais uma rede de segurança a cada 6h pra pegar troca de foto). Isso corta o egress em ~95%.
+- **Resultado:** o gasto cai pra ~1–2 GB/mês (bem abaixo dos 5 GB grátis), e o problema **não volta**.
+- **Dica:** se você trocar a foto de um produto e quiser ver na TV na hora, dá **Ctrl + F5** na TV (senão entra sozinho em até 6h).
+
+## 2026-06-19 — Foto da promoção/lançamento sem moldura
+- Tirei a **moldura dourada (e a verde do lançamento) ao redor da foto** — ficava pesada. Agora a foto fica limpa, só com cantos arredondados e uma **sombra suave** dando profundidade. O dourado (e o verde) continua **só na borda do quadro todo**, destacando a tela.
+
+## 2026-06-19 — Novo recurso: LANÇAMENTO (produto novo em tela cheia)
+- **Campo Lançamento:** ao lado da coluna **PROMO** na tela "TV / Produtos" tem agora a coluna **NOVO**. Marcou um produto como novidade (temperado, kit, etc.), ele ganha uma **tela cheia própria** na TV — igual a promoção, mas com **visual diferente pra chamar ainda mais atenção**.
+- **Visual do lançamento:** tema **verde/ciano**, selo **"✨ Novidade ✨"**, borda **piscando** mais forte e mais rápida que a da promoção (alterna pro ciano), foto e preço em moldura verde, e a frase **"Acabou de chegar na Filezão!"**. Diferentão — açougue nenhum tem isso.
+- **Como usar:** importa o `cad.txt` normal (o produto novo é criado), aí na tela TV / Produtos é só marcar o **NOVO**. Pra tirar, desmarca. (Promoção e Novidade são independentes; se marcar os dois, ele mostra as duas telas.)
+- **Sai do grid:** igual a promoção, o produto marcado como novidade sai da lista alfabética e aparece só na tela cheia dele.
+- **⚠️ Precisa rodar 1 SQL no Supabase ANTES de usar** (senão salvar produto dá erro):
+  ```sql
+  ALTER TABLE produtos ADD COLUMN IF NOT EXISTS lancamento boolean DEFAULT false;
+  ```
+
 ## 2026-06-19 — Promoção tela cheia dourada + script reconhece entregas parciais
 - **Promoção repaginada (tema dourado):** a tela cheia agora tem **borda dourada grossa em volta de tudo** com brilho dourado pulsando, o selo **"🔥 Promoção 🔥" bem maior**, a foto em **moldura dourada** e o preço numa **caixa dourada** (R$ e /kg em dourado, o valor gigante em vermelho). Máximo destaque, cara de oferta de verdade.
 - **Script reconhece entrega parcial:** antes ele só extraía o `.zip` se tivesse o `index.html` dentro. Agora reconhece se tiver **`index.html` OU `tv.html` OU `CHANGELOG.md`** — então funciona mesmo quando eu mandar só a TV, só o changelog, ou qualquer combinação (o `CHANGELOG.md` vai em toda entrega, então sempre cai certo).

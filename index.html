@@ -878,8 +878,8 @@ function save(k,d){
 function load(k){return null;} // não usa mais localStorage
 
 /* ===================== PRODUTOS / TV ===================== */
-function prodToDB(p){return {id:p.codigo,nome:p.nome,nometv:p.nomeTV||p.nome,unidade:p.unidade,preco:p.preco,exibir:!!p.exibir,promocao:!!p.promocao,promo_preco:(p.promoPreco&&p.promoPreco>0?p.promoPreco:null),promo_ate:(p.promoAte||null),ordem:p.ordem||0,foto:p.foto||null,ts:new Date().toISOString()};}
-function prodFromDB(r){return {codigo:String(r.id),nome:r.nome||'',nomeTV:r.nometv||r.nome||'',unidade:r.unidade||'KG',preco:Number(r.preco)||0,exibir:!!r.exibir,promocao:!!r.promocao,promoPreco:Number(r.promo_preco)||0,promoAte:r.promo_ate||'',ordem:Number(r.ordem)||0,foto:r.foto||''};}
+function prodToDB(p){return {id:p.codigo,nome:p.nome,nometv:p.nomeTV||p.nome,unidade:p.unidade,preco:p.preco,exibir:!!p.exibir,promocao:!!p.promocao,promo_preco:(p.promoPreco&&p.promoPreco>0?p.promoPreco:null),promo_ate:(p.promoAte||null),lancamento:!!p.lancamento,ordem:p.ordem||0,foto:p.foto||null,ts:new Date().toISOString()};}
+function prodFromDB(r){return {codigo:String(r.id),nome:r.nome||'',nomeTV:r.nometv||r.nome||'',unidade:r.unidade||'KG',preco:Number(r.preco)||0,exibir:!!r.exibir,promocao:!!r.promocao,promoPreco:Number(r.promo_preco)||0,promoAte:r.promo_ate||'',lancamento:!!r.lancamento,ordem:Number(r.ordem)||0,foto:r.foto||''};}
 // Parser do arquivo de cadastro da balança (posição fixa, 39 chars):
 // [0:6]=código  [6]=P(peso/KG) ou U(unidade/UN)  [7:29]=nome(22)  [29:36]=preço centavos  [36:39]=validade
 function prodParseBalanca(txt){
@@ -985,9 +985,10 @@ function tvFillCatFilter(){
 }
 function tvSelRow(p){
   var nm=p.nomeTV||p.nome;
-  var h='<tr'+(p.promocao?' style="background:#fff4e0"':(p.exibir?' style="background:#f0faf4"':''))+'>';
+  var h='<tr'+(p.promocao?' style="background:#fff4e0"':(p.lancamento?' style="background:#e0fbf1"':(p.exibir?' style="background:#f0faf4"':'')))+'>';
   h+='<td style="width:36px"><input type="checkbox" data-nocaps '+(p.exibir?'checked':'')+' onchange="tvToggle(\''+p.codigo+'\',this.checked)" style="width:20px;height:20px;cursor:pointer"></td>';
   h+='<td style="width:50px;text-align:center"><label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-size:9px;font-weight:800;color:'+(p.promocao?'#FE0000':'#ccc')+'"><input type="checkbox" data-nocaps '+(p.promocao?'checked':'')+' onchange="tvPromo(\''+p.codigo+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#FE0000">PROMO</label>'+(p.promocao&&p.promoPreco>0?'<div style="font-size:9px;color:#FE0000;font-weight:800;margin-top:2px;line-height:1.2">'+fmt(p.promoPreco)+'<br><span style="color:#b8860b">até '+(p.promoAte?fd(p.promoAte):'—')+'</span></div>':'')+'</td>';
+  h+='<td style="width:50px;text-align:center"><label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-size:9px;font-weight:800;color:'+(p.lancamento?'#0a8f4f':'#ccc')+'"><input type="checkbox" data-nocaps '+(p.lancamento?'checked':'')+' onchange="tvLanc(\''+p.codigo+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#16a35a">NOVO</label></td>';
   h+='<td style="width:46px;color:#999;font-size:12px;font-weight:700;text-align:center">'+cotEsc(p.codigo)+'</td>';
   h+='<td><input value="'+cotEsc(nm)+'" onchange="tvNome(\''+p.codigo+'\',this.value)" style="width:100%;border:1px solid #eee;border-radius:5px;padding:5px 7px;font-size:13px">'+(p.nome!==nm?'<div style="font-size:10px;color:#bbb;margin-top:1px">balança: '+cotEsc(p.nome)+'</div>':'')+'<div style="display:flex;align-items:center;gap:7px;margin-top:5px">'+(p.foto?'<img src="'+cotEsc(p.foto)+'" style="width:34px;height:34px;border-radius:6px;object-fit:cover;border:1px solid #eee;flex:0 0 auto">':'<span style="width:34px;height:34px;border-radius:6px;background:#f4f4f4;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto">🥩</span>')+'<label style="font-size:11px;color:#0369a1;cursor:pointer;border:1px solid #cfe3f5;background:#eff6ff;border-radius:6px;padding:4px 9px;white-space:nowrap">'+(p.foto?'Trocar foto':'Adicionar foto')+'<input type="file" accept="image/*" data-nocaps onchange="tvFotoFile(\''+p.codigo+'\',this)" style="display:none"></label>'+(p.foto?'<button onclick="tvFotoDel(\''+p.codigo+'\')" style="font-size:11px;color:#FE0000;background:none;border:none;cursor:pointer;padding:0">remover</button>':'')+'</div></td>';
   h+='<td style="color:#888;font-size:12px;width:38px">'+p.unidade+'</td>';
@@ -1001,7 +1002,7 @@ function tvSelRender(){
   if(!PROD.length){box.innerHTML='<p style="color:#999;font-size:14px">Nenhum produto ainda. Vá em <strong>Ferramentas \u2192 Importar produtos</strong> e carregue o arquivo da balança.</p>';return;}
   var q=((document.getElementById('tvsel-busca')||{}).value||'').trim().toUpperCase();
   var catf=((document.getElementById('tvsel-cat')||{}).value)||'';
-  var thead='<thead><tr style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px"><th style="width:36px"></th><th style="width:50px;text-align:center">Promo</th><th style="width:46px">Cód</th><th style="text-align:left">Produto / foto</th><th style="width:38px">Un</th><th style="text-align:right;width:82px">Preço</th></tr></thead>';
+  var thead='<thead><tr style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px"><th style="width:36px"></th><th style="width:50px;text-align:center">Promo</th><th style="width:50px;text-align:center">Novo</th><th style="width:46px">Cód</th><th style="text-align:left">Produto / foto</th><th style="width:38px">Un</th><th style="text-align:right;width:82px">Preço</th></tr></thead>';
   var sel=PROD.filter(function(p){return p.exibir;}).sort(tvSelSort);
   var h='';
   h+='<div style="margin:4px 0 6px;background:#0f7a37;color:#fff;border-radius:7px;padding:8px 12px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:7px"><i class="ti ti-device-tv"></i> Na TV ('+sel.length+')</div>';
@@ -1018,7 +1019,7 @@ function tvSelRender(){
     h+='<div class="tbl-wrap"><table>'+thead+'<tbody>';
     cats.forEach(function(c){
       var list=groups[c].sort(function(a,b){return (a.nomeTV||a.nome).localeCompare(b.nomeTV||b.nome);});
-      h+='<tr><td colspan="5" style="background:#fafafa;font-size:12px;font-weight:800;color:#6D0909;text-transform:uppercase;letter-spacing:.5px;padding:9px 7px 4px">'+cotEsc(c)+' <span style="color:#bbb;font-weight:500">('+list.length+')</span></td></tr>';
+      h+='<tr><td colspan="7" style="background:#fafafa;font-size:12px;font-weight:800;color:#6D0909;text-transform:uppercase;letter-spacing:.5px;padding:9px 7px 4px">'+cotEsc(c)+' <span style="color:#bbb;font-weight:500">('+list.length+')</span></td></tr>';
       list.forEach(function(p){h+=tvSelRow(p);});
     });
     h+='</tbody></table></div>';
@@ -1030,6 +1031,12 @@ function tvPromo(cod,on){
   var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;
   if(on){promoAbrir(cod);}
   else{p.promocao=false;p.promoPreco=0;p.promoAte='';tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});logReg('Produtos','Promoção','Encerrou · '+(p.nomeTV||p.nome),(p.promoPreco?fmt(p.promoPreco):''),'preço normal');}
+}
+function tvLanc(cod,on){
+  var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;
+  p.lancamento=!!on;tvSelRender();
+  sbUpsert('produtos',[prodToDB(p)]).catch(function(){});
+  logReg('Produtos','Lançamento',(on?'Marcou novidade · ':'Tirou novidade · ')+(p.nomeTV||p.nome),'',on?'novidade na TV':'');
 }
 function promoAbrir(cod){
   promoCod=cod;
