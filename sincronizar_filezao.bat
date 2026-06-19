@@ -34,8 +34,8 @@ pause
 exit /b 1
 :REPOOK
 
-echo Procurando o arquivo baixado (.zip do botao "Baixar tudo") em Downloads...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='SilentlyContinue'; $dl=Join-Path $env:USERPROFILE 'Downloads'; $repo='%cd%'; Add-Type -AssemblyName System.IO.Compression.FileSystem; $zips=Get-ChildItem -LiteralPath $dl -Filter *.zip | Sort-Object LastWriteTime -Descending; $zip=$null; foreach($z in $zips){ try { $a=[System.IO.Compression.ZipFile]::OpenRead($z.FullName); $has=($a.Entries | Where-Object { $_.Name -eq 'index.html' } | Select-Object -First 1); $a.Dispose(); if($has){ $zip=$z; break } } catch {} }; if(-not $zip){ Write-Host '  Nenhum .zip do sistema em Downloads - vou usar o que ja esta na pasta.'; exit }; Write-Host ('  Usando: ' + $zip.Name); $tmp=Join-Path $env:TEMP 'filezao_unzip'; if(Test-Path $tmp){ Remove-Item $tmp -Recurse -Force }; New-Item -ItemType Directory -Path $tmp | Out-Null; try { Expand-Archive -LiteralPath $zip.FullName -DestinationPath $tmp -Force } catch { Write-Host ('  [aviso] falha ao extrair: ' + $_.Exception.Message); exit }; $n=0; Get-ChildItem -Path $tmp -Recurse -File -Include *.html,*.md | ForEach-Object { Copy-Item $_.FullName -Destination $repo -Force; Write-Host ('  atualizado: ' + $_.Name); $n++ }; Remove-Item $tmp -Recurse -Force; Write-Host ('  ' + $n + ' arquivo(s) trazido(s) do .zip.') "
+echo Procurando o .zip do botao "Baixar tudo" (nesta pasta e em Downloads)...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='SilentlyContinue'; $repo='%cd%'; $dirs=@($repo,(Join-Path $env:USERPROFILE 'Downloads')); Add-Type -AssemblyName System.IO.Compression.FileSystem; $zips=@(); foreach($d in $dirs){ if(Test-Path $d){ $zips += Get-ChildItem -LiteralPath $d -Filter *.zip -File } }; $zips=$zips | Sort-Object LastWriteTime -Descending; $zip=$null; foreach($z in $zips){ try { $a=[System.IO.Compression.ZipFile]::OpenRead($z.FullName); $has=($a.Entries | Where-Object { $_.Name -eq 'index.html' } | Select-Object -First 1); $a.Dispose(); if($has){ $zip=$z; break } } catch {} }; if(-not $zip){ Write-Host '  Nenhum .zip do sistema encontrado - vou usar o que ja esta na pasta.'; exit }; Write-Host ('  Usando: ' + $zip.Name + '   (em: ' + $zip.DirectoryName + ')'); $tmp=Join-Path $env:TEMP 'filezao_unzip'; if(Test-Path $tmp){ Remove-Item $tmp -Recurse -Force }; New-Item -ItemType Directory -Path $tmp | Out-Null; try { Expand-Archive -LiteralPath $zip.FullName -DestinationPath $tmp -Force } catch { Write-Host ('  [aviso] falha ao extrair: ' + $_.Exception.Message); exit }; $n=0; Get-ChildItem -Path $tmp -Recurse -File -Include *.html,*.md | ForEach-Object { $dest=Join-Path $repo $_.Name; Copy-Item $_.FullName -Destination $dest -Force; (Get-Item $dest).LastWriteTime=Get-Date; Write-Host ('  atualizado: ' + $_.Name); $n++ }; Remove-Item $tmp -Recurse -Force; Write-Host ('  ' + $n + ' arquivo(s) trazido(s) do .zip.') "
 echo.
 
 echo Arquivos nesta pasta - data e hora da ultima alteracao:
@@ -44,6 +44,7 @@ echo.
 
 echo Procurando alteracoes...
 "%GIT%" add -A
+"%GIT%" reset -q -- "*.zip" >nul 2>nul
 echo.
 echo O Git detectou estas mudancas:
 "%GIT%" --no-pager status -s
