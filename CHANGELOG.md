@@ -1,5 +1,15 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Promoção tela cheia dourada + script reconhece entregas parciais
+- **Promoção repaginada (tema dourado):** a tela cheia agora tem **borda dourada grossa em volta de tudo** com brilho dourado pulsando, o selo **"🔥 Promoção 🔥" bem maior**, a foto em **moldura dourada** e o preço numa **caixa dourada** (R$ e /kg em dourado, o valor gigante em vermelho). Máximo destaque, cara de oferta de verdade.
+- **Script reconhece entrega parcial:** antes ele só extraía o `.zip` se tivesse o `index.html` dentro. Agora reconhece se tiver **`index.html` OU `tv.html` OU `CHANGELOG.md`** — então funciona mesmo quando eu mandar só a TV, só o changelog, ou qualquer combinação (o `CHANGELOG.md` vai em toda entrega, então sempre cai certo).
+
+## 2026-06-19 — Tudo em horário de Brasília (UTC−3)
+- **Regra fixa:** toda data/hora — no sistema, na TV e no script — agora usa **horário de Brasília** (`America/Sao_Paulo`), independente do fuso do PC ou da TV (Fire Stick).
+- **index.html:** os carimbos de hora dos **logs**, das **cotações salvas** e dos **saldos importados** passam por um formatador novo (`_fmtSP`) fixado em Brasília, com relógio de 0–23h (sem bug de "24:00" à meia-noite).
+- **tv.html:** o "Atualizado HH:MM" do rodapé e a checagem de **horário de missa** agora usam Brasília (antes pegavam o fuso do navegador da TV).
+- **sincronizar_filezao.bat:** ao copiar os arquivos do `.zip`, ele agora **marca a data do arquivo com a hora local** — então o "editado às" que aparece na tela do script bate com o seu relógio (resolve aquele 03:02 x 00:02).
+
 ## 2026-06-19 — Promoção só em tela cheia + tela repaginada + .bat aceita pasta do GitHub
 - **Promoção agora aparece SÓ em tela cheia.** Antes o produto em promoção saía em dois lugares (no grid de preços E em tela cheia). Agora ele é **retirado do grid** e mostrado **só na tela cheia própria** dele no rodízio. Sem duplicação.
 - **Tela cheia repaginada (nível profissional):** a foto agora fica numa **moldura de tamanho fixo** (não estoura mais "fora do quadrado"), com `object-fit: cover` pra preencher certinho. Layout lado a lado: foto à esquerda; à direita categoria, nome grande, "de R$X /un" riscado, "por R$Y /un" gigante e "Oferta válida até dd/mm". Mantida a borda dourada pulsando. Não usa `aspect-ratio` (compatível com navegador de Fire Stick mais antigo).
