@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-18 — Promoção em destaque na TV + ajustes (fidelidade, rádio)
+- **Campo "Promoção" na Seleção TV:** na tela onde você marca os produtos que aparecem na TV, agora tem uma coluna **PROMO**. Ao marcar, o produto aparece na TV com **destaque chamativo**: selo "🔥 Promoção", borda dourada pulsando e a faixa do preço realçada — pra "forçar a venda". A linha do produto em promoção também fica destacada (laranja) no painel de seleção.
+  - **Pré-requisito (uma vez só):** precisa criar a coluna `promocao` no banco antes de subir (ver instruções no chat). A TV foi feita pra **não quebrar** mesmo se a coluna ainda não existir.
+- **Fidelidade:** texto ajustado para "Acumule pontos a cada compra e troque por desconto e brindes exclusivos" (sem o "em breve"). Os chips agora dizem: 240 pontos = R$ 60, "Cadastre-se 1x grátis no site", "a cada compra os pontos somam sozinhos".
+- **Nome da rádio:** agora quebra em até 2 linhas no cabeçalho da TV, então dá pra ler o nome inteiro (antes cortava com "...").
+
 ## 2026-06-18 — TV vira um "canal": telas institucionais no rodízio + QR revezando
 - A TV agora intercala **telas em tela cheia** entre as páginas de preço (uma tela institucional a cada 2 páginas de produto, 10s cada):
   - **Cartão Fidelidade (a estrela, aparece com mais frequência):** "Clube de Pontos Filezão", gancho de acumular pontos e trocar por desconto (240 pontos = R$ 60) e brindes exclusivos futuros (tábua, faca), com QR pro cadastro no site.

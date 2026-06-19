@@ -221,8 +221,9 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
 #authgate .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:none;background:transparent;color:#9a9a9a;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;padding:0}
 #authgate .eye:hover{color:#FE0000;background:rgba(254,0,0,.07)}
 #authgate .eye svg{width:19px;height:19px}
-#authgate .caps{display:none;margin:-5px 0 13px;font-size:11.5px;font-weight:700;color:#b8860b;align-items:center;gap:6px}
-#authgate .caps.on{display:flex}
+#authgate .capsmini{display:none;margin-left:7px;font-size:10.5px;font-weight:700;color:#9a6b00;background:#fff4d6;border:1px solid #f0d488;border-radius:6px;padding:1px 7px;letter-spacing:.2px;vertical-align:1px}
+#authgate .capsmini.show{display:inline-flex;align-items:center;gap:3px}
+#authgate .capsmini svg{vertical-align:-1px}
 #authgate button.go{width:100%;padding:14px;font-size:15.5px;font-weight:800;letter-spacing:.5px;color:#fff;background:#FE0000;border:none;border-radius:11px;cursor:pointer;transition:background .15s,transform .05s,box-shadow .15s;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 8px 20px rgba(254,0,0,.28)}
 #authgate button.go:hover{background:#e60000}
 #authgate button.go:active{transform:translateY(1px)}
@@ -248,19 +249,15 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
       <label for="au-user">Usuário</label>
       <div class="field">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <input id="au-user" type="text" data-nocaps autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="seu usuário" onkeyup="authCaps(event)" onkeydown="if(event.key==='Enter'){var p=document.getElementById('au-pass');p&&p.focus();}">
+        <input id="au-user" type="text" data-nocaps autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="seu usuário" onkeyup="authCaps(event)" onkeydown="authCaps(event);if(event.key==='Enter'){var p=document.getElementById('au-pass');p&&p.focus();}">
       </div>
-      <label for="au-pass">Senha</label>
+      <label for="au-pass">Senha <span class="capsmini" id="au-caps"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 3 4 11h4v5h8v-5h4L12 3Zm-4 15h8v3H8v-3Z"/></svg> Caps Lock ativado</span></label>
       <div class="field pw">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <input id="au-pass" type="password" data-nocaps autocomplete="current-password" placeholder="sua senha" onkeyup="authCaps(event)" onkeydown="if(event.key==='Enter')authLogin()">
+        <input id="au-pass" type="password" data-nocaps autocomplete="current-password" placeholder="sua senha" onkeyup="authCaps(event)" onkeydown="authCaps(event);if(event.key==='Enter')authLogin()">
         <button type="button" class="eye" id="au-eye" onclick="authTogglePass()" aria-label="Mostrar ou ocultar senha" title="Mostrar/ocultar senha">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
-      </div>
-      <div class="caps" id="au-caps">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 10h4v6h8v-6h4L12 2Zm-4 16h8v4H8v-4Z"/></svg>
-        Caps Lock está ligado
       </div>
       <button class="go" id="au-btn" onclick="authLogin()">
         <span class="spin"></span><span class="lbl">Entrar</span>
@@ -864,8 +861,8 @@ function save(k,d){
 function load(k){return null;} // não usa mais localStorage
 
 /* ===================== PRODUTOS / TV ===================== */
-function prodToDB(p){return {id:p.codigo,nome:p.nome,nometv:p.nomeTV||p.nome,unidade:p.unidade,preco:p.preco,exibir:!!p.exibir,ordem:p.ordem||0,foto:p.foto||null,ts:new Date().toISOString()};}
-function prodFromDB(r){return {codigo:String(r.id),nome:r.nome||'',nomeTV:r.nometv||r.nome||'',unidade:r.unidade||'KG',preco:Number(r.preco)||0,exibir:!!r.exibir,ordem:Number(r.ordem)||0,foto:r.foto||''};}
+function prodToDB(p){return {id:p.codigo,nome:p.nome,nometv:p.nomeTV||p.nome,unidade:p.unidade,preco:p.preco,exibir:!!p.exibir,promocao:!!p.promocao,ordem:p.ordem||0,foto:p.foto||null,ts:new Date().toISOString()};}
+function prodFromDB(r){return {codigo:String(r.id),nome:r.nome||'',nomeTV:r.nometv||r.nome||'',unidade:r.unidade||'KG',preco:Number(r.preco)||0,exibir:!!r.exibir,promocao:!!r.promocao,ordem:Number(r.ordem)||0,foto:r.foto||''};}
 // Parser do arquivo de cadastro da balança (posição fixa, 39 chars):
 // [0:6]=código  [6]=P(peso/KG) ou U(unidade/UN)  [7:29]=nome(22)  [29:36]=preço centavos  [36:39]=validade
 function prodParseBalanca(txt){
@@ -971,8 +968,9 @@ function tvFillCatFilter(){
 }
 function tvSelRow(p){
   var nm=p.nomeTV||p.nome;
-  var h='<tr'+(p.exibir?' style="background:#f0faf4"':'')+'>';
+  var h='<tr'+(p.promocao?' style="background:#fff4e0"':(p.exibir?' style="background:#f0faf4"':''))+'>';
   h+='<td style="width:36px"><input type="checkbox" data-nocaps '+(p.exibir?'checked':'')+' onchange="tvToggle(\''+p.codigo+'\',this.checked)" style="width:20px;height:20px;cursor:pointer"></td>';
+  h+='<td style="width:50px;text-align:center"><label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-size:9px;font-weight:800;color:'+(p.promocao?'#FE0000':'#ccc')+'"><input type="checkbox" data-nocaps '+(p.promocao?'checked':'')+' onchange="tvPromo(\''+p.codigo+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#FE0000">PROMO</label></td>';
   h+='<td style="width:46px;color:#999;font-size:12px;font-weight:700;text-align:center">'+cotEsc(p.codigo)+'</td>';
   h+='<td><input value="'+cotEsc(nm)+'" onchange="tvNome(\''+p.codigo+'\',this.value)" style="width:100%;border:1px solid #eee;border-radius:5px;padding:5px 7px;font-size:13px">'+(p.nome!==nm?'<div style="font-size:10px;color:#bbb;margin-top:1px">balança: '+cotEsc(p.nome)+'</div>':'')+'<div style="display:flex;align-items:center;gap:7px;margin-top:5px">'+(p.foto?'<img src="'+cotEsc(p.foto)+'" style="width:34px;height:34px;border-radius:6px;object-fit:cover;border:1px solid #eee;flex:0 0 auto">':'<span style="width:34px;height:34px;border-radius:6px;background:#f4f4f4;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto">🥩</span>')+'<label style="font-size:11px;color:#0369a1;cursor:pointer;border:1px solid #cfe3f5;background:#eff6ff;border-radius:6px;padding:4px 9px;white-space:nowrap">'+(p.foto?'Trocar foto':'Adicionar foto')+'<input type="file" accept="image/*" data-nocaps onchange="tvFotoFile(\''+p.codigo+'\',this)" style="display:none"></label>'+(p.foto?'<button onclick="tvFotoDel(\''+p.codigo+'\')" style="font-size:11px;color:#FE0000;background:none;border:none;cursor:pointer;padding:0">remover</button>':'')+'</div></td>';
   h+='<td style="color:#888;font-size:12px;width:38px">'+p.unidade+'</td>';
@@ -986,7 +984,7 @@ function tvSelRender(){
   if(!PROD.length){box.innerHTML='<p style="color:#999;font-size:14px">Nenhum produto ainda. Vá em <strong>Ferramentas \u2192 Importar produtos</strong> e carregue o arquivo da balança.</p>';return;}
   var q=((document.getElementById('tvsel-busca')||{}).value||'').trim().toUpperCase();
   var catf=((document.getElementById('tvsel-cat')||{}).value)||'';
-  var thead='<thead><tr style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px"><th style="width:36px"></th><th style="width:46px">Cód</th><th style="text-align:left">Produto / foto</th><th style="width:38px">Un</th><th style="text-align:right;width:82px">Preço</th></tr></thead>';
+  var thead='<thead><tr style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px"><th style="width:36px"></th><th style="width:50px;text-align:center">Promo</th><th style="width:46px">Cód</th><th style="text-align:left">Produto / foto</th><th style="width:38px">Un</th><th style="text-align:right;width:82px">Preço</th></tr></thead>';
   var sel=PROD.filter(function(p){return p.exibir;}).sort(tvSelSort);
   var h='';
   h+='<div style="margin:4px 0 6px;background:#0f7a37;color:#fff;border-radius:7px;padding:8px 12px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:7px"><i class="ti ti-device-tv"></i> Na TV ('+sel.length+')</div>';
@@ -1011,6 +1009,7 @@ function tvSelRender(){
   box.innerHTML=h;
 }
 function tvToggle(cod,on){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.exibir=on;tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
+function tvPromo(cod,on){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.promocao=on;tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvNome(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.nomeTV=((v||'').trim().toUpperCase())||p.nome;sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvFoto(cod,v){var p=PROD.filter(function(x){return x.codigo===cod;})[0];if(!p)return;p.foto=(v||'').trim();tvSelRender();sbUpsert('produtos',[prodToDB(p)]).catch(function(){});}
 function tvFotoFile(cod,input){
@@ -2638,7 +2637,7 @@ function authTogglePass(){
 function authCaps(ev){
   var c=document.getElementById('au-caps');
   if(!c||!ev||!ev.getModifierState)return;
-  if(ev.getModifierState('CapsLock'))c.classList.add('on'); else c.classList.remove('on');
+  if(ev.getModifierState('CapsLock'))c.classList.add('show'); else c.classList.remove('show');
 }
 function authLogoInit(){
   var l=document.getElementById('au-logo'); if(!l||l.getAttribute('src'))return;
