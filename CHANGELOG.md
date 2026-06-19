@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-19 — Promoção só em tela cheia + tela repaginada + .bat aceita pasta do GitHub
+- **Promoção agora aparece SÓ em tela cheia.** Antes o produto em promoção saía em dois lugares (no grid de preços E em tela cheia). Agora ele é **retirado do grid** e mostrado **só na tela cheia própria** dele no rodízio. Sem duplicação.
+- **Tela cheia repaginada (nível profissional):** a foto agora fica numa **moldura de tamanho fixo** (não estoura mais "fora do quadrado"), com `object-fit: cover` pra preencher certinho. Layout lado a lado: foto à esquerda; à direita categoria, nome grande, "de R$X /un" riscado, "por R$Y /un" gigante e "Oferta válida até dd/mm". Mantida a borda dourada pulsando. Não usa `aspect-ratio` (compatível com navegador de Fire Stick mais antigo).
+- **Script aceita o .zip na pasta do GitHub também:** além de Downloads, o `sincronizar_filezao.bat` agora procura o `.zip` **na própria pasta do sistema**. Salve onde for mais fácil — ele pega o mais recente dos dois lugares.
+- **`.zip` não vai pro GitHub:** se você deixar o `.zip` dentro da pasta do GitHub, ele é **desindexado antes do commit** (`git reset -- *.zip`), então fica só local e não polui o repositório.
+
 ## 2026-06-18 — Script extrai o .zip sozinho (fluxo "Baixar tudo" + rodar)
 - O `sincronizar_filezao.bat` agora, ao rodar, **procura o .zip mais recente na pasta Downloads** (o que o botão "Baixar tudo" gera), **extrai sozinho** e copia os arquivos (`*.html` e `*.md`) pra pasta do sistema — depois sobe pro GitHub normalmente. Não precisa mais extrair na mão.
 - Segurança: só age em .zip que contenha o `index.html` (assinatura do sistema); se o .zip não for do sistema, ele ignora e usa o que já está na pasta. Não mexe em mais nada do Downloads.
