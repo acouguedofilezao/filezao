@@ -1,5 +1,23 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-18 — TV vira um "canal": telas institucionais no rodízio + QR revezando
+- A TV agora intercala **telas em tela cheia** entre as páginas de preço (uma tela institucional a cada 2 páginas de produto, 10s cada):
+  - **Cartão Fidelidade (a estrela, aparece com mais frequência):** "Clube de Pontos Filezão", gancho de acumular pontos e trocar por desconto (240 pontos = R$ 60) e brindes exclusivos futuros (tábua, faca), com QR pro cadastro no site.
+  - **Instagram:** "@acouguedofilezao" + QR pra seguir.
+  - **Horário de funcionamento:** Seg–Sex 07h–19h, Sáb 07h–17h, Dom 07h–12h.
+  - **Formas de pagamento:** Dinheiro, Pix, Cartão (débito/crédito) — com aviso de que não trabalha com vale-alimentação/voucher.
+  - **Endereço:** Av. Luiz Sulino, 35 — Centro, Perdigão/MG, com QR de WhatsApp e o número (37) 3287-0123.
+- **QR do canto revezando:** nas páginas de preço, o QR alterna entre **"Acesse nosso site"** e **"Siga no Instagram"** (cada um com o rótulo dizendo qual é, pra ninguém se confundir).
+- **Sem produtos selecionados:** em vez de tela vazia, a TV passa a rodar só as telas institucionais (Fidelidade, Instagram, etc.), então nunca fica "morta".
+- Tudo client-side, usando o mesmo gerador de QR que já existia (só muda o endereço de cada QR).
+
+## 2026-06-18 — Login: aviso de Caps Lock pequeno (no lugar da caixa grande)
+- O aviso de Caps Lock voltou, agora como um **selinho pequeno em amarelo** ao lado da palavra "Senha" ("Caps Lock ativado"). Aparece/some na hora em que você liga ou desliga o Caps Lock no teclado, com qualquer um dos campos (usuário ou senha) em foco. Sem a caixa grande de antes.
+
+## 2026-06-18 — Login: removida a caixa de aviso de Caps Lock
+- Tirado o aviso "Caps Lock está ligado" da tela de login (a pedido — estava ocupando muito espaço). O resto da tela continua igual (logo, campos, olho da senha, botão).
+- Sem mudança na segurança: a **senha** continua sendo conferida no servidor de forma exata (diferencia maiúscula/minúscula). O **usuário** continua aceitando maiúscula/minúscula (o login usa e-mail por baixo, que não diferencia caixa) — isso não enfraquece nada, porque a trava real é a senha exata.
+
 ## 2026-06-18 — Script de sincronização à prova de erro + ajuste no login
 - **Correção importante:** as primeiras versões deste script novo fechavam sozinhas no Windows por dois motivos — quebras de linha do Linux (LF) e textos com parênteses dentro de blocos `if(...)`, que o cmd interpretava como fim do bloco. Agora o script está em **CRLF**, **só ASCII** e foi reescrito com etiquetas/`goto` (sem blocos de parênteses), então roda normal e para no fim em "Pressione qualquer tecla".
 - **`sincronizar_filezao.bat` repaginado (resolve "não está subindo a versão do PC"):**

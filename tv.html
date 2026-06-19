@@ -61,6 +61,27 @@
   .center{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2vh}
   .center h2{font-size:4vh;color:#FE0000}
   .center p{font-size:2.2vh;color:#aaa;max-width:60vw;line-height:1.5}
+
+  .promo{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2.4vh;padding:2vh 4vw}
+  .promo .pico{font-size:9vh;line-height:1}
+  .promo h1{font-size:6.2vh;font-weight:900;text-transform:uppercase;letter-spacing:1px;line-height:1.04;text-shadow:0 3px 10px rgba(0,0,0,.45)}
+  .promo .big{color:#FE0000}
+  .promo .sub{font-size:3vh;color:#eaeaea;max-width:82vw;line-height:1.32;font-weight:600}
+  .promo .sub b{color:#fff}
+  .promo .handle{font-size:5vh;font-weight:900;color:#FE0000}
+  .promo .pbadge{font-size:2.6vh;font-weight:900;letter-spacing:2px;color:#fff;background:#FE0000;padding:.9vh 2.4vw;border-radius:999px;text-transform:uppercase;box-shadow:0 4px 14px rgba(254,0,0,.45)}
+  .promo .prow{display:flex;gap:1.6vw;flex-wrap:wrap;justify-content:center;align-items:stretch;margin-top:1vh}
+  .promo .pchip{background:#161616;border:1px solid #2a2a2a;border-radius:14px;padding:1.6vh 2vw;min-width:18vw;display:flex;flex-direction:column;gap:.6vh;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+  .promo .pchip b{font-size:3.1vh;color:#FE0000;font-weight:900}
+  .promo .pchip span{font-size:2.1vh;color:#ddd;font-weight:600}
+  .promo .paychip{background:#fff;color:#111;border-radius:14px;padding:1.8vh 2.4vw;font-size:3.1vh;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+  .promo .hgrid{display:flex;flex-direction:column;gap:1.4vh;margin-top:1vh}
+  .promo .hrow{display:flex;align-items:center;justify-content:space-between;gap:4vw;background:#161616;border:1px solid #2a2a2a;border-left:.8vh solid #FE0000;border-radius:12px;padding:1.5vh 3vw;min-width:54vw}
+  .promo .hrow b{font-size:3.4vh;font-weight:800}
+  .promo .hrow span{font-size:3.4vh;font-weight:900;color:#FE0000}
+  .promo .qrinline{display:flex;flex-direction:column;align-items:center;gap:1vh}
+  .promo .qrinline img{height:25vh;width:auto;border-radius:10px;background:#fff;padding:1vh}
+  .promo .qrinline span{font-size:2.2vh;font-weight:700;color:#fff}
 </style>
 </head>
 <body>
@@ -127,27 +148,89 @@ function fb(){return '<div class="ph-fallback"><div class="ic">🥩</div></div>'
 
 function renderDots(){
   var el=document.getElementById('dots');if(!el)return;
-  if(PAGES.length<=1){el.innerHTML='';return;}
-  var h='';for(var i=0;i<PAGES.length;i++)h+='<div class="d'+(i===cur?' on':'')+'"></div>';
+  if(SEQ.length<=1){el.innerHTML='';return;}
+  var h='';for(var i=0;i<SEQ.length;i++)h+='<div class="d'+(i===cur?' on':'')+'"></div>';
   el.innerHTML=h;
 }
-var QR_URL='https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=0&color=1a1a1a&bgcolor=ffffff&data=https%3A%2F%2Fcasa-de-carnes-filezao.onbeef.app.br%2F';
-function qrCardHTML(){
-  return '<div class="qrcard"><img class="qrimg" src="'+QR_URL+'" alt="QR code do site" onerror="this.remove()"><div class="qrtxt"><b>Acesse nosso site</b><span>e confira todos os nossos produtos</span></div></div>';
+function qrUrl(data){return 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=0&color=1a1a1a&bgcolor=ffffff&data='+encodeURIComponent(data);}
+var QR_SITE=qrUrl('https://casa-de-carnes-filezao.onbeef.app.br/');
+var QR_INSTA=qrUrl('https://instagram.com/acouguedofilezao');
+var QR_WHATS=qrUrl('https://wa.me/553732870123');
+var SEQ=[];
+function qrCardHTML(insta){
+  var url=insta?QR_INSTA:QR_SITE;
+  var b=insta?'Siga no Instagram':'Acesse nosso site';
+  var s=insta?'@acouguedofilezao':'e confira todos os nossos produtos';
+  return '<div class="qrcard"><img class="qrimg" src="'+url+'" alt="QR" onerror="this.remove()"><div class="qrtxt"><b>'+b+'</b><span>'+s+'</span></div></div>';
+}
+function infoHTML(id){
+  if(id==='instagram'){
+    return '<div class="promo"><div class="pico">📸</div>'
+      +'<h1>Siga a gente no <span class="big">Instagram</span></h1>'
+      +'<div class="handle">@acouguedofilezao</div>'
+      +'<div class="sub">Promoções, novidades e os melhores cortes no seu feed</div>'
+      +'<div class="qrinline"><img src="'+QR_INSTA+'" onerror="this.style.display=\'none\'"><span>Aponte a câmera para seguir</span></div></div>';
+  }
+  if(id==='horario'){
+    return '<div class="promo"><div class="pico">🕖</div>'
+      +'<h1>Horário de Funcionamento</h1><div class="hgrid">'
+      +'<div class="hrow"><b>Segunda a Sexta</b><span>07h às 19h</span></div>'
+      +'<div class="hrow"><b>Sábado</b><span>07h às 17h</span></div>'
+      +'<div class="hrow"><b>Domingo</b><span>07h às 12h</span></div></div></div>';
+  }
+  if(id==='pagamento'){
+    return '<div class="promo"><div class="pico">💳</div>'
+      +'<h1>Formas de Pagamento</h1><div class="prow">'
+      +'<div class="paychip">💵 Dinheiro</div><div class="paychip">📱 Pix</div>'
+      +'<div class="paychip">💳 Cartão débito e crédito</div></div>'
+      +'<div class="sub" style="font-size:2.2vh;color:#aaa;margin-top:1vh">Não trabalhamos com vale-alimentação / voucher</div></div>';
+  }
+  if(id==='endereco'){
+    return '<div class="promo"><div class="pico">📍</div>'
+      +'<h1>Venha nos visitar</h1>'
+      +'<div class="sub"><b>Av. Luiz Sulino, 35</b> — Centro, Perdigão/MG</div>'
+      +'<div class="prow" style="align-items:center">'
+      +'<div class="qrinline"><img src="'+QR_WHATS+'" onerror="this.style.display=\'none\'"><span>Chame no WhatsApp</span></div>'
+      +'<div class="pchip"><b>(37) 3287-0123</b><span>WhatsApp e telefone</span></div></div></div>';
+  }
+  return '<div class="promo"><div class="pbadge">★ Clube de Pontos Filezão</div>'
+    +'<h1>Cartão <span class="big">Fidelidade</span></h1>'
+    +'<div class="sub">Acumule pontos a cada compra e troque por <b>desconto</b> — e em breve <b>brindes exclusivos</b>: tábua personalizada, faca e mais</div>'
+    +'<div class="prow">'
+    +'<div class="pchip"><b>240 pontos</b><span>= R$ 60 de desconto</span></div>'
+    +'<div class="pchip"><b>Cadastro grátis</b><span>no nosso site</span></div>'
+    +'<div class="pchip"><b>Já é cliente?</b><span>peça no caixa pra acumular</span></div></div>'
+    +'<div class="qrinline"><img src="'+QR_SITE+'" onerror="this.style.display=\'none\'"><span>Aponte a câmera e cadastre-se</span></div></div>';
+}
+function montarSequencia(pages){
+  var infoSeq=['fidelidade','instagram','fidelidade','horario','fidelidade','pagamento','fidelidade','endereco'];
+  var seq=[],ii=0;
+  if(!pages.length){for(var k=0;k<infoSeq.length;k++)seq.push({tipo:'info',id:infoSeq[k]});return seq;}
+  for(var i=0;i<pages.length;i++){
+    seq.push({tipo:'prod',page:pages[i]});
+    if((i+1)%2===0){seq.push({tipo:'info',id:infoSeq[ii%infoSeq.length]});ii++;}
+  }
+  if(ii===0){seq.push({tipo:'info',id:'fidelidade'});seq.push({tipo:'info',id:'instagram'});}
+  return seq;
 }
 function showPage(){
   var stage=document.getElementById('stage');
-  var pg=PAGES[cur]||[];
-  stage.style.display='grid';
-  stage.innerHTML=pg.map(cardHTML).join('')+qrCardHTML();
+  var sl=SEQ[cur]||{tipo:'info',id:'fidelidade'};
+  if(sl.tipo==='prod'){
+    stage.style.display='grid';
+    stage.innerHTML=sl.page.map(cardHTML).join('')+qrCardHTML(cur%2===1);
+  }else{
+    stage.style.display='block';
+    stage.innerHTML=infoHTML(sl.id);
+  }
   renderDots();
   var d=new Date();document.getElementById('upd').textContent=z(d.getHours())+':'+z(d.getMinutes());
 }
 function rotate(){
-  if(PAGES.length<=1)return;
+  if(SEQ.length<=1)return;
   var stage=document.getElementById('stage');
   stage.style.opacity='0';
-  setTimeout(function(){cur=(cur+1)%PAGES.length;showPage();stage.style.opacity='1';},350);
+  setTimeout(function(){cur=(cur+1)%SEQ.length;showPage();stage.style.opacity='1';},350);
 }
 
 function montarPaginas(rows){
@@ -169,12 +252,11 @@ async function carregar(){
     var rows=await r.json();
     rows=rows.filter(function(p){return Number(p.preco)>0;});
     if(!rows.length){
-      PAGES=[];document.getElementById('stage').style.display='block';
-      document.getElementById('stage').innerHTML='<div class="center"><h2>Nenhum produto selecionado</h2><p>No sistema, vá em <b>TV → Seleção TV</b> e marque os produtos que devem aparecer aqui.</p></div>';
-      document.getElementById('dots').innerHTML='';return;
+      PAGES=[];SEQ=montarSequencia([]);if(cur>=SEQ.length)cur=0;showPage();return;
     }
     PAGES=montarPaginas(rows);
-    if(cur>=PAGES.length)cur=0;
+    SEQ=montarSequencia(PAGES);
+    if(cur>=SEQ.length)cur=0;
     showPage();
   }catch(e){
     document.getElementById('stage').style.display='block';
