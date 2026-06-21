@@ -1,5 +1,12 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-20 — Roncador: aba Energia (geração solar × consumo)
+- Primeira aba da Fazenda Roncador: **Energia**. Cruza a **geração solar** (3 inversores: 2 na casa/Perdigão, 1 na Roça) com o **consumo das contas CEMIG** (4 leitores: Loja 1, Loja 2, Casa e Roça).
+- Mostra por mês: quanto **gerou**, quanto **consumiu**, o **saldo** (gerou − gastou) e quanto **pagou** — no **total** (a sobra da Roça e da Casa vira crédito pra Loja 2, então tudo é um pote só), com detalhe **por inversor** e **por conta**, e o **acumulado** desde o início.
+- **Histórico mensal** com gráfico de barras (geração × consumo) e tabela.
+- **Alertas automáticos**: avisa quando um inversor gera bem abaixo da média (possível defeito) e quando um sistema consome mais do que gera.
+- Inversores nomeados (Solarman Perdigão, Fision Perdigão, Solarman Roça). Dados reais de maio e junho/2026 carregados a partir dos PDFs e fotos. Lançamento por formulário (ou eu preencho). Dados em localStorage + Supabase (tabela `energia`).
+
 ## 2026-06-20 — Filezão + Fazenda Roncador (início)
 - Cabeçalho agora mostra **FILEZÃO + FAZENDA RONCADOR · Sistema de Gestão** (logo do açougue mantida).
 - Novo **seletor na barra lateral** para escolher qual gerenciar: **Filezão** (vermelho) ou **Roncador** (verde).

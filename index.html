@@ -325,11 +325,7 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     </div>
     <div id="nav-roncador" style="display:none">
       <div class="nav-section">Fazenda Roncador</div>
-      <div style="padding:16px;color:rgba(255,255,255,0.55);font-size:13px;line-height:1.6">
-        <i class="ti ti-plant-2" style="font-size:26px;color:#9CCC65;display:block;margin-bottom:8px"></i>
-        Espaço da <b style="color:#9CCC65">Fazenda Roncador</b> em construção.<br><br>
-        Aqui vamos montar a gestão do sítio das Rocas. Me conta o que quer controlar que a gente cria as telas.
-      </div>
+      <button class="nav-btn" onclick="showSec('energia',this)"><i class="ti ti-bolt"></i><span>Energia</span></button>
     </div>
   </div>
   <!-- Status de conexão no fundo da sidebar -->
@@ -354,6 +350,18 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <h2 style="margin:14px 0 6px;font-size:24px;color:#33691E">Fazenda Roncador</h2>
     <div style="color:#777;font-size:15px;max-width:540px;margin:0 auto;line-height:1.6">Este é o espaço da gestão do sítio das Rocas. Ainda está em branco — vamos construir as telas juntos.<br><br>Me conta o que você quer controlar aqui (rebanho, plantio, custos, vendas, funcionários da fazenda...) que eu começo a montar.</div>
   </div>
+</div>
+
+<!-- ENERGIA (Roncador) -->
+<div id="sec-energia" class="section">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <i class="ti ti-bolt" style="font-size:26px;color:#7CB342"></i>
+    <div>
+      <h2 style="margin:0;font-size:22px;color:#33691E">Energia · Geração × Consumo</h2>
+      <div style="color:#888;font-size:13px">Solar (3 inversores) vs contas CEMIG (4 leitores) — Perdigão e Roça</div>
+    </div>
+  </div>
+  <div id="en-root"></div>
 </div>
 
 <!-- PAINEL -->
@@ -1213,14 +1221,295 @@ function logRender(){
   });
   h+='</tbody></table></div>';box.innerHTML=h;
 }
+/* ===================== ENERGIA (Roncador) ===================== */
+var ENG_INV=[
+  {id:'inv_smperd', nome:'Solarman · Perdigão',local:'Perdigão'},
+  {id:'inv_fiperd', nome:'Fision · Perdigão',  local:'Perdigão'},
+  {id:'inv_smroca', nome:'Solarman · Roça',    local:'Roça'}
+];
+var ENG_CONTA=[
+  {id:'ct_loja1',nome:'Loja 1',local:'Perdigão'},
+  {id:'ct_loja2',nome:'Loja 2',local:'Perdigão'},
+  {id:'ct_casa', nome:'Casa',  local:'Perdigão'},
+  {id:'ct_roca', nome:'Roça',  local:'Roça'}
+];
+var ENG=[];          /* registros */
+var ENG_MES='';      /* mês selecionado no formulário (YYYY-MM) */
+var ENG_LOADED=false;
+
+function engNum(s){
+  if(s==null)return 0;
+  s=String(s).trim(); if(!s)return 0;
+  s=s.replace(/\s/g,'').replace(/r\$/i,'').replace(/kwh/i,'');
+  if(s.indexOf(',')>=0){ s=s.replace(/\./g,'').replace(',','.'); }
+  else { s=s.replace(/\./g,''); }   /* pt-BR: ponto sem vírgula = separador de milhar */
+  var n=parseFloat(s); return isNaN(n)?0:n;
+}
+function engKwh(v){return (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2})+' kWh';}
+function engMesISO(){var d=nowBR();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
+function engMesLabel(m){
+  if(!m)return '';
+  var p=String(m).split('-'),meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var mi=parseInt(p[1],10)-1; return (meses[mi]||p[1])+'/'+p[0];
+}
+function engId(mes,tipo,uni){return mes+'_'+tipo+'_'+uni;}
+function engGet(mes,tipo,uni){var id=engId(mes,tipo,uni);for(var i=0;i<ENG.length;i++){if(ENG[i].id===id)return ENG[i];}return null;}
+function engNome(tipo,uni){var L=(tipo==='inversor'?ENG_INV:ENG_CONTA);for(var i=0;i<L.length;i++){if(L[i].id===uni)return L[i];}return {nome:uni,local:''};}
+function engUnitExists(tipo,uni){var L=(tipo==='inversor'?ENG_INV:ENG_CONTA);for(var i=0;i<L.length;i++){if(L[i].id===uni)return true;}return false;}
+
+function engToDB(r){return {id:r.id,mes:r.mes,tipo:r.tipo,unidade:r.unidade,local:r.local||'',nome:r.nome||'',
+  geracao:Number(r.geracao)||0,consumo:Number(r.consumo)||0,valor:Number(r.valor)||0,saldo:Number(r.saldo)||0,ts:new Date().toISOString()};}
+function engFromDB(d){return {id:d.id,mes:d.mes,tipo:d.tipo,unidade:d.unidade,local:d.local||'',nome:d.nome||'',
+  geracao:Number(d.geracao)||0,consumo:Number(d.consumo)||0,valor:Number(d.valor)||0,saldo:Number(d.saldo)||0};}
+
+function engSeed(){
+  /* dados reais que o Diogo mandou — contas pelo mês "Referente a"; pode editar/excluir */
+  ENG=[
+    /* MAIO/2026 */
+    {id:engId('2026-05','inversor','inv_smperd'),mes:'2026-05',tipo:'inversor',unidade:'inv_smperd',local:'Perdigão',nome:'Solarman · Perdigão',geracao:517.6,consumo:0,valor:0,saldo:0},
+    {id:engId('2026-05','inversor','inv_fiperd'),mes:'2026-05',tipo:'inversor',unidade:'inv_fiperd',local:'Perdigão',nome:'Fision · Perdigão',geracao:834.96,consumo:0,valor:0,saldo:0},
+    {id:engId('2026-05','inversor','inv_smroca'),mes:'2026-05',tipo:'inversor',unidade:'inv_smroca',local:'Roça',nome:'Solarman · Roça',geracao:1080,consumo:0,valor:0,saldo:0},
+    {id:engId('2026-05','conta','ct_loja1'),mes:'2026-05',tipo:'conta',unidade:'ct_loja1',local:'Perdigão',nome:'Loja 1',consumo:260,valor:341.48,saldo:0,geracao:0},
+    {id:engId('2026-05','conta','ct_loja2'),mes:'2026-05',tipo:'conta',unidade:'ct_loja2',local:'Perdigão',nome:'Loja 2',consumo:2479,valor:1030.12,saldo:0,geracao:0},
+    /* JUNHO/2026 */
+    {id:engId('2026-06','conta','ct_casa'),mes:'2026-06',tipo:'conta',unidade:'ct_casa',local:'Perdigão',nome:'Casa',consumo:147,valor:91.95,saldo:0,geracao:0},
+    {id:engId('2026-06','conta','ct_roca'),mes:'2026-06',tipo:'conta',unidade:'ct_roca',local:'Roça',nome:'Roça',consumo:339,valor:70.63,saldo:0,geracao:0}
+  ];
+}
+
+async function engLoad(){
+  if(ENG_LOADED)return;
+  var ok=false;
+  try{
+    var rows=await sbGet('energia','select=*&order=mes.asc');
+    if(rows){ENG=rows.map(engFromDB);ok=true;}
+  }catch(e){ /* tabela pode não existir ainda */ }
+  if(!ok){
+    try{var ls=localStorage.getItem('fz_energia');if(ls){ENG=JSON.parse(ls)||[];ok=true;}}catch(e){}
+  }
+  if(!ENG||!ENG.length){engSeed();try{localStorage.setItem('fz_energia',JSON.stringify(ENG));}catch(e){}}
+  ENG_LOADED=true;
+}
+
+function engPersistLocal(){try{localStorage.setItem('fz_energia',JSON.stringify(ENG));}catch(e){}}
+async function engPersistCloud(rows){
+  try{await sbUpsert('energia',rows.map(engToDB));}catch(e){ /* segue só local */ }
+}
+
+function energiaInit(){
+  if(!ENG_LOADED){ engLoad().then(function(){ engRender(); }); }
+  else engRender();
+}
+
+/* ---- cálculo do resumo de um mês ---- */
+function engResumo(mes){
+  var ger=0,cons=0,val=0,porLocal={};
+  ['Perdigão','Roça'].forEach(function(l){porLocal[l]={ger:0,cons:0,val:0};});
+  ENG.forEach(function(r){
+    if(r.mes!==mes)return;
+    if(!engUnitExists(r.tipo,r.unidade))return;
+    var l=r.local||(engNome(r.tipo,r.unidade).local)||'—';
+    if(!porLocal[l])porLocal[l]={ger:0,cons:0,val:0};
+    if(r.tipo==='inversor'){ger+=Number(r.geracao)||0;porLocal[l].ger+=Number(r.geracao)||0;}
+    else{cons+=Number(r.consumo)||0;val+=Number(r.valor)||0;porLocal[l].cons+=Number(r.consumo)||0;porLocal[l].val+=Number(r.valor)||0;}
+  });
+  return {ger:ger,cons:cons,val:val,dif:ger-cons,porLocal:porLocal};
+}
+function engMeses(){
+  var s={};ENG.forEach(function(r){if(r.mes)s[r.mes]=1;});
+  return Object.keys(s).sort();
+}
+
+/* ---- HTML: formulário de entrada ---- */
+function engFormHTML(mes){
+  var h='';
+  h+='<div class="card" style="margin-bottom:14px">';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">';
+  h+='<b style="font-size:15px;color:#222">Lançar / editar mês</b>';
+  h+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:#666">Mês:</span>'
+    +'<input type="month" id="en-mes" value="'+mes+'" onchange="engTrocaMes(this.value)" style="height:38px;border:1px solid #ddd;border-radius:7px;padding:0 10px;font-size:14px">'
+    +'<button onclick="engSalvarMes()" style="height:38px;background:#7CB342;color:#fff;border:none;border-radius:7px;padding:0 16px;font-weight:700;cursor:pointer">Salvar mês</button></div>';
+  h+='</div>';
+
+  /* inversores */
+  h+='<div style="font-size:12px;font-weight:700;color:#7CB342;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px">Geração — inversores (kWh)</div>';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px">';
+  ENG_INV.forEach(function(u){
+    var r=engGet(mes,'inversor',u.id),v=r?engFmtIn(r.geracao):'';
+    h+='<div style="flex:1;min-width:150px"><label style="font-size:12px;color:#666;display:block;margin-bottom:3px">'+u.nome+' <span style="color:#aaa">· '+u.local+'</span></label>'
+      +'<input id="en-i-'+u.id+'" inputmode="decimal" value="'+v+'" placeholder="0" style="width:100%;height:38px;border:1px solid #ddd;border-radius:7px;padding:0 10px;font-size:14px"></div>';
+  });
+  h+='</div>';
+
+  /* contas */
+  h+='<div style="font-size:12px;font-weight:700;color:#FE0000;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px">Consumo — contas CEMIG</div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+  h+='<thead><tr style="color:#888;text-align:left"><th style="padding:4px 6px">Conta</th><th style="padding:4px 6px">Consumo (kWh)</th><th style="padding:4px 6px">Valor (R$)</th><th style="padding:4px 6px">Saldo créditos (kWh)</th></tr></thead><tbody>';
+  ENG_CONTA.forEach(function(u){
+    var r=engGet(mes,'conta',u.id);
+    h+='<tr style="border-top:1px solid #eee">'
+      +'<td style="padding:6px">'+u.nome+' <span style="color:#bbb;font-size:11px">· '+u.local+'</span></td>'
+      +'<td style="padding:6px"><input id="en-c-'+u.id+'-cons" inputmode="decimal" value="'+(r?engFmtIn(r.consumo):'')+'" placeholder="0" style="width:120px;height:34px;border:1px solid #ddd;border-radius:6px;padding:0 8px"></td>'
+      +'<td style="padding:6px"><input id="en-c-'+u.id+'-val" inputmode="decimal" value="'+(r&&r.valor?engFmtIn(r.valor):'')+'" placeholder="0,00" style="width:110px;height:34px;border:1px solid #ddd;border-radius:6px;padding:0 8px"></td>'
+      +'<td style="padding:6px"><input id="en-c-'+u.id+'-sal" inputmode="decimal" value="'+(r&&r.saldo?engFmtIn(r.saldo):'')+'" placeholder="0" style="width:110px;height:34px;border:1px solid #ddd;border-radius:6px;padding:0 8px"></td>'
+      +'</tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="font-size:12px;color:#999;margin-top:8px">Dica: pode me mandar os PDFs e as fotos dos inversores que eu preencho isso pra você.</div>';
+  h+='</div>';
+  return h;
+}
+function engFmtIn(v){if(!v)return '';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2});}
+
+/* ---- HTML: resumo do mês ---- */
+function engCard(tit,val,sub,cor){
+  return '<div class="card" style="flex:1;min-width:150px;padding:14px">'
+    +'<div style="font-size:12px;color:#888;margin-bottom:4px">'+tit+'</div>'
+    +'<div style="font-size:22px;font-weight:800;color:'+(cor||'#222')+'">'+val+'</div>'
+    +(sub?'<div style="font-size:12px;color:#999;margin-top:2px">'+sub+'</div>':'')+'</div>';
+}
+function engResumoHTML(mes){
+  var R=engResumo(mes);
+  var difCor=R.dif>=0?'#2E7D32':'#C62828';
+  var difTxt=(R.dif>=0?'+':'−')+engKwh(Math.abs(R.dif));
+  var h='<div style="font-size:13px;color:#666;margin:4px 0 8px">Resumo de <b>'+engMesLabel(mes)+'</b></div>';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px">';
+  h+=engCard('Gerou (solar)',engKwh(R.ger),null,'#2E7D32');
+  h+=engCard('Consumiu',engKwh(R.cons),null,'#C62828');
+  h+=engCard('Saldo do mês',difTxt,R.dif>=0?'sobrou energia (virou crédito)':'usou créditos acumulados',difCor);
+  h+=engCard('Pagou nas contas',fmt(R.val),null,'#222');
+  h+='</div>';
+  /* detalhe por inversor e por conta (créditos são um pote só) */
+  h+='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px">';
+  h+='<div class="card" style="flex:1;min-width:240px;padding:14px;border-left:3px solid #66BB6A"><div style="font-weight:700;color:#333;margin-bottom:8px">Geração por inversor</div>';
+  ENG_INV.forEach(function(u){var r=engGet(mes,'inversor',u.id);var g=r?Number(r.geracao)||0:0;
+    h+='<div style="display:flex;justify-content:space-between;font-size:13px;color:#555;padding:3px 0"><span>'+u.nome+'</span><b>'+engKwh(g)+'</b></div>';});
+  h+='</div>';
+  h+='<div class="card" style="flex:1;min-width:240px;padding:14px;border-left:3px solid #EF5350"><div style="font-weight:700;color:#333;margin-bottom:8px">Consumo por conta</div>';
+  ENG_CONTA.forEach(function(u){var r=engGet(mes,'conta',u.id);var c=r?Number(r.consumo)||0:0;var v=r?Number(r.valor)||0:0;
+    h+='<div style="display:flex;justify-content:space-between;font-size:13px;color:#555;padding:3px 0"><span>'+u.nome+'</span><b>'+engKwh(c)+(v?' · '+fmt(v):'')+'</b></div>';});
+  h+='</div>';
+  h+='</div>';
+  h+='<div style="font-size:12px;color:#999;margin:0 0 14px">A energia que sobra na Roça e na Casa vira crédito pra Loja 2 — por isso o que vale é o <b>total</b> (tudo somado).</div>';
+  return h;
+}
+
+/* ---- HTML: histórico + gráfico ---- */
+function engHistHTML(){
+  var meses=engMeses();
+  if(!meses.length)return '';
+  var h='<div class="card" style="margin-bottom:14px"><b style="font-size:15px;color:#222">Histórico mensal</b>';
+  var tg=0,tc=0;meses.forEach(function(m){var Rr=engResumo(m);tg+=Rr.ger;tc+=Rr.cons;});var tsd=tg-tc;
+  h+='<div style="display:flex;flex-wrap:wrap;gap:16px;margin:8px 0 2px;font-size:13px;color:#555">'
+    +'<span>Acumulado · Gerou: <b style="color:#2E7D32">'+engKwh(tg)+'</b></span>'
+    +'<span>Consumiu: <b style="color:#C62828">'+engKwh(tc)+'</b></span>'
+    +'<span>Saldo: <b style="color:'+(tsd>=0?'#2E7D32':'#C62828')+'">'+(tsd>=0?'+':'−')+engKwh(Math.abs(tsd))+'</b></span></div>';
+  /* gráfico de barras (últimos 12) */
+  var ult=meses.slice(-12);
+  var max=0;ult.forEach(function(m){var R=engResumo(m);max=Math.max(max,R.ger,R.cons);});
+  if(max<=0)max=1;
+  var bw=ult.length*64, W=Math.max(bw+20,320), H=170, base=H-26, top=10;
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:'+W+'px;height:auto;margin:12px 0;display:block">';
+  ult.forEach(function(m,i){
+    var R=engResumo(m);var x=10+i*64;
+    var hg=(R.ger/max)*(base-top), hc=(R.cons/max)*(base-top);
+    svg+='<rect x="'+(x+6)+'" y="'+(base-hg)+'" width="20" height="'+hg+'" rx="2" fill="#66BB6A"></rect>';
+    svg+='<rect x="'+(x+30)+'" y="'+(base-hc)+'" width="20" height="'+hc+'" rx="2" fill="#EF5350"></rect>';
+    svg+='<text x="'+(x+28)+'" y="'+(H-10)+'" text-anchor="middle" font-size="10" fill="#999">'+engMesLabel(m).split('/')[0]+'</text>';
+  });
+  svg+='</svg>';
+  h+=svg;
+  h+='<div style="font-size:12px;color:#777;margin-bottom:8px"><span style="color:#66BB6A">■</span> Gerou &nbsp; <span style="color:#EF5350">■</span> Consumiu</div>';
+  /* tabela */
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+  h+='<thead><tr style="color:#888;text-align:left"><th style="padding:6px">Mês</th><th style="padding:6px;text-align:right">Gerou</th><th style="padding:6px;text-align:right">Consumiu</th><th style="padding:6px;text-align:right">Saldo</th><th style="padding:6px;text-align:right">Pagou</th></tr></thead><tbody>';
+  meses.slice().reverse().forEach(function(m){
+    var R=engResumo(m);var neg=R.dif<0;
+    h+='<tr style="border-top:1px solid #eee;'+(neg?'background:#FFF6F6':'')+'">'
+      +'<td style="padding:6px;font-weight:600">'+engMesLabel(m)+'</td>'
+      +'<td style="padding:6px;text-align:right;color:#2E7D32">'+engKwh(R.ger)+'</td>'
+      +'<td style="padding:6px;text-align:right;color:#C62828">'+engKwh(R.cons)+'</td>'
+      +'<td style="padding:6px;text-align:right;font-weight:700;color:'+(R.dif>=0?'#2E7D32':'#C62828')+'">'+(R.dif>=0?'+':'−')+engKwh(Math.abs(R.dif))+'</td>'
+      +'<td style="padding:6px;text-align:right">'+(R.val?fmt(R.val):'—')+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  return h;
+}
+
+/* ---- HTML: alertas ---- */
+function engAlertasHTML(){
+  var al=[];
+  /* 1) inversor abaixo da média */
+  ENG_INV.forEach(function(u){
+    var vals=[];ENG.forEach(function(r){if(r.tipo==='inversor'&&r.unidade===u.id&&(Number(r.geracao)||0)>0)vals.push({mes:r.mes,g:Number(r.geracao)});});
+    if(vals.length<3)return;
+    var media=vals.reduce(function(a,b){return a+b.g;},0)/vals.length;
+    vals.forEach(function(v){
+      if(media>0&&v.g<media*0.65){
+        var pct=Math.round((1-v.g/media)*100);
+        al.push({cor:'#E65100',ic:'ti-alert-triangle',txt:'<b>'+u.nome+'</b> gerou '+engKwh(v.g)+' em '+engMesLabel(v.mes)+' — <b>'+pct+'% abaixo</b> da média ('+engKwh(media)+'). Vale verificar o painel.'});
+      }
+    });
+  });
+  /* 2) consumo total > geração total no mês */
+  engMeses().forEach(function(m){
+    var R=engResumo(m);
+    if(R.ger>0&&R.cons>R.ger){
+      al.push({cor:'#E65100',ic:'ti-bolt',txt:'Em <b>'+engMesLabel(m)+'</b>, o consumo total ('+engKwh(R.cons)+') passou a geração ('+engKwh(R.ger)+') — usou créditos acumulados.'});
+    }
+  });
+  if(!al.length)return '<div class="card" style="margin-bottom:14px;color:#2E7D32"><i class="ti ti-circle-check"></i> Nenhum alerta — geração e consumo dentro do esperado.</div>';
+  var h='<div class="card" style="margin-bottom:14px"><b style="font-size:15px;color:#222">Alertas</b><div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">';
+  al.forEach(function(a){
+    h+='<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:'+a.cor+'11;border-left:3px solid '+a.cor+'">'
+      +'<i class="ti '+a.ic+'" style="color:'+a.cor+';font-size:16px;margin-top:1px"></i><div style="font-size:13px;color:#444;line-height:1.5">'+a.txt+'</div></div>';
+  });
+  h+='</div></div>';
+  return h;
+}
+
+function engRender(){
+  var root=document.getElementById('en-root');if(!root)return;
+  if(!ENG_MES){var ms=engMeses();ENG_MES=ms.length?ms[ms.length-1]:engMesISO();}
+  root.innerHTML=engFormHTML(ENG_MES)+engResumoHTML(ENG_MES)+engAlertasHTML()+engHistHTML();
+}
+function engTrocaMes(m){ENG_MES=m;engRender();}
+
+function engSalvarMes(){
+  var mes=document.getElementById('en-mes').value;if(!mes){toast('Escolha o mês','erro');return;}
+  var alterados=[];
+  ENG_INV.forEach(function(u){
+    var g=engNum((document.getElementById('en-i-'+u.id)||{}).value);
+    upsertEng(mes,'inversor',u.id,{geracao:g});
+    var r=engGet(mes,'inversor',u.id);if(r)alterados.push(r);
+  });
+  ENG_CONTA.forEach(function(u){
+    var cons=engNum((document.getElementById('en-c-'+u.id+'-cons')||{}).value);
+    var val=engNum((document.getElementById('en-c-'+u.id+'-val')||{}).value);
+    var sal=engNum((document.getElementById('en-c-'+u.id+'-sal')||{}).value);
+    upsertEng(mes,'conta',u.id,{consumo:cons,valor:val,saldo:sal});
+    var r=engGet(mes,'conta',u.id);if(r)alterados.push(r);
+  });
+  engPersistLocal();
+  engPersistCloud(alterados);
+  ENG_MES=mes;
+  engRender();
+  toast('Mês '+engMesLabel(mes)+' salvo ✓','ok');
+}
+function upsertEng(mes,tipo,uni,dados){
+  var id=engId(mes,tipo,uni),u=engNome(tipo,uni),r=engGet(mes,tipo,uni);
+  if(!r){r={id:id,mes:mes,tipo:tipo,unidade:uni,local:u.local||'',nome:u.nome||uni,geracao:0,consumo:0,valor:0,saldo:0};ENG.push(r);}
+  for(var k in dados)r[k]=dados[k];
+}
+
 function setModulo(m){
   var fz=document.getElementById('nav-filezao'),rc=document.getElementById('nav-roncador');
   var bf=document.getElementById('mod-filezao'),br=document.getElementById('mod-roncador');
   if(m==='roncador'){
     if(fz)fz.style.display='none'; if(rc)rc.style.display='';
     if(bf)bf.classList.remove('active'); if(br)br.classList.add('active');
-    document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
-    var sr=document.getElementById('sec-roncador'); if(sr)sr.classList.add('active');
+    var eb=document.querySelector('#nav-roncador .nav-btn');
+    showSec('energia',eb);
   }else{
     if(fz)fz.style.display=''; if(rc)rc.style.display='none';
     if(br)br.classList.remove('active'); if(bf)bf.classList.add('active');
@@ -1250,6 +1539,7 @@ function showSec(id,el){
   else if(id==='log')logRender();
   else if(id==='saldo')saldoRender();
   else if(id==='pagamento')folhaInit();
+  else if(id==='energia')energiaInit();
 }
 function toggleSidebar(){
   const sb=document.getElementById('sidebar');
