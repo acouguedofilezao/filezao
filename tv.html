@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel — Casa de Carnes Filezão</title>
+<title>#TABELA FILEZÃO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -69,8 +69,8 @@ main{flex:1 1 auto;position:relative;min-height:0}
 /* card de produto (estilo CORTES) */
 .card{position:relative;width:calc(33.333% - .94vw);height:32vh;background:var(--panel);border:1px solid var(--line);
   border-radius:1.3vh;overflow:hidden;box-shadow:0 2.2vh 4.6vh rgba(0,0,0,.55);display:flex;flex-direction:column;animation:fadeUp .55s both}
-.card .photo{position:relative;width:100%;flex:1 1 auto;min-height:0;background:#0e0e10;overflow:hidden}
-.card .photo img{width:100%;height:100%;object-fit:cover;filter:saturate(1.06) contrast(1.04) brightness(.99)}
+.card .photo{position:relative;width:100%;flex:1 1 auto;min-height:0;background:radial-gradient(circle at 50% 40%,#16161a,#0c0c0e);overflow:hidden}
+.card .photo img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain;filter:saturate(1.06) contrast(1.04)}
 .card .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#1b1b1f,#0f0f11)}
 .card .tag{position:absolute;top:1vh;left:1vh;background:var(--red);color:#fff;font-family:'Anton';font-size:1.4vh;
   letter-spacing:1px;padding:.6vh 1vw;border-radius:.5vh;box-shadow:0 0 1.6vh var(--glow);z-index:2;text-transform:uppercase;font-size:1.8vh}
@@ -86,7 +86,8 @@ main{flex:1 1 auto;position:relative;min-height:0}
 .card .pr .un{font-size:1.7vh;color:var(--muted)}
 .card.promo{border-color:rgba(255,26,26,.5)}
 
-/* QR card */
+.card .photo .bd,.feat .pic .bd{position:absolute;inset:-10%;background-size:cover;background-position:center;filter:blur(2.4vh) brightness(.5) saturate(1.1);transform:scale(1.12);z-index:0;pointer-events:none}
+  /* QR card */
 .qrcard{width:calc(33.333% - .94vw);height:32vh;background:var(--panel);border:1px solid var(--line);border-radius:1.3vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;padding:1.6vh;box-shadow:0 2.2vh 4.6vh rgba(0,0,0,.55);animation:fadeUp .55s both}
 .qrcard .qrimg{height:58%;width:auto;border-radius:1vh;background:#fff;padding:1vh}
@@ -96,9 +97,9 @@ main{flex:1 1 auto;position:relative;min-height:0}
 
 /* ===== Destaque OFERTA / NOVIDADE (feat) ===== */
 .feat{display:flex;align-items:center;gap:4vw;width:100%;max-width:90vw}
-.feat .pic{flex:0 0 auto;width:44vh;height:44vh;border:.5vh solid var(--red);border-radius:2vh;overflow:hidden;
+.feat .pic{position:relative;flex:0 0 auto;width:44vh;height:44vh;border:.5vh solid var(--red);border-radius:2vh;overflow:hidden;
   box-shadow:0 3vh 7vh rgba(0,0,0,.7),0 0 6vh var(--glow);animation:slideR .9s both}
-.feat .pic img{width:100%;height:100%;object-fit:cover}
+.feat .pic img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain}
 .feat .pic .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#1b1b1f,#0f0f11)}
 .feat .meta{flex:1 1 auto;animation:slideL .9s .12s both}
 .feat .meta .kick{display:inline-flex;align-items:center;background:var(--red);color:#fff;font-family:'Anton';font-size:2.3vh;
@@ -314,7 +315,7 @@ function cardHTML(p){
   var promo=emPromo(p);
   var preco=promo?Number(p.promo_preco):Number(p.preco);
   var de=promo?'<span class="de">R$ '+fmtPreco(p.preco)+'</span>':'';
-  var photo='<div class="photo">'+(foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb())+'</div>';
+  var photo='<div class="photo">'+(foto?'<div class="bd" style="background-image:url(&quot;'+esc(foto)+'&quot;)"></div><img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb())+'</div>';
   return '<div class="card'+(promo?' promo':'')+'">'+photo
     +(promo?'<span class="tag">Oferta</span>':'')
     +'<div class="cap"><div class="cat">'+catIcon(cat)+'<span>'+esc(cat)+'</span></div>'
@@ -356,10 +357,10 @@ function qrCardHTML(insta){
 }
 function infoHTML(id){
   if(id==='instagram'){
-    return '<div class="info"><div class="kick">Siga a casa</div>'
+    return '<div class="info"><div class="kick">Siga o Filezão</div>'
       +'<h2>No <span class="red">Instagram</span></h2>'
       +'<div class="handle">@acouguedofilezao</div><div class="rule"></div>'
-      +'<div class="lead">Promoções, novidades e os melhores cortes, todo dia no seu feed</div>'
+      +'<div class="lead">Promoções, novidades e os melhores cortes todos os dias no seu feed</div>'
       +'<div class="qr"><img src="'+QR_INSTA+'" onerror="this.style.display=\'none\'"><span>Aponte a câmera para seguir</span></div></div>';
   }
   if(id==='horario'){
@@ -397,7 +398,7 @@ function promoFullHTML(p){
   var un=(p.unidade==='UN')?'un':'kg';
   var cat=catProd(p);
   var foto=(p.foto||'').trim();
-  var pic=foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
+  var pic=foto?'<div class="bd" style="background-image:url(&quot;'+esc(foto)+'&quot;)"></div><img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
   var ate=p.promo_ate?'<div class="ate">Oferta válida até <b>'+fdBR(p.promo_ate)+'</b></div>':'';
   return '<div class="feat promo"><div class="pic">'+pic+'</div>'
     +'<div class="meta"><div class="kick">Oferta da casa</div>'
@@ -411,7 +412,7 @@ function lancFullHTML(p){
   var un=(p.unidade==='UN')?'un':'kg';
   var cat=catProd(p);
   var foto=(p.foto||'').trim();
-  var pic=foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
+  var pic=foto?'<div class="bd" style="background-image:url(&quot;'+esc(foto)+'&quot;)"></div><img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
   var preco=Number(p.preco)>0?'<div class="priceln"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div>':'';
   return '<div class="feat novo"><div class="pic">'+pic+'</div>'
     +'<div class="meta"><div class="kick">Novidade da casa</div>'
