@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — TV: cabeçalho novo, logo maior e rádio repaginada
+- **Textos do cabeçalho:** "Seu açougue favorito ♥ • Perdigão/MG" / **Casa de Carnes Filezão** / "Desde 1997 • XX anos de tradição e qualidade • peça pelo nosso delivery". O "XX anos" **atualiza sozinho** (ano atual − 1997).
+- **Logo aumentada** (mais presença no topo).
+- **Rádio com novo estilo:** virou um módulo de largura fixa com **botões redondos grandes** que **ficam vermelhos quando selecionados** (bem mais fácil de acertar pelo controle da TV). O nome da estação aparece **completo** (em até 2 linhas) e, por ter largura fixa, **os botões não se mexem** ao pausar/trocar. As regras do motor seguem iguais: salva a última rádio, mostra a descrição da estação, etc.
+
 ## 2026-06-21 — TV: ajustes finais (bio original, fontes maiores, rádio melhor)
 - **Bio de volta ao original:** cabeçalho mostra de novo "Açougue de tradição · Perdigão/MG", **Casa de Carnes Filezão** e "Desde 1997 · X anos de casa · qualidade que você confia" — só que no estilo novo.
 - **Fontes maiores** no geral, principalmente no cabeçalho (logo, título, relógio e datas bem maiores), pra ficar legível na TV de longe. Nomes de produto, preços, categorias, clima e rodapé também aumentaram.
