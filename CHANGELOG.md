@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — Energia: contas no mês certo + auditoria mais honesta
+- **Convenção da CEMIG aplicada:** a conta "Referente a" um mês é, na verdade, do consumo/geração do **mês anterior** (usa num mês, paga no outro). Agora cada conta cai no mês que ela realmente representa — conta "ABR" → **março**, "MAI" → **abril**, "JUN" → **maio**. Os inversores continuam no mês de calendário deles. Os dados antigos são recarregados automaticamente nessa organização nova.
+- **Auditoria de injeção não dá mais "alarme falso" num mês só.** A leitura do medidor pega de uma data a outra (ex.: 16/05 a 17/06), atravessando dois meses de calendário — então num mês isolado a diferença é normal, e um medidor pode até aparecer com energia "a mais" na CEMIG (quando a leitura pegou dias do mês seguinte). Tudo isso explicado na própria tela.
+- **Novo: Acumulado por medidor** (só soma os meses em que tem geração E injeção juntas). É esse número que vale como prova contra a CEMIG: quanto mais meses casados, mais o desencontro das datas some na média.
+- A auditoria do mês agora só aparece quando dá pra comparar de verdade (tem os dois lados). Quando faltam dados, mostra um aviso explicando o que enviar.
+
 ## 2026-06-20 — Roncador: aba Energia (geração solar × consumo)
 - Primeira aba da Fazenda Roncador: **Energia**. Cruza a **geração solar** (3 inversores: 2 na casa/Perdigão, 1 na Roça) com o **consumo das contas CEMIG** (4 leitores: Loja 1, Loja 2, Casa e Roça).
 - Mostra por mês: quanto **gerou**, quanto **consumiu**, o **saldo** (gerou − gastou) e quanto **pagou** — no **total** (a sobra da Roça e da Casa vira crédito pra Loja 2, então tudo é um pote só), com detalhe **por inversor** e **por conta**, e o **acumulado** desde o início.
