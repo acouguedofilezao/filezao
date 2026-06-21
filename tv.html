@@ -155,7 +155,30 @@
   .ticker-track{display:inline-block;white-space:nowrap;will-change:transform;animation:ticker 34s linear infinite}
   .ticker-track span{font-size:2vh;font-weight:800;letter-spacing:.26vw;color:#fff;text-transform:uppercase}
   @keyframes ticker{from{transform:translateX(-50%)}to{transform:translateX(0)}}
-  </style>
+  
+  /* ----- modo TV / notícias ao vivo ----- */
+  #tvmode{display:none;position:fixed;inset:0;z-index:50;background:#0a0a0c;flex-direction:column}
+  .tvbar{flex:0 0 auto;display:flex;align-items:center;gap:1.2vw;padding:1.3vh 2.5vw;background:linear-gradient(180deg,#161619,#0e0e11);border-bottom:.3vh solid var(--red)}
+  .tvbar .tvtitle{font-weight:800;font-size:2.1vh;text-transform:uppercase;letter-spacing:.18vw;color:#fff;flex:0 0 auto}
+  .tvbar .tvtitle::before{content:"\25CF";color:var(--red);margin-right:.6vw;font-size:1.5vh;vertical-align:.2vh}
+  .tvchans{display:flex;gap:.9vw;flex:1 1 auto;flex-wrap:wrap}
+  .tvchan{display:flex;flex-direction:column;align-items:flex-start;gap:.1vh;padding:.85vh 1.5vw;border-radius:.7vh;border:.16vh solid var(--line);background:var(--ink-2);color:var(--bone);cursor:pointer;text-align:left;transition:all .15s}
+  .tvchan b{font-size:1.95vh;font-weight:800;letter-spacing:.3px}
+  .tvchan span{font-size:1.3vh;color:var(--bone-2);font-weight:500}
+  .tvchan:hover,.tvchan:focus{border-color:var(--red);outline:none}
+  .tvchan.on{background:var(--red);border-color:var(--red)}
+  .tvchan.on b,.tvchan.on span{color:#fff}
+  .tvopen{flex:0 0 auto;font-size:1.45vh;font-weight:600;color:var(--bone-2);text-decoration:none;border:.14vh solid var(--line);padding:.85vh 1.3vw;border-radius:.7vh}
+  .tvopen:hover,.tvopen:focus{border-color:var(--red);color:#fff;outline:none}
+  .tvback{flex:0 0 auto;font-size:1.75vh;font-weight:800;text-transform:uppercase;letter-spacing:.08vw;color:#fff;background:var(--red);border:none;padding:1vh 1.9vw;border-radius:.7vh;cursor:pointer}
+  .tvback:hover,.tvback:focus{filter:brightness(1.12);outline:none}
+  .tvstage{flex:1 1 auto;position:relative;background:#000}
+  .tvstage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .tvtrigger{display:flex;align-items:center;gap:.5vw;height:5.4vh;padding:0 1.5vw;border-radius:999px;border:.16vh solid var(--red);background:transparent;color:#fff;font-weight:800;font-size:1.7vh;text-transform:uppercase;letter-spacing:.1vw;cursor:pointer;transition:all .15s;flex:0 0 auto}
+  .tvtrigger:hover,.tvtrigger:focus{background:var(--red);outline:none}
+  .tvtrigger .dotlive{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--red);box-shadow:0 0 .8vh var(--red);animation:breathe 1.6s ease-in-out infinite}
+  .tvtrigger:hover .dotlive,.tvtrigger:focus .dotlive{background:#fff;box-shadow:none}
+</style>
 </head>
 <body>
   <video id="nosleep" loop muted playsinline webkit-playsinline preload="auto" style="position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1"><source src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAOCbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAC7gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAqx0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAC7gAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAEAAAABAAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAu4AABAAAABAAAAAAIkbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAwABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABz21pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAY9zdGJsAAAAv3N0c2QAAAAAAAAAAQAAAK9hdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAEAAQABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAANWF2Y0MBZAAK/+EAGGdkAAqs2UQmwEQAAAMABAAAAwAQPEiWWAEABmjr48siwP34+AAAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAAIUgAACFIAAAAYc3R0cwAAAAAAAAABAAAABgAAIAAAAAAUc3RzcwAAAAAAAAABAAAAAQAAAEBjdHRzAAAAAAAAAAYAAAABAABAAAAAAAEAAKAAAAAAAQAAQAAAAAABAAAAAAAAAAEAACAAAAAAAQAAQAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAYAAAABAAAALHN0c3oAAAAAAAAAAAAAAAYAAALXAAAADwAAAA0AAAAMAAAADAAAABQAAAAUc3RjbwAAAAAAAAABAAADsgAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAMnbWRhdAAAAq0GBf//qdxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0xIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDM6MHgxMTMgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTEgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MyBiX3B5cmFtaWQ9MiBiX2FkYXB0PTEgYl9iaWFzPTAgZGlyZWN0PTEgd2VpZ2h0Yj0xIG9wZW5fZ29wPTAgd2VpZ2h0cD0yIGtleWludD0yNTAga2V5aW50X21pbj0yIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAImWIhAAV//73ye/Apuvb3rW/k89I+HvGUA+sGavr20h/+zEAAAALQZokbEFP/taNRoAAAAAJQZ5CeIKfAM+BAAAACAGeYXRBLwF7AAAACAGeY2pBLwF7AAAAEEGaZUmoQWiZTAgl//61K+8=" type="video/mp4"></video>
@@ -170,6 +193,7 @@
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:1.9vw;flex:0 0 auto">
+        <button class="tvtrigger" id="tvbtn" onclick="abrirTV()" title="Ver notícias ao vivo"><span class="dotlive"></span>TV</button>
         <div class="music"><button class="mbtn off" id="mbtn" onclick="toggleMusic()" title="Tocar / Pausar">&#9654;</button><button id="mnext" onclick="nextStation()" title="Trocar de estação">&#9197;</button><div class="minfo"><small>Rádio</small><b id="mstation">Música</b></div></div>
         <div class="clockwrap"><div class="clock" id="hora">--:--</div><div class="date" id="data">&mdash;</div></div>
       </div>
@@ -181,6 +205,15 @@
     <div class="foot-info"><div class="dots" id="dots"></div><span>Atualizado <span id="upd">&mdash;</span> &middot; Publicado <span id="pub">&mdash;</span></span></div>
     <div class="ticker"><div class="ticker-track" id="tickertrack"></div></div>
   </footer>
+  <div id="tvmode">
+    <div class="tvbar">
+      <div class="tvtitle">Notícias ao vivo</div>
+      <div id="tvchans" class="tvchans"></div>
+      <a id="tvlink" class="tvopen" href="#" target="_blank" rel="noopener">Abrir no YouTube</a>
+      <button class="tvback" onclick="fecharTV()">Voltar pra tabela</button>
+    </div>
+    <div class="tvstage"><iframe id="tvframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>
+  </div>
 
 <script>
 const SB_URL='https://vfrgqtuvbflkexapdzho.supabase.co';
@@ -393,6 +426,7 @@ var _rotTimer=null;
 function tempoTela(){var sl=SEQ[cur]||{};return DUR[sl.tipo]||ROTACAO_MS;}
 function agendarRotacao(){clearTimeout(_rotTimer);_rotTimer=setTimeout(rotate,tempoTela());}
 function rotate(){
+  if(tvAberta)return;
   if(SEQ.length<=1){agendarRotacao();return;}
   var stage=document.getElementById('stage');
   stage.style.opacity='0';
@@ -575,11 +609,47 @@ document.addEventListener('keydown',falaUnlock);
 document.addEventListener('touchstart',falaUnlock);
 falaInit();
 
+/* ===== Modo TV / Notícias ao vivo (canais oficiais no YouTube) ===== */
+var TV_CANAIS=[
+  {nome:'Itatiaia',     tag:'Notícias Minas/BH · 24h',     ch:'UC9T0ZAarQHL4cJGFzORVsFg'},
+  {nome:'Band Minas',   tag:'Jornalismo de Minas',         ch:'UC4HvOqEHSll8ieikr6ffvqQ'},
+  {nome:'Record Minas', tag:'MG no Ar · Balanço Geral',     ch:'UC83lmzkypxbrGB6myovcR_g'},
+  {nome:'TV Horizonte', tag:'Canal de BH',                 ch:'UC_n4rC_MIZVtpKHmtIc_QbQ'}
+];
+var tvAberta=false,_tvWasPlaying=false,tvCur=0;
+function tvEmbed(ch){return 'https://www.youtube.com/embed/live_stream?channel='+ch+'&autoplay=1';}
+function tvLink(ch){return 'https://www.youtube.com/channel/'+ch+'/live';}
+function tvMontaBotoes(){var w=document.getElementById('tvchans');if(!w)return;var h='';for(var i=0;i<TV_CANAIS.length;i++){h+='<button class="tvchan" onclick="tvCanal('+i+')"><b>'+TV_CANAIS[i].nome+'</b><span>'+TV_CANAIS[i].tag+'</span></button>';}w.innerHTML=h;}
+function tvCanal(i){
+  tvCur=((i%TV_CANAIS.length)+TV_CANAIS.length)%TV_CANAIS.length;
+  var c=TV_CANAIS[tvCur];
+  var f=document.getElementById('tvframe');if(f)f.src=tvEmbed(c.ch);
+  var lk=document.getElementById('tvlink');if(lk)lk.href=tvLink(c.ch);
+  var bs=document.querySelectorAll('#tvchans .tvchan');for(var k=0;k<bs.length;k++)bs[k].className='tvchan'+(k===tvCur?' on':'');
+}
+function abrirTV(){
+  if(tvAberta)return;tvAberta=true;
+  _tvWasPlaying=mplaying;
+  try{mWantPlay=false;mplayer.pause();mplaying=false;mClearFail();lsSet('playing','0');mUpd();}catch(e){}
+  clearTimeout(_rotTimer);
+  var m=document.getElementById('tvmode');if(m)m.style.display='flex';
+  tvCanal(tvCur||0);
+}
+function fecharTV(){
+  if(!tvAberta)return;tvAberta=false;
+  var f=document.getElementById('tvframe');if(f)f.src='';
+  var m=document.getElementById('tvmode');if(m)m.style.display='none';
+  agendarRotacao();
+  if(_tvWasPlaying){try{mWantPlay=true;mTries=0;mPlay();}catch(e){}}
+}
+document.addEventListener('keydown',function(e){var k=e.key||e.keyCode;if(tvAberta&&(k==='Escape'||k==='Backspace'||k==='BrowserBack'||k==='GoBack'||k===27||k===8||k===461||k===10009)){e.preventDefault();fecharTV();}});
+tvMontaBotoes();
+
 var _wakeLock=null;
 function keepAwake(){var v=document.getElementById('nosleep');if(v){var pp=v.play();if(pp&&pp.catch)pp.catch(function(){});}if('wakeLock' in navigator && !_wakeLock){try{navigator.wakeLock.request('screen').then(function(w){_wakeLock=w;w.addEventListener('release',function(){_wakeLock=null;});}).catch(function(){});}catch(e){}}}
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){_wakeLock=null;keepAwake();}});
 document.addEventListener('click',keepAwake);document.addEventListener('keydown',keepAwake);
-document.addEventListener('keydown',function(e){var k=e.key||e.keyCode;if(k==='MediaPlayPause'||k==='MediaPlay'||k==='MediaPause'||k==='Pause'||k===179||k===415||k===19){if(typeof toggleMusic==='function')toggleMusic();}else if(k==='MediaTrackNext'||k==='MediaNextTrack'||k===176||k===425){if(typeof nextStation==='function')nextStation();}});
+document.addEventListener('keydown',function(e){var k=e.key||e.keyCode;if(tvAberta){return;}if(k==='MediaPlayPause'||k==='MediaPlay'||k==='MediaPause'||k==='Pause'||k===179||k===415||k===19){if(typeof toggleMusic==='function')toggleMusic();}else if(k==='MediaTrackNext'||k==='MediaNextTrack'||k===176||k===425){if(typeof nextStation==='function')nextStation();}});
 keepAwake();
 setInterval(keepAwake,60000);
 (function(){var t=document.getElementById('tickertrack');if(t){var u=('Preços sujeitos a alteração \u00A0\u00A0\u2022\u00A0\u00A0 ').repeat(8);t.innerHTML='<span>'+u+'</span><span>'+u+'</span>';}})();
