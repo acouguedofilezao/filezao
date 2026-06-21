@@ -1,10 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
 ## 2026-06-21 — TV: botão "Notícias / TV ao vivo"
-- Novo botão **TV** no cabeçalho. Ao clicar, abre o **modo notícias** em tela cheia com transmissões **oficiais e gratuitas** ao vivo do YouTube, e um botão **"Voltar pra tabela"**.
-- Canais: **Itatiaia** (notícias Minas/BH, 24h), **TV Band Minas**, **Record Minas** (MG no Ar, Balanço Geral MG, Cidade Alerta) e **TV Horizonte** (BH). Dá pra trocar de canal nos botões do topo.
-- Ao abrir o modo TV, a **rádio pausa sozinha** (pra não embolar o áudio) e o rodízio de telas para; ao voltar, a rádio religa e a tabela volta a girar. O controle/Fire Stick: tecla "Voltar" fecha o modo TV.
-- Observação: Itatiaia é 24h; Band/Record Minas ficam ao vivo nos horários dos telejornais — fora disso, use a Itatiaia ou o botão "Abrir no YouTube". Não usamos IPTV pirata (Globo/SBT/Record por lista) por risco de multa de direito autoral.
+- Novo botão **TV** no cabeçalho. Ao clicar, abre o **modo notícias** com os canais **oficiais e gratuitos** de Minas/BH e um botão **"Voltar pra tabela"**.
+- Canais: **Itatiaia** (notícias Minas/BH, 24h), **TV Band Minas**, **Record Minas** (MG no Ar, Balanço Geral MG, Cidade Alerta) e **TV Horizonte** (BH).
+- **Como funciona:** tocar num canal **abre o telejornal ao vivo direto no YouTube** (numa nova aba). Foi preciso fazer assim porque as emissoras de jornal **bloqueiam a exibição embutida** em outros sites (dava "vídeo não disponível"). Abrindo no YouTube, sempre toca.
+- Ao abrir o modo TV, a **rádio pausa sozinha** e o rodízio de telas para; ao voltar, a rádio religa e a tabela volta a girar. O botão **Voltar** do controle fecha o modo TV.
+- Itatiaia é 24h; Band/Record Minas ficam ao vivo nos horários dos telejornais. Não usamos IPTV pirata (Globo/SBT/Record por lista) por risco de multa.
 
 ## 2026-06-21 — TV: painel na identidade da marca (vermelho/branco/preto)
 - Painel redesenhado na **identidade da Filezão**: paleta **vermelho (#F40000) + branco + preto**, tirada da própria logo (o boi "FILEZÃO").

@@ -178,6 +178,16 @@
   .tvtrigger:hover,.tvtrigger:focus{background:var(--red);outline:none}
   .tvtrigger .dotlive{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--red);box-shadow:0 0 .8vh var(--red);animation:breathe 1.6s ease-in-out infinite}
   .tvtrigger:hover .dotlive,.tvtrigger:focus .dotlive{background:#fff;box-shadow:none}
+
+  .tvlauncher{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;padding:4vh 6vw;background:#0a0a0c}
+  .tvhint{font-size:2vh;color:var(--bone-2);text-align:center;max-width:62vw;line-height:1.5}
+  .tvhint b{color:#fff}
+  .tvgrid{display:grid;grid-template-columns:repeat(2,minmax(28vw,1fr));gap:2.4vh 2.4vw;width:100%;max-width:78vw}
+  .tvbig{display:flex;flex-direction:column;gap:.5vh;padding:2.8vh 3vw;border-radius:1vh;border:.16vh solid var(--line);background:var(--ink-2);color:#fff;text-decoration:none;transition:all .15s}
+  .tvbig:hover,.tvbig:focus{border-color:var(--red);background:#1d1316;outline:none;transform:translateY(-.4vh)}
+  .tvbig b{font-size:3.3vh;font-weight:800;letter-spacing:.3px}
+  .tvbig span{font-size:1.85vh;color:var(--bone-2);font-weight:500}
+  .tvbig em{font-style:normal;font-size:1.75vh;font-weight:700;color:var(--red);margin-top:.7vh;letter-spacing:.05vw}
 </style>
 </head>
 <body>
@@ -208,11 +218,13 @@
   <div id="tvmode">
     <div class="tvbar">
       <div class="tvtitle">Notícias ao vivo</div>
-      <div id="tvchans" class="tvchans"></div>
-      <a id="tvlink" class="tvopen" href="#" target="_blank" rel="noopener">Abrir no YouTube</a>
+      <div style="flex:1 1 auto"></div>
       <button class="tvback" onclick="fecharTV()">Voltar pra tabela</button>
     </div>
-    <div class="tvstage"><iframe id="tvframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>
+    <div class="tvstage tvlauncher">
+      <div class="tvhint">Toque num canal para assistir o telejornal ao vivo no YouTube. Para voltar, aperte <b>Voltar</b> no controle.</div>
+      <div id="tvchans" class="tvgrid"></div>
+    </div>
   </div>
 
 <script>
@@ -609,35 +621,25 @@ document.addEventListener('keydown',falaUnlock);
 document.addEventListener('touchstart',falaUnlock);
 falaInit();
 
-/* ===== Modo TV / Notícias ao vivo (canais oficiais no YouTube) ===== */
+/* ===== Modo TV / Notícias ao vivo (abre o canal oficial no YouTube) ===== */
 var TV_CANAIS=[
-  {nome:'Itatiaia',     tag:'Notícias Minas/BH · 24h',     ch:'UC9T0ZAarQHL4cJGFzORVsFg'},
-  {nome:'Band Minas',   tag:'Jornalismo de Minas',         ch:'UC4HvOqEHSll8ieikr6ffvqQ'},
-  {nome:'Record Minas', tag:'MG no Ar · Balanço Geral',     ch:'UC83lmzkypxbrGB6myovcR_g'},
-  {nome:'TV Horizonte', tag:'Canal de BH',                 ch:'UC_n4rC_MIZVtpKHmtIc_QbQ'}
+  {nome:'Itatiaia',     tag:'Notícias Minas/BH · 24h',   ch:'UC9T0ZAarQHL4cJGFzORVsFg'},
+  {nome:'Band Minas',   tag:'Jornalismo de Minas',       ch:'UC4HvOqEHSll8ieikr6ffvqQ'},
+  {nome:'Record Minas', tag:'MG no Ar · Balanço Geral',   ch:'UC83lmzkypxbrGB6myovcR_g'},
+  {nome:'TV Horizonte', tag:'Canal de BH',               ch:'UC_n4rC_MIZVtpKHmtIc_QbQ'}
 ];
-var tvAberta=false,_tvWasPlaying=false,tvCur=0;
-function tvEmbed(ch){return 'https://www.youtube.com/embed/live_stream?channel='+ch+'&autoplay=1';}
+var tvAberta=false,_tvWasPlaying=false;
 function tvLink(ch){return 'https://www.youtube.com/channel/'+ch+'/live';}
-function tvMontaBotoes(){var w=document.getElementById('tvchans');if(!w)return;var h='';for(var i=0;i<TV_CANAIS.length;i++){h+='<button class="tvchan" onclick="tvCanal('+i+')"><b>'+TV_CANAIS[i].nome+'</b><span>'+TV_CANAIS[i].tag+'</span></button>';}w.innerHTML=h;}
-function tvCanal(i){
-  tvCur=((i%TV_CANAIS.length)+TV_CANAIS.length)%TV_CANAIS.length;
-  var c=TV_CANAIS[tvCur];
-  var f=document.getElementById('tvframe');if(f)f.src=tvEmbed(c.ch);
-  var lk=document.getElementById('tvlink');if(lk)lk.href=tvLink(c.ch);
-  var bs=document.querySelectorAll('#tvchans .tvchan');for(var k=0;k<bs.length;k++)bs[k].className='tvchan'+(k===tvCur?' on':'');
-}
+function tvMontaBotoes(){var w=document.getElementById('tvchans');if(!w)return;var h='';for(var i=0;i<TV_CANAIS.length;i++){var c=TV_CANAIS[i];h+='<a class="tvbig" href="'+tvLink(c.ch)+'" target="_blank" rel="noopener"><b>'+c.nome+'</b><span>'+c.tag+'</span><em>Assistir ao vivo \u25B8</em></a>';}w.innerHTML=h;}
 function abrirTV(){
   if(tvAberta)return;tvAberta=true;
   _tvWasPlaying=mplaying;
   try{mWantPlay=false;mplayer.pause();mplaying=false;mClearFail();lsSet('playing','0');mUpd();}catch(e){}
   clearTimeout(_rotTimer);
   var m=document.getElementById('tvmode');if(m)m.style.display='flex';
-  tvCanal(tvCur||0);
 }
 function fecharTV(){
   if(!tvAberta)return;tvAberta=false;
-  var f=document.getElementById('tvframe');if(f)f.src='';
   var m=document.getElementById('tvmode');if(m)m.style.display='none';
   agendarRotacao();
   if(_tvWasPlaying){try{mWantPlay=true;mTries=0;mPlay();}catch(e){}}
