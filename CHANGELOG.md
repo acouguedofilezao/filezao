@@ -1,5 +1,14 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — TV: novo painel "O Talho" (identidade de açougue de tradição)
+- Painel redesenhado com identidade própria, fugindo do visual genérico. Direção: **quadro de preços de açougue de tradição**.
+- Fundo café/carvão quente (não preto frio), tipografia em serifa com personalidade (**Fraunces**) + apoio em Inter, detalhes em **latão envelhecido** e um **selo "Est. 1997"** (cabeça de boi) como assinatura da casa.
+- **Produtos com foto grande** (o herói): card com a foto preenchendo, e o nome + preço por cima num degradê elegante (estilo revista gastronômica). Categoria discreta no canto e selo de "Oferta" sóbrio nas promoções — sem brilho/pulsação.
+- **Promoção e novidade** viram destaque editorial com foto grande e tipografia de revista (sem brilho/pulsação).
+- **Telas informativas** (fidelidade, Instagram, horário, pagamento, endereço) repaginadas no mesmo padrão, sem emoji.
+- Mantém **tudo funcionando**: preços ao vivo do Supabase, rádio, anúncio falado, relógio de Brasília, auto-refresh da Fire Stick e o rodízio de telas.
+- Fontes vêm do Google Fonts; se a internet da TV cair no boot, usa as fontes do sistema sem quebrar.
+
 ## 2026-06-21 — Energia: contas no mês certo + auditoria mais honesta
 - **Convenção da CEMIG aplicada:** a conta "Referente a" um mês é, na verdade, do consumo/geração do **mês anterior** (usa num mês, paga no outro). Agora cada conta cai no mês que ela realmente representa — conta "ABR" → **março**, "MAI" → **abril**, "JUN" → **maio**. Os inversores continuam no mês de calendário deles. Os dados antigos são recarregados automaticamente nessa organização nova.
 - **Auditoria de injeção não dá mais "alarme falso" num mês só.** A leitura do medidor pega de uma data a outra (ex.: 16/05 a 17/06), atravessando dois meses de calendário — então num mês isolado a diferença é normal, e um medidor pode até aparecer com energia "a mais" na CEMIG (quando a leitura pegou dias do mês seguinte). Tudo isso explicado na própria tela.
