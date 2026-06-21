@@ -95,25 +95,25 @@ main{flex:1 1 auto;position:relative;min-height:0}
 .qrcard .qrtxt span{font-size:1.7vh;color:var(--muted)}
 
 /* ===== Destaque OFERTA / NOVIDADE (feat) ===== */
-.feat{display:flex;align-items:center;gap:4vw;width:100%;max-width:90vw}
-.feat .pic{position:relative;flex:0 0 auto;width:44vh;height:44vh;border:.5vh solid var(--red);border-radius:2vh;overflow:hidden;
+.feat{display:flex;align-items:center;justify-content:center;gap:5vw;width:100%;max-width:93vw}
+.feat .pic{position:relative;flex:0 0 auto;width:60vh;height:60vh;border:.5vh solid var(--red);border-radius:2vh;overflow:hidden;
   box-shadow:0 3vh 7vh rgba(0,0,0,.7),0 0 6vh var(--glow);animation:slideR .9s both}
 .feat .pic img{width:100%;height:100%;object-fit:cover}
 .feat .pic .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#1b1b1f,#0f0f11)}
 .feat .meta{flex:1 1 auto;animation:slideL .9s .12s both}
-.feat .meta .kick{display:inline-flex;align-items:center;background:var(--red);color:#fff;font-family:'Anton';font-size:2.3vh;
+.feat .meta .kick{display:inline-flex;align-items:center;background:var(--red);color:#fff;font-family:'Anton';font-size:2.8vh;
   letter-spacing:.18vw;padding:.9vh 1.8vw;border-radius:.7vh;box-shadow:0 0 2.6vh var(--glow);margin-bottom:1.8vh;text-transform:uppercase}
-.feat .meta .cat{display:flex;align-items:center;gap:.6vw;font-size:1.7vh;letter-spacing:.18vw;color:var(--muted);text-transform:uppercase;margin-bottom:.8vh}
-.feat .meta .cat .cic{width:2.3vh;height:2.3vh;color:var(--red)}
-.feat .meta .nm{font-family:'Anton';font-size:8.4vh;line-height:.84;color:var(--cream);text-shadow:0 .4vh 0 var(--redDeep),0 0 5vh var(--glow);text-transform:uppercase}
-.feat .meta .rule{width:9vw;height:.55vh;background:var(--red);box-shadow:0 0 1.6vh var(--glow);margin:1.6vh 0}
-.feat .meta .de{font-size:2.2vh;color:var(--muted);text-decoration:line-through;margin-bottom:.4vh}
+.feat .meta .cat{display:flex;align-items:center;gap:.6vw;font-size:2.1vh;letter-spacing:.18vw;color:var(--muted);text-transform:uppercase;margin-bottom:.8vh}
+.feat .meta .cat .cic{width:2.9vh;height:2.9vh;color:var(--red)}
+.feat .meta .nm{font-family:'Anton';font-size:10.6vh;line-height:.82;color:var(--cream);text-shadow:0 .4vh 0 var(--redDeep),0 0 5vh var(--glow);text-transform:uppercase}
+.feat .meta .rule{width:11vw;height:.6vh;background:var(--red);box-shadow:0 0 1.6vh var(--glow);margin:1.6vh 0}
+.feat .meta .de{font-size:2.7vh;color:var(--muted);text-decoration:line-through;margin-bottom:.4vh}
 .feat .priceln{display:flex;align-items:baseline;gap:.5vw;margin-top:.3vh}
-.feat .priceln .por{font-size:2.2vh;color:var(--muted);margin-right:.3vw}
-.feat .priceln .cif{font-family:'Anton';font-size:4vh;color:var(--red)}
-.feat .priceln .val{font-family:'Anton';font-size:13vh;line-height:.76;color:var(--cream);text-shadow:0 0 5vh var(--glow)}
-.feat .priceln .un{font-size:2.2vh;color:var(--muted);align-self:flex-end;margin-bottom:1.4vh}
-.feat .ate{margin-top:1.6vh;font-size:1.7vh;letter-spacing:.12vw;color:var(--muted)}
+.feat .priceln .por{font-size:2.7vh;color:var(--muted);margin-right:.3vw}
+.feat .priceln .cif{font-family:'Anton';font-size:5vh;color:var(--red)}
+.feat .priceln .val{font-family:'Anton';font-size:16.5vh;line-height:.74;color:var(--cream);text-shadow:0 0 5vh var(--glow)}
+.feat .priceln .un{font-size:2.7vh;color:var(--muted);align-self:flex-end;margin-bottom:2.1vh}
+.feat .ate{margin-top:2vh;font-size:2.1vh;letter-spacing:.12vw;color:var(--muted)}
 .feat .ate b{color:var(--cream);font-weight:600}
 
 /* ===== Telas info ===== */
@@ -423,7 +423,7 @@ function lancFullHTML(p){
   var pic=foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
   var preco=Number(p.preco)>0?'<div class="priceln"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div>':'';
   return '<div class="feat novo"><div class="pic">'+pic+'</div>'
-    +'<div class="meta"><div class="kick">Novidade da casa</div>'
+    +'<div class="meta"><div class="kick">Novidade Filezão</div>'
     +'<div class="cat">'+catIcon(cat)+'<span>'+esc(cat)+'</span></div><div class="nm">'+esc(nome)+'</div><div class="rule"></div>'
     +preco+'<div class="ate">Exclusividade <b>Filezão</b></div></div></div>';
 }
