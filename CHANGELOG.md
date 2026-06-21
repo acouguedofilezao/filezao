@@ -1,6 +1,22 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-20 — Filezão + Fazenda Roncador (início)
+- Cabeçalho agora mostra **FILEZÃO + FAZENDA RONCADOR · Sistema de Gestão** (logo do açougue mantida).
+- Novo **seletor na barra lateral** para escolher qual gerenciar: **Filezão** (vermelho) ou **Roncador** (verde).
+- O **Roncador entra como espaço separado e vazio** (em construção) — nada do financeiro do açougue foi alterado. As telas da fazenda serão montadas depois.
+
 # CHANGELOG — Sistema Filezão
+
+## 2026-06-19 — Cotações: mínimo de salsicha e coração
+- **Salsicha:** mínimo ajustado para **2 kg** (era 5).
+- **Coração de frango:** mínimo definido em **6 kg** (1 pacote = 1 kg). Antes ficava "sem mínimo definido".
+- O sistema agora entende **"não temos / acabou / faltou"** como estoque **zero** — então um item que o Magela marcou que não tem já cai como abaixo do mínimo (precisa comprar), em vez de "sem mínimo definido".
+
+## 2026-06-19 — TV: anúncio só com a rádio tocando
+- O anúncio agora só toca quando a rádio está tocando. Se você pausar/desligar a música, os anúncios param automaticamente (e voltam quando religar a música).
+
+## 2026-06-19 — TV: anúncio mais robusto (destrava no 1º toque)
+- Áudio do anúncio destrava no primeiro toque do controle, busca o arquivo novamente (evita "erro" preso em cache) e a primeira fala sai em ~25s pra facilitar o teste.
 
 ## 2026-06-19 — TV: anúncio em MP3 (voz igual em todas) + reforço anti-desligamento
 - A TV agora toca o arquivo **`anuncio.mp3`** (colocado na pasta do repositório, do lado do `tv.html`) — assim **todas as TVs tocam exatamente a mesma voz**. A cada ~5 min pausa a rádio, toca o anúncio e volta a rádio.

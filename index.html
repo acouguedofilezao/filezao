@@ -32,6 +32,11 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F5F5F5;c
 .hamburger:hover{background:rgba(254,0,0,0.3);border-color:#FE0000}
 /* ── LAYOUT LATERAL ── */
 .app-body{display:flex;height:calc(100vh - 91px);overflow:hidden}
+.modsel{display:flex;gap:6px;padding:10px 12px 6px}
+.modbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;font-size:12.5px;font-weight:700;padding:9px 6px;border-radius:9px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.55);transition:all .15s}
+.modbtn:hover{color:rgba(255,255,255,0.85)}
+#mod-filezao.active{background:rgba(254,0,0,0.18);border-color:rgba(254,0,0,0.55);color:#fff}
+#mod-roncador.active{background:rgba(124,179,66,0.22);border-color:rgba(124,179,66,0.65);color:#fff}
 .sidebar{width:220px;min-width:220px;background:#0d0d0d;border-right:1px solid rgba(254,0,0,0.15);display:flex;flex-direction:column;transition:all .25s;overflow:hidden;position:relative}
 .sidebar.collapsed{width:0;min-width:0}
 .sidebar-toggle{position:fixed;top:50%;left:220px;transform:translateY(-50%);z-index:100;width:28px;height:64px;background:#1a1a1a;border:1px solid rgba(254,0,0,0.4);border-left:none;border-radius:0 10px 10px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);transition:left .25s,background .15s;font-size:13px;box-shadow:3px 0 10px rgba(0,0,0,0.3)}
@@ -283,14 +288,19 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
   </div>
   <div class="header-divider"></div>
   <div class="header-text">
-    <div class="header-title">FILEZÃO</div>
-    <div class="header-sub">Casa de Carnes · Sistema de Gestão</div>
+    <div class="header-title">FILEZÃO <span style="color:#9CCC65;font-size:.6em;font-weight:800;letter-spacing:1px">+ FAZENDA RONCADOR</span></div>
+    <div class="header-sub">Sistema de Gestão</div>
   </div>
   <div class="header-right"></div>
 </div>
 <div class="app-body">
 <div class="sidebar" id="sidebar">
   <div class="sidebar-inner">
+    <div class="modsel">
+      <button id="mod-filezao" class="modbtn active" onclick="setModulo('filezao')"><i class="ti ti-meat"></i> Filezão</button>
+      <button id="mod-roncador" class="modbtn" onclick="setModulo('roncador')"><i class="ti ti-plant-2"></i> Roncador</button>
+    </div>
+    <div id="nav-filezao">
     <div class="nav-section">Menu</div>
     <button class="nav-btn active" onclick="showSec('dashboard',this)"><i class="ti ti-layout-dashboard"></i><span>Painel</span></button>
     <button class="nav-btn" onclick="showSec('entradas',this)"><i class="ti ti-arrow-down-circle"></i><span>Entradas</span></button>
@@ -312,6 +322,15 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
     <button class="nav-btn" onclick="showSec('log',this)"><i class="ti ti-history"></i><span>Registro de alterações</span></button>
     <div class="nav-section">TV</div>
     <button class="nav-btn" onclick="showSec('tv',this)"><i class="ti ti-device-tv"></i><span>Seleção TV</span></button>
+    </div>
+    <div id="nav-roncador" style="display:none">
+      <div class="nav-section">Fazenda Roncador</div>
+      <div style="padding:16px;color:rgba(255,255,255,0.55);font-size:13px;line-height:1.6">
+        <i class="ti ti-plant-2" style="font-size:26px;color:#9CCC65;display:block;margin-bottom:8px"></i>
+        Espaço da <b style="color:#9CCC65">Fazenda Roncador</b> em construção.<br><br>
+        Aqui vamos montar a gestão do sítio das Rocas. Me conta o que quer controlar que a gente cria as telas.
+      </div>
+    </div>
   </div>
   <!-- Status de conexão no fundo da sidebar -->
   <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);margin-top:auto">
@@ -327,6 +346,15 @@ tr.chq-pago{background:#f0faf4}tr.chq-pago:hover td{background:#e6f4ec}tr.chq-pa
   <i class="ti ti-chevron-left" id="toggle-icon"></i>
 </button>
 <div class="main-content" id="main-content">
+
+<!-- FAZENDA RONCADOR (placeholder) -->
+<div id="sec-roncador" class="section">
+  <div class="card" style="text-align:center;padding:48px 24px">
+    <i class="ti ti-plant-2" style="font-size:56px;color:#7CB342"></i>
+    <h2 style="margin:14px 0 6px;font-size:24px;color:#33691E">Fazenda Roncador</h2>
+    <div style="color:#777;font-size:15px;max-width:540px;margin:0 auto;line-height:1.6">Este é o espaço da gestão do sítio das Rocas. Ainda está em branco — vamos construir as telas juntos.<br><br>Me conta o que você quer controlar aqui (rebanho, plantio, custos, vendas, funcionários da fazenda...) que eu começo a montar.</div>
+  </div>
+</div>
 
 <!-- PAINEL -->
 <div id="sec-dashboard" class="section active">
@@ -1185,6 +1213,21 @@ function logRender(){
   });
   h+='</tbody></table></div>';box.innerHTML=h;
 }
+function setModulo(m){
+  var fz=document.getElementById('nav-filezao'),rc=document.getElementById('nav-roncador');
+  var bf=document.getElementById('mod-filezao'),br=document.getElementById('mod-roncador');
+  if(m==='roncador'){
+    if(fz)fz.style.display='none'; if(rc)rc.style.display='';
+    if(bf)bf.classList.remove('active'); if(br)br.classList.add('active');
+    document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+    var sr=document.getElementById('sec-roncador'); if(sr)sr.classList.add('active');
+  }else{
+    if(fz)fz.style.display=''; if(rc)rc.style.display='none';
+    if(br)br.classList.remove('active'); if(bf)bf.classList.add('active');
+    var db=document.querySelector('#nav-filezao .nav-btn');
+    showSec('dashboard',db);
+  }
+}
 function showSec(id,el){
   const btn=(el&&el.closest)?el.closest('.nav-btn')||el:el;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -1696,7 +1739,8 @@ var EST_CFG={
   'BACON':{unit:'cx',cxKg:20,min:2,buy:3},
   'BACON EM CUBOS':{unit:'cx',cxKg:20,min:2,buy:2},
   'EMPANADO':{unit:'kg',cxKg:5,min:5,buy:5},
-  'SALSICHA':{unit:'kg',cxKg:5,min:5,buy:5},
+  'SALSICHA':{unit:'kg',cxKg:5,min:2,buy:2},
+  'CORACAO DE FRANGO':{unit:'kg',cxKg:1,min:6,buy:6},
   'PAO DE ALHO FRIGOLEMOS':{unit:'un',cxKg:10,min:6,buy:'1cx'}
 };
 function estCanon(nome){
@@ -1713,6 +1757,7 @@ function estCanon(nome){
   if(/TULIPA|MEIO DA ASA/.test(up))return'Meio da asa de frango';
   if(/PESCOCO.*PERU/.test(up))return'Pescoço de peru';
   if(/MOELA/.test(up))return'Moela de frango';
+  if(/CORACAO/.test(up))return'Coração de frango';
   if(/FILE.*PEITO|^PEITO$/.test(up))return'Filé do peito de frango';
   if(/COXA.*SOBRE|^COXA$/.test(up))return'Coxa sobrecoxa';
   if(/\bASINHA\b|^ASA$/.test(up))return'Asa de frango';
@@ -1732,6 +1777,7 @@ function estParseLine(l){
       work=l.slice(0,last.index);
     }
   }
+  if(!plenty&&qty===null&&/NAO TEMOS|NAO TEM|ACABO|ZERAD|SEM ESTOQUE|NAO HA|FALTAND|FALTOU|NENHUM|ESGOTAD/.test(up)){qty=0;unit='';}
   var nome=work.replace(/[\s\-:]+$/,'').trim();if(!nome)return null;
   var canon=estCanon(nome);
   return {raw:nome,nome:canon,key:cotKey(canon),qty:qty,unit:unit,plenty:plenty};
@@ -1959,7 +2005,7 @@ function folhaInit(){
   var ms=document.getElementById('fl-ms'),an=document.getElementById('fl-an');
   if(ms&&ms.dataset.init!=='1'){
     var d=_fmtSP(new Date()).split(' ')[0].split('/');
-    if(d.length===3){ms.value=d[1];if(an)an.value=d[2];}
+    if(d.length===3){ms.value=d[1];if(an)an.value=d[2];var qs=document.getElementById('fl-q');if(qs)qs.value=(parseInt(d[0],10)>=15?'2':'1');}
     ms.dataset.init='1';
   }
   folhaSync().then(folhaRender);
