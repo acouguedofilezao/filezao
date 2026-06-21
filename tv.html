@@ -67,27 +67,27 @@ main{flex:1 1 auto;position:relative;min-height:0}
 .brd-cat .ln{flex:1;height:2px;background:linear-gradient(90deg,var(--red),transparent)}
 
 /* card de produto (estilo CORTES) */
-.card{position:relative;width:calc(33.333% - .94vw);height:34vh;background:var(--panel);border:1px solid var(--line);
+.card{position:relative;width:calc(33.333% - .94vw);height:33vh;background:var(--panel);border:1px solid var(--line);
   border-radius:1.3vh;overflow:hidden;box-shadow:0 2.2vh 4.6vh rgba(0,0,0,.55);display:flex;flex-direction:column;animation:fadeUp .55s both}
-.card .photo{position:relative;width:100%;flex:1 1 auto;min-height:0;background:radial-gradient(circle at 50% 38%,#1b1b20,#0c0c0e);overflow:hidden;padding:.5vh}
-.card .photo img{width:100%;height:100%;object-fit:contain;filter:saturate(1.06) contrast(1.04)}
+.card .photo{position:relative;width:100%;flex:1 1 auto;min-height:0;background:#0c0c0e;overflow:hidden}
+.card .photo img{width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(1.06) contrast(1.04) brightness(.99)}
 .card .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#1b1b1f,#0f0f11)}
 .card .tag{position:absolute;top:1vh;left:1vh;background:var(--red);color:#fff;font-family:'Anton';font-size:1.4vh;
   letter-spacing:1px;padding:.6vh 1vw;border-radius:.5vh;box-shadow:0 0 1.6vh var(--glow);z-index:2;text-transform:uppercase;font-size:1.8vh}
-.card .cap{padding:.85vh 1.2vw .95vh;background:linear-gradient(180deg,rgba(22,22,26,.4),var(--panel))}
-.card .cap .cat{display:flex;align-items:center;gap:.45vw;color:var(--muted);font-size:1.55vh;letter-spacing:.16vw;text-transform:uppercase;margin-bottom:.45vh}
-.card .cap .cat .cic{width:2.3vh;height:2.3vh;color:var(--red);flex:0 0 auto}
-.card .nm{font-family:'Anton';font-size:3.2vh;line-height:.98;color:var(--cream);letter-spacing:.3px;margin-bottom:.5vh;text-transform:uppercase;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .cap{padding:.5vh 1.1vw .65vh;background:linear-gradient(180deg,rgba(22,22,26,.55),var(--panel))}
+.card .cap .cat{display:flex;align-items:center;gap:.4vw;color:var(--muted);font-size:1.3vh;letter-spacing:.14vw;text-transform:uppercase;margin-bottom:.15vh}
+.card .cap .cat .cic{width:1.85vh;height:1.85vh;color:var(--red);flex:0 0 auto}
+.card .nm{font-family:'Anton';font-size:2.85vh;line-height:.94;color:var(--cream);letter-spacing:.3px;margin-bottom:.25vh;text-transform:uppercase;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .card .pr{display:flex;align-items:baseline;gap:.35vw;flex-wrap:wrap}
 .card .pr .de{font-size:1.75vh;color:var(--muted);text-decoration:line-through;margin-right:.4vw}
 .card .pr .cif{font-family:'Anton';font-size:2.2vh;color:var(--red)}
-.card .pr .val{font-family:'Anton';font-size:4vh;line-height:.9;color:var(--red);text-shadow:0 0 2vh var(--glow)}
+.card .pr .val{font-family:'Anton';font-size:3.5vh;line-height:.9;color:var(--red);text-shadow:0 0 2vh var(--glow)}
 .card .pr .un{font-size:1.7vh;color:var(--muted)}
 .card.promo{border-color:rgba(255,26,26,.5)}
 
 /* QR card */
-.qrcard{width:calc(33.333% - .94vw);height:34vh;background:var(--panel);border:1px solid var(--line);border-radius:1.3vh;
+.qrcard{width:calc(33.333% - .94vw);height:33vh;background:var(--panel);border:1px solid var(--line);border-radius:1.3vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;padding:1.6vh;box-shadow:0 2.2vh 4.6vh rgba(0,0,0,.55);animation:fadeUp .55s both}
 .qrcard .qrimg{height:58%;width:auto;border-radius:1vh;background:#fff;padding:1vh}
 .qrcard .qrtxt{text-align:center}
