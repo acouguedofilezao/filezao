@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — TV: cara nova (design "Açougue Premium" do Claude Design)
+- Painel inteiro repaginado com a identidade do design que você criou: fundo escuro cinematográfico com **brilho vermelho** animado e textura de linhas, **vermelho #FF1A1A + creme #F3ECE0**, fontes **Anton** (títulos/preços) e **Oswald** (texto), cabeçalho com selo **"ABERTO"** pulsando + relógio, e **dots** animados embaixo.
+- **Todo o motor continua igual**: dados do Supabase, rodízio de telas, rádio, anúncio falado, relógio de Brasília, clima + dia de churrasco, kit do dia, QR, keep-awake e teclas da Fire Stick. Só mudou a aparência.
+- Cards de produto agora têm cara de "corte premium" (foto grande, nome em Anton, preço vermelho); promoção/novidade viram destaque estilo "OFERTA DA SEMANA"; telas de clima/kit/info repaginadas na mesma identidade.
+- Responsivo (não usa tamanho fixo), então escala certinho na TV. Fontes carregadas do Google Fonts.
+
 ## 2026-06-21 — Segurança: logout ao fechar a aba + por inatividade (index.html)
 - **Novo:** ao **fechar a aba/navegador**, ao reabrir o sistema **pede login de novo** (antes continuava logado mesmo após fechar). Recarregar na mesma aba segue valendo, pra não pedir senha a cada F5.
 - A sessão **não fica mais salva pra sempre**. Depois de **15 minutos parado** (sem mexer), o sistema **desloga sozinho** e cai na tela de login. Se alguém pegar seu celular/notebook parado, não entra direto.
