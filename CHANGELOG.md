@@ -5,7 +5,7 @@
 - Mostra por mês: quanto **gerou**, quanto **consumiu**, o **saldo** (gerou − gastou) e quanto **pagou** — no **total** (a sobra da Roça e da Casa vira crédito pra Loja 2, então tudo é um pote só), com detalhe **por inversor** e **por conta**, e o **acumulado** desde o início.
 - **Histórico mensal** com gráfico de barras (geração × consumo) e tabela.
 - **Alertas automáticos**: avisa quando um inversor gera bem abaixo da média (possível defeito) e quando um sistema consome mais do que gera.
-- Inversores: Solarman Perdigão, FusionSolar Perdigão, Solarman Roça. Campo de **injeção da CEMIG** por conta + quadro de **auditoria de injeção** (geração dos inversores × injetado registrado pela CEMIG). Dados reais de maio e junho/2026 carregados a partir dos PDFs e fotos. Lançamento por formulário (ou eu preencho). Dados em localStorage + Supabase (tabela `energia`).
+- Inversores: Solarman Perdigão, FusionSolar Perdigão, Solarman Roça. Campo de **injeção da CEMIG** por conta + quadro de **auditoria de injeção** (geração dos inversores × injetado registrado pela CEMIG), **por medidor** (Casa = 2 inversores de Perdigão; Roça = inversor da Roça). Dados reais de maio e junho/2026 carregados a partir dos PDFs e fotos. Lançamento por formulário (ou eu preencho). Dados em localStorage + Supabase (tabela `energia`).
 
 ## 2026-06-20 — Filezão + Fazenda Roncador (início)
 - Cabeçalho agora mostra **FILEZÃO + FAZENDA RONCADOR · Sistema de Gestão** (logo do açougue mantida).

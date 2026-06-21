@@ -1223,9 +1223,9 @@ function logRender(){
 }
 /* ===================== ENERGIA (Roncador) ===================== */
 var ENG_INV=[
-  {id:'inv_smperd', nome:'Solarman · Perdigão',local:'Perdigão'},
-  {id:'inv_fiperd', nome:'FusionSolar · Perdigão',  local:'Perdigão'},
-  {id:'inv_smroca', nome:'Solarman · Roça',    local:'Roça'}
+  {id:'inv_smperd', nome:'Solarman · Perdigão',local:'Perdigão',medidor:'ct_casa'},
+  {id:'inv_fiperd', nome:'FusionSolar · Perdigão',  local:'Perdigão',medidor:'ct_casa'},
+  {id:'inv_smroca', nome:'Solarman · Roça',    local:'Roça',medidor:'ct_roca'}
 ];
 var ENG_CONTA=[
   {id:'ct_loja1',nome:'Loja 1',local:'Perdigão'},
@@ -1265,7 +1265,10 @@ function engFromDB(d){return {id:d.id,mes:d.mes,tipo:d.tipo,unidade:d.unidade,lo
 function engSeed(){
   /* dados reais que o Diogo mandou — contas pelo mês "Referente a"; pode editar/excluir */
   ENG=[
-    /* ABRIL/2026 (4 contas) */
+    /* ABRIL/2026 (4 contas + 3 inversores) */
+    {id:engId('2026-04','inversor','inv_smperd'),mes:'2026-04',tipo:'inversor',unidade:'inv_smperd',local:'Perdigão',nome:'Solarman · Perdigão',geracao:658.2,consumo:0,valor:0,saldo:0},
+    {id:engId('2026-04','inversor','inv_fiperd'),mes:'2026-04',tipo:'inversor',unidade:'inv_fiperd',local:'Perdigão',nome:'FusionSolar · Perdigão',geracao:958.06,consumo:0,valor:0,saldo:0},
+    {id:engId('2026-04','inversor','inv_smroca'),mes:'2026-04',tipo:'inversor',unidade:'inv_smroca',local:'Roça',nome:'Solarman · Roça',geracao:1240,consumo:0,valor:0,saldo:0},
     {id:engId('2026-04','conta','ct_loja1'),mes:'2026-04',tipo:'conta',unidade:'ct_loja1',local:'Perdigão',nome:'Loja 1',consumo:375,valor:478.83,saldo:0,geracao:0},
     {id:engId('2026-04','conta','ct_loja2'),mes:'2026-04',tipo:'conta',unidade:'ct_loja2',local:'Perdigão',nome:'Loja 2',consumo:3655,valor:402.86,saldo:173.10,geracao:0},
     {id:engId('2026-04','conta','ct_casa'),mes:'2026-04',tipo:'conta',unidade:'ct_casa',local:'Perdigão',nome:'Casa',consumo:128,valor:85.80,saldo:0,geracao:0,injecao:1126},
@@ -1320,8 +1323,16 @@ function engResumo(mes){
   });
   return {ger:ger,cons:cons,val:val,inj:inj,dif:ger-cons,porLocal:porLocal};
 }
-function engMeses(){
-  var s={};ENG.forEach(function(r){if(r.mes)s[r.mes]=1;});
+function engAuditoria(mes){
+  var rows=[],tg=0,ti=0;
+  ENG_CONTA.forEach(function(c){
+    var inj=0,rc=engGet(mes,'conta',c.id);if(rc)inj=Number(rc.injecao)||0;
+    var ger=0;ENG_INV.forEach(function(iv){if(iv.medidor===c.id){var ri=engGet(mes,'inversor',iv.id);if(ri)ger+=Number(ri.geracao)||0;}});
+    if(inj>0||ger>0){rows.push({nome:c.nome,ger:ger,inj:inj,dif:ger-inj});tg+=ger;ti+=inj;}
+  });
+  return {rows:rows,ger:tg,inj:ti};
+}
+function engMeses(){  var s={};ENG.forEach(function(r){if(r.mes)s[r.mes]=1;});
   return Object.keys(s).sort();
 }
 
@@ -1396,24 +1407,26 @@ function engResumoHTML(mes){
     h+='<div style="display:flex;justify-content:space-between;font-size:13px;color:#555;padding:3px 0"><span>'+u.nome+'</span><b>'+engKwh(c)+(v?' · '+fmt(v):'')+'</b></div>';});
   h+='</div>';
   h+='</div>';
-  /* auditoria de injeção: tudo que é produzido é injetado -> geração deve bater com a injeção da CEMIG */
-  if(R.inj>0||R.ger>0){
-    var difInj=R.ger-R.inj, temAmbos=(R.ger>0&&R.inj>0);
-    var status='',stCor='#888';
-    if(temAmbos){
-      var perc=Math.abs(difInj)/R.ger;
-      if(perc<=0.03){status='✓ Bateu — a CEMIG recebeu o que foi gerado';stCor='#2E7D32';}
-      else if(difInj>0){status='⚠ A CEMIG registrou '+engKwh(difInj)+' a MENOS do que os inversores geraram — verificar';stCor='#C62828';}
-      else{status='⚠ A CEMIG registrou MAIS do que os inversores geraram ('+engKwh(-difInj)+') — conferir';stCor='#E65100';}
-    }
+  /* auditoria de injeção por medidor: tudo que é produzido é injetado -> deve bater com a CEMIG */
+  var AUD=engAuditoria(mes);
+  if(AUD.rows.length){
     h+='<div class="card" style="margin:0 0 14px;padding:14px;border-left:3px solid #1565C0">';
-    h+='<div style="font-weight:700;color:#333;margin-bottom:8px">Auditoria de injeção (a CEMIG recebeu o que os inversores geraram?)</div>';
-    h+='<div style="display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:#555">'
-      +'<span>Geração dos inversores: <b style="color:#2E7D32">'+engKwh(R.ger)+'</b></span>'
-      +'<span>Injetado na rede (CEMIG): <b style="color:#1565C0">'+engKwh(R.inj)+'</b></span>'
-      +(temAmbos?'<span>Diferença: <b style="color:'+stCor+'">'+(difInj>=0?'':'+')+engKwh(Math.abs(difInj))+'</b></span>':'')+'</div>';
-    if(status)h+='<div style="font-size:13px;color:'+stCor+';font-weight:600;margin-top:8px">'+status+'</div>';
-    h+='<div style="font-size:12px;color:#999;margin-top:6px">Como tudo que é produzido é injetado, esses dois números devem bater. Falta a geração e a injeção do mesmo mês pra comparar.</div>';
+    h+='<div style="font-weight:700;color:#333;margin-bottom:8px">Auditoria de injeção — a CEMIG recebeu o que os inversores geraram?</div>';
+    h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+    h+='<thead><tr style="color:#888;text-align:left"><th style="padding:4px 6px">Medidor</th><th style="padding:4px 6px;text-align:right">Inversores geraram</th><th style="padding:4px 6px;text-align:right">CEMIG registrou</th><th style="padding:4px 6px;text-align:right">Diferença</th></tr></thead><tbody>';
+    AUD.rows.forEach(function(a){
+      var temAmbos=a.ger>0&&a.inj>0,st='',stc='#888';
+      if(temAmbos){var perc=Math.abs(a.dif)/Math.max(a.ger,a.inj);
+        if(perc<=0.05){st='✓ bate';stc='#2E7D32';}
+        else if(a.dif>0){st='⚠ '+engKwh(a.dif)+' a menos';stc='#C62828';}
+        else{st='⚠ '+engKwh(-a.dif)+' a mais';stc='#E65100';}}
+      h+='<tr style="border-top:1px solid #eee"><td style="padding:6px;font-weight:600">'+a.nome+'</td>'
+        +'<td style="padding:6px;text-align:right;color:#2E7D32">'+engKwh(a.ger)+'</td>'
+        +'<td style="padding:6px;text-align:right;color:#1565C0">'+engKwh(a.inj)+'</td>'
+        +'<td style="padding:6px;text-align:right;font-weight:700;color:'+stc+'">'+(temAmbos?st:'—')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<div style="font-size:12px;color:#999;margin-top:8px">Cada lugar tem seu medidor: o de Perdigão (Casa) registra os 2 inversores de lá, e o da Roça registra o inversor da Roça. Diferença pequena num mês pode ser só o desencontro das datas de leitura — o que vale mesmo é o acumulado de vários meses.</div>';
     h+='</div>';
   }
   h+='<div style="font-size:12px;color:#999;margin:0 0 14px">A energia que sobra na Roça e na Casa vira crédito pra Loja 2 — por isso o que vale é o <b>total</b> (tudo somado).</div>';
