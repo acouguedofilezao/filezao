@@ -57,7 +57,7 @@ header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-betwe
 
 /* ===== Palco ===== */
 main{flex:1 1 auto;position:relative;min-height:0}
-#stage{position:absolute;inset:1vh 3.2vw 1.2vh;opacity:1;transition:transform .5s cubic-bezier(.66,0,.2,1),opacity .42s ease;overflow:hidden;will-change:transform,opacity}
+#stage{position:absolute;inset:1vh 3.2vw 1.2vh;opacity:1;transition:opacity .6s ease,transform .9s cubic-bezier(.2,.6,.2,1);overflow:hidden;will-change:transform,opacity}
 #stage.board{display:flex;flex-wrap:wrap;align-content:flex-start;gap:1.5vh 1.4vw}
 #stage:not(.board){display:flex;align-items:center;justify-content:center}
 
@@ -166,6 +166,7 @@ main{flex:1 1 auto;position:relative;min-height:0}
 .clima .churras b{display:block;font-family:'Anton';font-size:3.4vh;color:var(--cream);text-transform:uppercase;margin-bottom:.5vh}
 .clima .churras span{font-size:2.1vh;color:var(--muted)}
 .clima .churras.alt{background:linear-gradient(90deg,rgba(255,255,255,.05),transparent)}
+.clima .churras.caldo{background:linear-gradient(90deg,rgba(255,150,40,.16),transparent);border-left-color:#ff9628}
 
 /* ===== Kit do dia ===== */
 .kit{animation:fadeIn .6s both;max-width:86vw;width:100%}
@@ -475,7 +476,10 @@ function climaHTML(){
   var strip='';var lim=Math.min(4,c.dias.length);
   for(var i=0;i<lim;i++){var d=c.dias[i];strip+='<div class="cd'+(i===0?' on':'')+'"><b>'+(i===0?'Hoje':diaSemanaCurto(d.data))+'</b>'+climaIcon(d.code,false)+'<span class="t">'+d.tmax+'°<i>'+d.tmin+'°</i></span></div>';}
   var banner='';
-  if(c.churras){
+  var frio=isFinite(c.tempAgora)&&c.tempAgora<=20;
+  if(frio){
+    banner='<div class="churras caldo"><b>Tá frio? Dia de caldo!</b><span>'+(isFinite(c.tempAgora)?c.tempAgora+'° em '+esc(c.nome)+' · ':'')+climaLabel(c.codeAgora)+'. Passa aqui e leva costela, músculo ou ossobuco pra um caldo caprichado.</span></div>';
+  }else if(c.churras){
     var dd=c.churras.dia; var quando=c.churras.hoje?'Hoje':(diaSemanaCurto(dd.data)==='Sáb'?'Sábado':'Domingo');
     banner='<div class="churras"><b>'+(c.churras.hoje?'Hoje é dia de churrasco!':quando+' tá pra churrasco!')+'</b><span>'+climaLabel(dd.code)+' · máx '+dd.tmax+'° · chuva '+(dd.chuva==null?'—':dd.chuva+'%')+'. Já separa a picanha aqui com a gente.</span></div>';
   }else{
@@ -578,14 +582,14 @@ function rotate(){
 function deslizarPara(setIdx){
   var stage=document.getElementById('stage');
   if(!stage){setIdx();showPage();agendarRotacao();return;}
-  stage.style.transform='translateX(-100%)';stage.style.opacity='0';
+  stage.style.opacity='0';stage.style.transform='scale(1.025)';
   setTimeout(function(){
     setIdx();showPage();
-    stage.style.transition='none';stage.style.transform='translateX(100%)';stage.style.opacity='0';
+    stage.style.transition='none';stage.style.opacity='0';stage.style.transform='scale(1.05)';
     void stage.offsetWidth;
-    stage.style.transition='';stage.style.transform='translateX(0)';stage.style.opacity='1';
+    stage.style.transition='';stage.style.opacity='1';stage.style.transform='scale(1)';
     agendarRotacao();
-  },500);
+  },600);
 }
 
 function montarPaginas(rows){
