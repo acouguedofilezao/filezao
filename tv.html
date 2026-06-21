@@ -428,14 +428,13 @@ var FALA_IDX=0;
 var FALA_INTERVALO=5*60*1000;   /* a cada 5 minutos */
 var FALA_PRIMEIRA=25*1000;      /* primeira após 25s */
 var _falaVoz=null,_falando=false;
-var ANUNCIO_URL='anuncio.mp3?v=2';
+var ANUNCIO_URL='anuncio2.mp3';
 var _anuncioAudio=null,_anuncioUnlocked=false;
 function falaFrases(){
-  var anos;try{anos=(typeof agoraBR==='function'?agoraBR():new Date()).getFullYear()-1997;}catch(e){anos=(new Date()).getFullYear()-1997;}
   return [
-    'Casa de Carnes Filezão, o seu açougue favorito! Aqui você sempre encontra novidades: cortes diferentes, produtos exclusivos e lançamentos que você não acha em qualquer lugar. Esse é o nosso diferencial, há '+anos+' anos.',
-    'Novidade é aqui na Casa de Carnes Filezão! Estamos sempre trazendo cortes especiais e produtos novos pra você experimentar. Venha conferir as novidades da Filezão, o seu açougue favorito!',
-    'Na Casa de Carnes Filezão você encontra sempre algo novo. São '+anos+' anos inovando e trazendo o que há de melhor em carnes. Fique de olho nas nossas novidades!'
+    'Casa de Carnes Filezão. Desde 1997, oferecendo qualidade, tradição e sempre buscando o melhor para você. Aqui você encontra novidades: cortes diferentes e produtos exclusivos que são o nosso diferencial. Filezão, o seu açougue favorito. Venha conferir!',
+    'Casa de Carnes Filezão, o seu açougue favorito desde 1997. Buscamos sempre qualidade, melhoria e novidades para a sua mesa. Venha conhecer os nossos cortes especiais e produtos exclusivos!',
+    'Há mais de duas décadas, a Casa de Carnes Filezão leva qualidade e tradição até você. Estamos sempre inovando, com novos cortes e produtos que você não encontra em qualquer lugar. Filezão: qualidade e novidade que você confia.'
   ];
 }
 function falaTTS(volta){
@@ -456,9 +455,11 @@ function falaPickVoz(){
 }
 function falaAnuncio(){
   if(_falando)return;
-  var eraRadio=false;try{eraRadio=!!(mplaying&&mplayer&&!mplayer.paused);if(eraRadio)mplayer.pause();}catch(e){}
+  var tocando=false;try{tocando=!!(mplaying&&mplayer&&!mplayer.paused);}catch(e){}
+  if(!tocando)return;   /* rádio pausada/desligada -> não anuncia */
+  try{mplayer.pause();}catch(e){}
   _falando=true;
-  function volta(){if(!_falando)return;_falando=false;try{if(eraRadio){var p=mplayer.play();if(p&&p.catch)p.catch(function(){});}}catch(e){}}
+  function volta(){if(!_falando)return;_falando=false;try{var p=mplayer.play();if(p&&p.catch)p.catch(function(){});}catch(e){}}
   /* rede de segurança: se nada disparar, volta a rádio em 90s */
   setTimeout(volta,90000);
   try{
