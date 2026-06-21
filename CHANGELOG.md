@@ -1,5 +1,17 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — Sistema: correção do relatório "Saldo diário"
+- **Bug:** o relatório mostrava **o mesmo saldo em todos os dias**. Motivo: ao importar o OFX, o sistema guardava só **um** número (o saldo final do extrato, `LEDGERBAL`) na data de fechamento — então o relatório repetia esse valor pra frente em todos os dias.
+- **Correção:** agora, na importação do OFX, o sistema **reconstrói o saldo de fechamento de cada dia** a partir das transações (parte do saldo final e acumula dia a dia). Cada dia passa a mostrar o saldo real daquele dia.
+- **Para preencher o histórico antigo:** reimporte os extratos OFX dos períodos que você quer ver dia a dia (os imports antigos só tinham um saldo cada). Daqui pra frente, todo OFX importado já preenche os dias automaticamente.
+
+## 2026-06-21 — TV: fotos, telas de exclusivo, dots clicáveis e slide nas transições
+- **Foto dos produtos:** volta a **preencher o card** (sem fundo preto nem desfocado). A faixa de descrição/preço ficou **menor** (nome em 1 linha) pra **sobrar mais espaço pra carne**.
+- **Tela de produto exclusivo (Novidade/Oferta):** **foto bem maior** (60vh) e **nome/preço aumentados**, aproveitando o espaço que sobrava na tela.
+- **Selos:** "Novidade da Casa" → **NOVIDADE FILEZÃO** e "Oferta da Casa" → **OFERTA FILEZÃO**.
+- **Dots viraram botões:** os pontinhos embaixo agora são **clicáveis** — seleciona pelo controle e **pula direto pra aquela tela**, sem esperar o rodízio. Continuam mostrando a posição atual e o rodízio segue normal depois.
+- **Transição em slide:** a troca de telas agora **desliza** (a tela sai pra esquerda e a próxima entra pela direita), tanto no rodízio automático quanto ao clicar num ponto.
+
 ## 2026-06-21 — TV: cabeçalho novo, logo maior e rádio repaginada
 - **Textos do cabeçalho:** "Seu açougue favorito ♥ • Perdigão/MG" / **Casa de Carnes Filezão** / "Desde 1997 • XX anos de tradição e qualidade • peça pelo nosso delivery". O "XX anos" **atualiza sozinho** (ano atual − 1997).
 - **Logo aumentada** (mais presença no topo).

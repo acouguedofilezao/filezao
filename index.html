@@ -2285,17 +2285,42 @@ function saldoCapturar(text){
   var org=((text.match(/<ORG>([^<\r\n]*)/)||[])[1]||'').trim();
   var lb=text.match(/<LEDGERBAL>[\s\S]*?<BALAMT>([^<\r\n]*)[\s\S]*?<DTASOF>([^<\r\n]*)/);
   if(!acct||!lb)return;
-  var saldo=parseFloat(lb[1]);if(isNaN(saldo))return;
+  var saldoFinal=parseFloat(lb[1]);if(isNaN(saldoFinal))return;
   var raw=(lb[2]||'').replace(/[^0-9]/g,'').slice(0,14);
-  var iso=raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8);
-  var _dd=saldoDiaGet(),_dk=acct+'|'+iso,_dpv=_dd[_dk];
-  if(!_dpv||(''+raw)>=(''+(_dpv.ts||''))){_dd[_dk]={acctid:acct,banco:org,data:iso,saldo:saldo,ts:raw};saldoDiaSet(_dd);saldoDiaCloudSave(_dd[_dk]);}
+  var isoAsof=raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8);
+
+  // ── saldo de CADA dia, reconstruído a partir das transações do extrato ──
+  // parte do saldo final (LEDGERBAL na data do extrato) e acumula dia a dia
+  var blocks=text.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/g)||[];
+  var porDia={},total=0,temTxn=false;
+  blocks.forEach(function(b){
+    var amt=parseFloat(impTag(b,'TRNAMT'))||0;
+    var dt=(impTag(b,'DTPOSTED')||'').slice(0,8);if(dt.length<8)return;
+    var iso=dt.slice(0,4)+'-'+dt.slice(4,6)+'-'+dt.slice(6,8);
+    if(iso>isoAsof)return; // ignora lançamentos depois da data do saldo
+    porDia[iso]=r2((porDia[iso]||0)+amt);total=r2(total+amt);temTxn=true;
+  });
+  var _dd=saldoDiaGet();
+  function _guarda(iso,sd){
+    var dk=acct+'|'+iso,pv=_dd[dk];
+    if(!pv||(''+raw)>=(''+(pv.ts||''))){_dd[dk]={acctid:acct,banco:org,data:iso,saldo:r2(sd),ts:raw};saldoDiaCloudSave(_dd[dk]);}
+  }
+  if(temTxn){
+    var run=r2(saldoFinal-total); // saldo de abertura do período (antes do 1º lançamento)
+    Object.keys(porDia).sort().forEach(function(iso){run=r2(run+porDia[iso]);_guarda(iso,run);}); // saldo de fechamento de cada dia
+    _guarda(isoAsof,saldoFinal); // garante o saldo oficial na data do extrato
+  }else{
+    _guarda(isoAsof,saldoFinal); // extrato sem transações: guarda só o saldo da data
+  }
+  saldoDiaSet(_dd);
+
+  // ── saldo "atual" da conta (comportamento de antes) ──
   var m=saldoGet(),cur=m[acct];
   if(!cur||(''+raw)>=(''+(cur.ts||''))){
-    var _novo=(!cur||cur.saldo!==saldo);
-    m[acct]={acctid:acct,banco:org,saldo:saldo,data:iso,ts:raw,imp:Date.now(),label:(cur&&cur.label)||''};
+    var _novo=(!cur||cur.saldo!==saldoFinal);
+    m[acct]={acctid:acct,banco:org,saldo:saldoFinal,data:isoAsof,ts:raw,imp:Date.now(),label:(cur&&cur.label)||''};
     saldoSet(m);saldoCloudSave(m[acct]);
-    if(_novo){try{logReg('Saldo bancário','Importou',(org||'')+' · conta '+acct,(cur?fmt(cur.saldo):''),fmt(saldo)+' em '+fd(iso));}catch(e){}}
+    if(_novo){try{logReg('Saldo bancário','Importou',(org||'')+' · conta '+acct,(cur?fmt(cur.saldo):''),fmt(saldoFinal)+' em '+fd(isoAsof));}catch(e){}}
   }
 }
 function saldoCloudSave(s){if(!s)return;try{sbUpsert('saldos',[{acctid:s.acctid,banco:s.banco,saldo:s.saldo,data:s.data,ts:s.ts,label:s.label||''}]).catch(function(){});}catch(e){}}
