@@ -70,11 +70,11 @@ main{flex:1 1 auto;position:relative;min-height:0}
 .card{position:relative;width:calc(33.333% - .94vw);height:32vh;background:var(--panel);border:1px solid var(--line);
   border-radius:1.3vh;overflow:hidden;box-shadow:0 2.2vh 4.6vh rgba(0,0,0,.55);display:flex;flex-direction:column;animation:fadeUp .55s both}
 .card .photo{position:relative;width:100%;flex:1 1 auto;min-height:0;background:radial-gradient(circle at 50% 40%,#16161a,#0c0c0e);overflow:hidden}
-.card .photo img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain;filter:saturate(1.06) contrast(1.04)}
+.card .photo img{width:100%;height:100%;object-fit:cover;filter:saturate(1.06) contrast(1.04) brightness(.99)}
 .card .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#1b1b1f,#0f0f11)}
 .card .tag{position:absolute;top:1vh;left:1vh;background:var(--red);color:#fff;font-family:'Anton';font-size:1.4vh;
   letter-spacing:1px;padding:.6vh 1vw;border-radius:.5vh;box-shadow:0 0 1.6vh var(--glow);z-index:2;text-transform:uppercase;font-size:1.8vh}
-.card .cap{padding:1.2vh 1.2vw 1.3vh;background:linear-gradient(180deg,rgba(22,22,26,.4),var(--panel))}
+.card .cap{padding:.85vh 1.2vw .95vh;background:linear-gradient(180deg,rgba(22,22,26,.4),var(--panel))}
 .card .cap .cat{display:flex;align-items:center;gap:.45vw;color:var(--muted);font-size:1.55vh;letter-spacing:.16vw;text-transform:uppercase;margin-bottom:.45vh}
 .card .cap .cat .cic{width:2.3vh;height:2.3vh;color:var(--red);flex:0 0 auto}
 .card .nm{font-family:'Anton';font-size:3.2vh;line-height:.98;color:var(--cream);letter-spacing:.3px;margin-bottom:.5vh;text-transform:uppercase;
@@ -86,8 +86,7 @@ main{flex:1 1 auto;position:relative;min-height:0}
 .card .pr .un{font-size:1.7vh;color:var(--muted)}
 .card.promo{border-color:rgba(255,26,26,.5)}
 
-.card .photo .bd,.feat .pic .bd{position:absolute;inset:-10%;background-size:cover;background-position:center;filter:blur(2.4vh) brightness(.5) saturate(1.1);transform:scale(1.12);z-index:0;pointer-events:none}
-  /* QR card */
+/* QR card */
 .qrcard{width:calc(33.333% - .94vw);height:32vh;background:var(--panel);border:1px solid var(--line);border-radius:1.3vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;padding:1.6vh;box-shadow:0 2.2vh 4.6vh rgba(0,0,0,.55);animation:fadeUp .55s both}
 .qrcard .qrimg{height:58%;width:auto;border-radius:1vh;background:#fff;padding:1vh}
@@ -99,7 +98,7 @@ main{flex:1 1 auto;position:relative;min-height:0}
 .feat{display:flex;align-items:center;gap:4vw;width:100%;max-width:90vw}
 .feat .pic{position:relative;flex:0 0 auto;width:44vh;height:44vh;border:.5vh solid var(--red);border-radius:2vh;overflow:hidden;
   box-shadow:0 3vh 7vh rgba(0,0,0,.7),0 0 6vh var(--glow);animation:slideR .9s both}
-.feat .pic img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain}
+.feat .pic img{width:100%;height:100%;object-fit:cover}
 .feat .pic .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#1b1b1f,#0f0f11)}
 .feat .meta{flex:1 1 auto;animation:slideL .9s .12s both}
 .feat .meta .kick{display:inline-flex;align-items:center;background:var(--red);color:#fff;font-family:'Anton';font-size:2.3vh;
@@ -196,9 +195,10 @@ main{flex:1 1 auto;position:relative;min-height:0}
 /* ===== Rodapé ===== */
 footer{flex:0 0 auto;padding:0 3.2vw 2vh}
 .foot-info{display:flex;align-items:center;justify-content:space-between;gap:2vw;margin-bottom:1vh}
-.dots{display:flex;gap:.7vw;align-items:center}
-.dots .d{height:1vh;width:1vh;border-radius:6px;background:rgba(255,255,255,.13);transition:all .5s cubic-bezier(.6,0,.2,1)}
-.dots .d.on{width:4.4vh;background:var(--red);box-shadow:0 0 1.6vh var(--glow)}
+.dots{display:flex;gap:.9vw;align-items:center;flex-wrap:wrap}
+.dots .d{height:1.7vh;width:1.7vh;border-radius:999px;background:rgba(255,255,255,.16);border:none;padding:0;cursor:pointer;transition:all .3s cubic-bezier(.6,0,.2,1)}
+.dots .d:hover,.dots .d:focus{background:var(--cream);transform:scale(1.22);box-shadow:0 0 1.4vh var(--glow);outline:none}
+.dots .d.on{width:5vh;background:var(--red);box-shadow:0 0 1.6vh var(--glow)}
 .foot-info span{font-size:1.6vh;color:var(--muted);letter-spacing:.06vw}
 .ticker{overflow:hidden;border-top:1px solid var(--line);padding-top:1vh}
 .ticker-track{display:inline-block;white-space:nowrap;font-size:1.95vh;letter-spacing:.2vw;color:var(--muted);text-transform:uppercase;animation:ticker 32s linear infinite}
@@ -315,7 +315,7 @@ function cardHTML(p){
   var promo=emPromo(p);
   var preco=promo?Number(p.promo_preco):Number(p.preco);
   var de=promo?'<span class="de">R$ '+fmtPreco(p.preco)+'</span>':'';
-  var photo='<div class="photo">'+(foto?'<div class="bd" style="background-image:url(&quot;'+esc(foto)+'&quot;)"></div><img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb())+'</div>';
+  var photo='<div class="photo">'+(foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb())+'</div>';
   return '<div class="card'+(promo?' promo':'')+'">'+photo
     +(promo?'<span class="tag">Oferta</span>':'')
     +'<div class="cap"><div class="cat">'+catIcon(cat)+'<span>'+esc(cat)+'</span></div>'
@@ -340,8 +340,16 @@ function productBoardHTML(page){
 function renderDots(){
   var el=document.getElementById('dots');if(!el)return;
   if(SEQ.length<=1){el.innerHTML='';return;}
-  var h='';for(var i=0;i<SEQ.length;i++)h+='<div class="d'+(i===cur?' on':'')+'"></div>';
+  var h='';for(var i=0;i<SEQ.length;i++)h+='<button type="button" class="d'+(i===cur?' on':'')+'" onclick="irParaTela('+i+')" aria-label="Tela '+(i+1)+'"></button>';
   el.innerHTML=h;
+}
+function irParaTela(i){
+  if(i<0||i>=SEQ.length)return;
+  cur=i;
+  clearTimeout(_rotTimer);
+  var st=document.getElementById('stage');if(st)st.style.opacity='1';
+  showPage();
+  agendarRotacao();
 }
 function qrUrl(data){return 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=0&color=1a1a1a&bgcolor=ffffff&data='+encodeURIComponent(data);}
 var QR_SITE=qrUrl('https://casa-de-carnes-filezao.onbeef.app.br/');
@@ -398,7 +406,7 @@ function promoFullHTML(p){
   var un=(p.unidade==='UN')?'un':'kg';
   var cat=catProd(p);
   var foto=(p.foto||'').trim();
-  var pic=foto?'<div class="bd" style="background-image:url(&quot;'+esc(foto)+'&quot;)"></div><img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
+  var pic=foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
   var ate=p.promo_ate?'<div class="ate">Oferta válida até <b>'+fdBR(p.promo_ate)+'</b></div>':'';
   return '<div class="feat promo"><div class="pic">'+pic+'</div>'
     +'<div class="meta"><div class="kick">Oferta da casa</div>'
@@ -412,7 +420,7 @@ function lancFullHTML(p){
   var un=(p.unidade==='UN')?'un':'kg';
   var cat=catProd(p);
   var foto=(p.foto||'').trim();
-  var pic=foto?'<div class="bd" style="background-image:url(&quot;'+esc(foto)+'&quot;)"></div><img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
+  var pic=foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
   var preco=Number(p.preco)>0?'<div class="priceln"><span class="cif">R$</span><span class="val">'+fmtPreco(p.preco)+'</span><span class="un">/'+un+'</span></div>':'';
   return '<div class="feat novo"><div class="pic">'+pic+'</div>'
     +'<div class="meta"><div class="kick">Novidade da casa</div>'
