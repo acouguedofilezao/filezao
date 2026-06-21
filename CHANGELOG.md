@@ -1,5 +1,13 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — TV: ajustes finais (bio original, fontes maiores, rádio melhor)
+- **Bio de volta ao original:** cabeçalho mostra de novo "Açougue de tradição · Perdigão/MG", **Casa de Carnes Filezão** e "Desde 1997 · X anos de casa · qualidade que você confia" — só que no estilo novo.
+- **Fontes maiores** no geral, principalmente no cabeçalho (logo, título, relógio e datas bem maiores), pra ficar legível na TV de longe. Nomes de produto, preços, categorias, clima e rodapé também aumentaram.
+- **Rádio:** botões bem **maiores** (fáceis de selecionar pelo controle da TV) e com destaque forte quando selecionados. O nome da estação agora tem largura fixa, então **os botões não se mexem mais** ao pausar ou trocar de estação.
+
+## 2026-06-21 — TV: tela "Sugestão da casa" (Kit) desligada
+- A tela do Kit do dia saiu do rodízio (a pedido). Clima e o restante seguem ativos. Pra voltar, `KIT_DIA.ativo=true`.
+
 ## 2026-06-21 — TV: cara nova (design "Açougue Premium" do Claude Design)
 - Painel inteiro repaginado com a identidade do design que você criou: fundo escuro cinematográfico com **brilho vermelho** animado e textura de linhas, **vermelho #FF1A1A + creme #F3ECE0**, fontes **Anton** (títulos/preços) e **Oswald** (texto), cabeçalho com selo **"ABERTO"** pulsando + relógio, e **dots** animados embaixo.
 - **Todo o motor continua igual**: dados do Supabase, rodízio de telas, rádio, anúncio falado, relógio de Brasília, clima + dia de churrasco, kit do dia, QR, keep-awake e teclas da Fire Stick. Só mudou a aparência.
