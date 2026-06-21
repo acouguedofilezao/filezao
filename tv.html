@@ -57,7 +57,7 @@ header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-betwe
 
 /* ===== Palco ===== */
 main{flex:1 1 auto;position:relative;min-height:0}
-#stage{position:absolute;inset:1vh 3.2vw 1.2vh;opacity:1;transition:opacity .35s ease;overflow:hidden}
+#stage{position:absolute;inset:1vh 3.2vw 1.2vh;opacity:1;transition:transform .5s cubic-bezier(.66,0,.2,1),opacity .42s ease;overflow:hidden;will-change:transform,opacity}
 #stage.board{display:flex;flex-wrap:wrap;align-content:flex-start;gap:1.5vh 1.4vw}
 #stage:not(.board){display:flex;align-items:center;justify-content:center}
 
@@ -344,12 +344,9 @@ function renderDots(){
   el.innerHTML=h;
 }
 function irParaTela(i){
-  if(i<0||i>=SEQ.length)return;
-  cur=i;
+  if(i<0||i>=SEQ.length||i===cur)return;
   clearTimeout(_rotTimer);
-  var st=document.getElementById('stage');if(st)st.style.opacity='1';
-  showPage();
-  agendarRotacao();
+  deslizarPara(function(){cur=i;});
 }
 function qrUrl(data){return 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=0&color=1a1a1a&bgcolor=ffffff&data='+encodeURIComponent(data);}
 var QR_SITE=qrUrl('https://casa-de-carnes-filezao.onbeef.app.br/');
@@ -409,7 +406,7 @@ function promoFullHTML(p){
   var pic=foto?'<img src="'+esc(foto)+'" onerror="this.parentNode.innerHTML=fb()">':fb();
   var ate=p.promo_ate?'<div class="ate">Oferta válida até <b>'+fdBR(p.promo_ate)+'</b></div>':'';
   return '<div class="feat promo"><div class="pic">'+pic+'</div>'
-    +'<div class="meta"><div class="kick">Oferta da casa</div>'
+    +'<div class="meta"><div class="kick">Oferta Filezão</div>'
     +'<div class="cat">'+catIcon(cat)+'<span>'+esc(cat)+'</span></div><div class="nm">'+esc(nome)+'</div><div class="rule"></div>'
     +'<div class="de">de R$ '+fmtPreco(p.preco)+' /'+un+'</div>'
     +'<div class="priceln"><span class="por">por</span><span class="cif">R$</span><span class="val">'+fmtPreco(p.promo_preco)+'</span><span class="un">/'+un+'</span></div>'
@@ -576,9 +573,19 @@ function tempoTela(){var sl=SEQ[cur]||{};return DUR[sl.tipo]||ROTACAO_MS;}
 function agendarRotacao(){clearTimeout(_rotTimer);_rotTimer=setTimeout(rotate,tempoTela());}
 function rotate(){
   if(SEQ.length<=1){agendarRotacao();return;}
+  deslizarPara(function(){cur=(cur+1)%SEQ.length;});
+}
+function deslizarPara(setIdx){
   var stage=document.getElementById('stage');
-  stage.style.opacity='0';
-  setTimeout(function(){cur=(cur+1)%SEQ.length;showPage();stage.style.opacity='1';agendarRotacao();},350);
+  if(!stage){setIdx();showPage();agendarRotacao();return;}
+  stage.style.transform='translateX(-100%)';stage.style.opacity='0';
+  setTimeout(function(){
+    setIdx();showPage();
+    stage.style.transition='none';stage.style.transform='translateX(100%)';stage.style.opacity='0';
+    void stage.offsetWidth;
+    stage.style.transition='';stage.style.transform='translateX(0)';stage.style.opacity='1';
+    agendarRotacao();
+  },500);
 }
 
 function montarPaginas(rows){
