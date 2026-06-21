@@ -1,11 +1,22 @@
 # CHANGELOG — Sistema Filezão
 
-## 2026-06-21 — TV: botão "Notícias / TV ao vivo"
-- Novo botão **TV** no cabeçalho. Ao clicar, abre o **modo notícias** com os canais **oficiais e gratuitos** de Minas/BH e um botão **"Voltar pra tabela"**.
-- Canais: **Itatiaia** (notícias Minas/BH, 24h), **TV Band Minas**, **Record Minas** (MG no Ar, Balanço Geral MG, Cidade Alerta) e **TV Horizonte** (BH).
-- **Como funciona:** tocar num canal **abre o telejornal ao vivo direto no YouTube** (numa nova aba). Foi preciso fazer assim porque as emissoras de jornal **bloqueiam a exibição embutida** em outros sites (dava "vídeo não disponível"). Abrindo no YouTube, sempre toca.
-- Ao abrir o modo TV, a **rádio pausa sozinha** e o rodízio de telas para; ao voltar, a rádio religa e a tabela volta a girar. O botão **Voltar** do controle fecha o modo TV.
-- Itatiaia é 24h; Band/Record Minas ficam ao vivo nos horários dos telejornais. Não usamos IPTV pirata (Globo/SBT/Record por lista) por risco de multa.
+## 2026-06-21 — Segurança: logout ao fechar a aba + por inatividade (index.html)
+- **Novo:** ao **fechar a aba/navegador**, ao reabrir o sistema **pede login de novo** (antes continuava logado mesmo após fechar). Recarregar na mesma aba segue valendo, pra não pedir senha a cada F5.
+- A sessão **não fica mais salva pra sempre**. Depois de **15 minutos parado** (sem mexer), o sistema **desloga sozinho** e cai na tela de login. Se alguém pegar seu celular/notebook parado, não entra direto.
+- Enquanto você está usando, continua logado normal (a atividade renova o tempo). Mostra "Sessão encerrada por inatividade" no login quando desloga sozinho.
+- Pra mudar o tempo: `AUTH_IDLE_MIN` no topo do bloco de login (ex.: 5, 10, 30). Se preferir deslogar **sempre que recarregar**, dá pra trocar — é só pedir.
+
+## 2026-06-21 — TV: vídeos removidos (clima e kit mantidos)
+- A tela de **vídeos próprios** foi removida do painel a pedido. Continuam ativas as telas de **Clima + dia de churrasco** e **Kit do dia + carne por pessoa**.
+
+## 2026-06-21 — TV: três telas novas no rodízio (Clima, Kit do dia, Vídeos)
+- **Clima + dia de churrasco:** tela com o tempo de Perdigão agora + próximos dias e um aviso forte quando o fim de semana está bom pra churrasco ("Sábado tá pra churrasco!"). Dados da API aberta Open-Meteo (de graça, sem cadastro), no horário de Brasília. Atualiza sozinha a cada 30 min.
+- **Kit do dia + carne por pessoa:** tela com um combo de churrasco (editável) e o guia "quanto de carne por pessoa" + tabela rápida (6/10/15/20 pessoas). Pra editar o kit, mexa no `KIT_DIA` lá no topo do `tv.html` (título, itens, preço).
+- **Vídeos próprios em loop:** o painel pode tocar seus próprios vídeos (corte, churrasco, bastidores) entre as telas, **sem som** (a rádio continua). Fica desligado até você criar um `videos.json` na pasta do site listando os arquivos. Ex.: `["videos/picanha.mp4","videos/linguica.mp4"]`. Sem copyright, 100% seu.
+- As três entram **espaçadas** no rodízio, sem atrapalhar preços e promoções. Clima e Kit já funcionam de cara; vídeo ativa quando você subir os arquivos.
+
+## 2026-06-21 — TV: função de "Notícias / TV ao vivo" removida
+- A função de TV ao vivo foi **removida**. Dependia do YouTube/emissora liberar a exibição, o que fica fora do nosso controle e não funcionava de forma confiável. Painel voltou ao foco: preços, rádio e telas da casa.
 
 ## 2026-06-21 — TV: painel na identidade da marca (vermelho/branco/preto)
 - Painel redesenhado na **identidade da Filezão**: paleta **vermelho (#F40000) + branco + preto**, tirada da própria logo (o boi "FILEZÃO").

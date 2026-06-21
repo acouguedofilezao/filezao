@@ -156,38 +156,49 @@
   .ticker-track span{font-size:2vh;font-weight:800;letter-spacing:.26vw;color:#fff;text-transform:uppercase}
   @keyframes ticker{from{transform:translateX(-50%)}to{transform:translateX(0)}}
   
-  /* ----- modo TV / notícias ao vivo ----- */
-  #tvmode{display:none;position:fixed;inset:0;z-index:50;background:#0a0a0c;flex-direction:column}
-  .tvbar{flex:0 0 auto;display:flex;align-items:center;gap:1.2vw;padding:1.3vh 2.5vw;background:linear-gradient(180deg,#161619,#0e0e11);border-bottom:.3vh solid var(--red)}
-  .tvbar .tvtitle{font-weight:800;font-size:2.1vh;text-transform:uppercase;letter-spacing:.18vw;color:#fff;flex:0 0 auto}
-  .tvbar .tvtitle::before{content:"\25CF";color:var(--red);margin-right:.6vw;font-size:1.5vh;vertical-align:.2vh}
-  .tvchans{display:flex;gap:.9vw;flex:1 1 auto;flex-wrap:wrap}
-  .tvchan{display:flex;flex-direction:column;align-items:flex-start;gap:.1vh;padding:.85vh 1.5vw;border-radius:.7vh;border:.16vh solid var(--line);background:var(--ink-2);color:var(--bone);cursor:pointer;text-align:left;transition:all .15s}
-  .tvchan b{font-size:1.95vh;font-weight:800;letter-spacing:.3px}
-  .tvchan span{font-size:1.3vh;color:var(--bone-2);font-weight:500}
-  .tvchan:hover,.tvchan:focus{border-color:var(--red);outline:none}
-  .tvchan.on{background:var(--red);border-color:var(--red)}
-  .tvchan.on b,.tvchan.on span{color:#fff}
-  .tvopen{flex:0 0 auto;font-size:1.45vh;font-weight:600;color:var(--bone-2);text-decoration:none;border:.14vh solid var(--line);padding:.85vh 1.3vw;border-radius:.7vh}
-  .tvopen:hover,.tvopen:focus{border-color:var(--red);color:#fff;outline:none}
-  .tvback{flex:0 0 auto;font-size:1.75vh;font-weight:800;text-transform:uppercase;letter-spacing:.08vw;color:#fff;background:var(--red);border:none;padding:1vh 1.9vw;border-radius:.7vh;cursor:pointer}
-  .tvback:hover,.tvback:focus{filter:brightness(1.12);outline:none}
-  .tvstage{flex:1 1 auto;position:relative;background:#000}
-  .tvstage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  .tvtrigger{display:flex;align-items:center;gap:.5vw;height:5.4vh;padding:0 1.5vw;border-radius:999px;border:.16vh solid var(--red);background:transparent;color:#fff;font-weight:800;font-size:1.7vh;text-transform:uppercase;letter-spacing:.1vw;cursor:pointer;transition:all .15s;flex:0 0 auto}
-  .tvtrigger:hover,.tvtrigger:focus{background:var(--red);outline:none}
-  .tvtrigger .dotlive{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--red);box-shadow:0 0 .8vh var(--red);animation:breathe 1.6s ease-in-out infinite}
-  .tvtrigger:hover .dotlive,.tvtrigger:focus .dotlive{background:#fff;box-shadow:none}
-
-  .tvlauncher{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;padding:4vh 6vw;background:#0a0a0c}
-  .tvhint{font-size:2vh;color:var(--bone-2);text-align:center;max-width:62vw;line-height:1.5}
-  .tvhint b{color:#fff}
-  .tvgrid{display:grid;grid-template-columns:repeat(2,minmax(28vw,1fr));gap:2.4vh 2.4vw;width:100%;max-width:78vw}
-  .tvbig{display:flex;flex-direction:column;gap:.5vh;padding:2.8vh 3vw;border-radius:1vh;border:.16vh solid var(--line);background:var(--ink-2);color:#fff;text-decoration:none;transition:all .15s}
-  .tvbig:hover,.tvbig:focus{border-color:var(--red);background:#1d1316;outline:none;transform:translateY(-.4vh)}
-  .tvbig b{font-size:3.3vh;font-weight:800;letter-spacing:.3px}
-  .tvbig span{font-size:1.85vh;color:var(--bone-2);font-weight:500}
-  .tvbig em{font-style:normal;font-size:1.75vh;font-weight:700;color:var(--red);margin-top:.7vh;letter-spacing:.05vw}
+ 
+  /* ----- telas especiais: clima ----- */
+  #stage{position:relative}
+  .info.clima{gap:1.6vh}
+  .climanow{display:flex;align-items:center;gap:2vw}
+  .climabig{width:13vh;height:13vh}
+  .climasm{width:4.6vh;height:4.6vh}
+  .cnT{display:flex;flex-direction:column;align-items:flex-start}
+  .cnTemp{font-size:9vh;font-weight:800;line-height:.9;color:#fff}
+  .cnDesc{font-size:2.2vh;color:var(--bone-2);font-weight:600}
+  .climastrip{display:flex;gap:1.4vw;margin-top:.5vh}
+  .cd{display:flex;flex-direction:column;align-items:center;gap:.5vh;padding:1.2vh 1.4vw;border-radius:1vh;border:.14vh solid var(--line);background:var(--ink-2);min-width:8.6vw}
+  .cd.on{border-color:var(--red)}
+  .cd b{font-size:1.85vh;color:var(--bone);font-weight:700}
+  .cd .t{font-size:2.2vh;font-weight:800;color:#fff}
+  .cd .t i{font-style:normal;font-size:1.5vh;color:var(--bone-2);margin-left:.4vw}
+  .churras{margin-top:1.2vh;max-width:76vw;display:flex;flex-direction:column;gap:.4vh;padding:1.6vh 2.4vw;border-radius:1vh;background:linear-gradient(90deg,#2a0c0c,#170a0a);border:.16vh solid var(--red)}
+  .churras b{font-size:3vh;font-weight:800;color:#fff}
+  .churras span{font-size:1.9vh;color:var(--bone)}
+  .churras.alt{background:var(--ink-2);border-color:var(--line)}
+  /* ----- kit do dia ----- */
+  .info.kit{gap:1.2vh}
+  .kitgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:2.2vw;width:86vw;max-width:86vw;align-items:stretch;text-align:left}
+  .kitcombo{display:flex;flex-direction:column;gap:.9vh;padding:2.2vh 2.4vw;border-radius:1.2vh;background:linear-gradient(160deg,#1f1416,#120c0d);border:.16vh solid var(--red)}
+  .kitcombo .kt{font-size:3vh;font-weight:800;color:#fff}
+  .kitcombo ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.6vh}
+  .kitcombo li{font-size:2.1vh;color:var(--bone);padding-left:1.6vw;position:relative}
+  .kitcombo li::before{content:"";position:absolute;left:0;top:1vh;width:.8vh;height:.8vh;background:var(--red);border-radius:50%}
+  .kitpreco{margin-top:.4vh;color:#fff;display:flex;align-items:baseline;gap:.4vw}
+  .kitpreco .cif{font-size:2.6vh;font-weight:700;color:var(--red)}
+  .kitpreco .val{font-size:6vh;font-weight:800;line-height:.9}
+  .kitserve{font-size:1.85vh;color:var(--bone-2)}
+  .kitguia{display:flex;flex-direction:column;gap:.6vh;padding:2.2vh 2.4vw;border-radius:1.2vh;background:var(--ink-2);border:.14vh solid var(--line)}
+  .kgh{font-size:2.3vh;font-weight:800;color:#fff;margin-bottom:.3vh}
+  .krow{display:flex;align-items:center;gap:1vw;font-size:2vh;color:var(--bone)}
+  .krow b{font-weight:700;color:#fff;flex:0 0 auto}
+  .krow .ln{flex:1 1 auto;height:0;border-bottom:.12vh dotted #4a4a52}
+  .kgsub{font-size:1.65vh;color:var(--bone-2);margin-top:.5vh}
+  .kqtys{display:grid;grid-template-columns:repeat(2,1fr);gap:.6vh 1vw;margin-top:.1vh}
+  .kqty{display:flex;justify-content:space-between;font-size:1.9vh;padding:.5vh 1vw;border-radius:.7vh;background:#16161a}
+  .kqty b{color:#fff;font-weight:700}
+  .kqty span{color:var(--red);font-weight:800}
+  /* ----- vídeos próprios ----- */
 </style>
 </head>
 <body>
@@ -203,7 +214,6 @@
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:1.9vw;flex:0 0 auto">
-        <button class="tvtrigger" id="tvbtn" onclick="abrirTV()" title="Ver notícias ao vivo"><span class="dotlive"></span>TV</button>
         <div class="music"><button class="mbtn off" id="mbtn" onclick="toggleMusic()" title="Tocar / Pausar">&#9654;</button><button id="mnext" onclick="nextStation()" title="Trocar de estação">&#9197;</button><div class="minfo"><small>Rádio</small><b id="mstation">Música</b></div></div>
         <div class="clockwrap"><div class="clock" id="hora">--:--</div><div class="date" id="data">&mdash;</div></div>
       </div>
@@ -215,17 +225,6 @@
     <div class="foot-info"><div class="dots" id="dots"></div><span>Atualizado <span id="upd">&mdash;</span> &middot; Publicado <span id="pub">&mdash;</span></span></div>
     <div class="ticker"><div class="ticker-track" id="tickertrack"></div></div>
   </footer>
-  <div id="tvmode">
-    <div class="tvbar">
-      <div class="tvtitle">Notícias ao vivo</div>
-      <div style="flex:1 1 auto"></div>
-      <button class="tvback" onclick="fecharTV()">Voltar pra tabela</button>
-    </div>
-    <div class="tvstage tvlauncher">
-      <div class="tvhint">Toque num canal para assistir o telejornal ao vivo no YouTube. Para voltar, aperte <b>Voltar</b> no controle.</div>
-      <div id="tvchans" class="tvgrid"></div>
-    </div>
-  </div>
 
 <script>
 const SB_URL='https://vfrgqtuvbflkexapdzho.supabase.co';
@@ -233,7 +232,7 @@ const SB_KEY='sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5';
 const HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
 const PER_PAGE=5;
 const ROTACAO_MS=8000;   // tempo padrao por tela
-const DUR={prod:8000,promo:6500,lanc:6500,info:8000};   // tempo por tipo de tela (ms)
+const DUR={prod:8000,promo:6500,lanc:6500,info:8000,clima:11000,kit:12000};   // tempo por tipo de tela (ms)
 const REFRESH_MS=60000;   // rebusca os dados a cada 1min
 
 var CATMAP={"1":"CARNES BOVINAS","2":"CARNES BOVINAS","3":"CARNES BOVINAS","4":"CARNES BOVINAS","5":"CARNES BOVINAS","6":"CARNES BOVINAS","8":"CARNES BOVINAS","9":"CARNES BOVINAS","10":"CARNES BOVINAS","11":"CARNES BOVINAS","12":"CARNES BOVINAS","13":"CARNES BOVINAS","14":"CARNES BOVINAS","15":"CARNES BOVINAS","16":"CARNES BOVINAS","17":"CARNES BOVINAS","18":"CARNES BOVINAS","19":"CARNES BOVINAS","21":"CARNES BOVINAS","22":"TEMPERADOS E RECHEADOS","23":"CARNES BOVINAS","24":"CARNES SUINAS","25":"CARNES SUINAS","27":"CARNES SUINAS","28":"CARNES SUINAS","29":"CARNES SUINAS","30":"CARNES SUINAS","31":"CARNES SUINAS","32":"CARNES SUINAS","33":"CARNES SUINAS","34":"CARNES BOVINAS","35":"CARNES SUINAS","36":"CARNES SUINAS","37":"FRANGOS E AVES","38":"FRANGOS E AVES","39":"FRANGOS E AVES","40":"FRANGOS E AVES","41":"FRANGOS E AVES","42":"FRANGOS E AVES","44":"TEMPERADOS E RECHEADOS","45":"TEMPERADOS E RECHEADOS","46":"FRANGOS E AVES","47":"CARNES SUINAS","48":"CARNES SUINAS","49":"FRANGOS E AVES","50":"EMBUTIDOS","51":"FRANGOS E AVES","58":"TEMPERADOS E RECHEADOS","59":"LATICÍNIOS","60":"LINGUIÇAS","62":"LINGUIÇAS","63":"LINGUIÇAS","64":"LINGUIÇAS","67":"CARNES BOVINAS","68":"CARNES BOVINAS","69":"CARNES SUINAS","70":"CARNES SUINAS","71":"LINGUIÇAS","73":"LINGUIÇAS","75":"CARNES BOVINAS","76":"CARNES BOVINAS","77":"CARNES SUINAS","78":"CARNES SUINAS","80":"TEMPERADOS E RECHEADOS","81":"CARNES SUINAS","82":"TEMPERADOS E RECHEADOS","83":"TEMPERADOS E RECHEADOS","84":"FRANGOS E AVES","87":"TEMPERADOS E RECHEADOS","89":"TEMPERADOS E RECHEADOS","91":"CARNES SUINAS","92":"KITS","93":"KITS","95":"LATICÍNIOS","96":"KITS","102":"KITS","104":"TEMPERADOS E RECHEADOS","109":"LINGUIÇAS","110":"KITS","111":"LINGUIÇAS","112":"FRANGOS E AVES","113":"LINGUIÇAS","199":"ESPETINHOS","200":"ESPETINHOS","206":"TEMPERADOS E RECHEADOS","212":"MERCEARIA","213":"KITS","216":"CARNES SUINAS","234":"TEMPERADOS E RECHEADOS","237":"KITS","238":"CARNES BOVINAS","255":"CARNES BOVINAS","256":"LINGUIÇAS","260":"KITS","263":"FRANGOS E AVES","264":"TEMPERADOS E RECHEADOS","268":"LINGUIÇAS","272":"TEMPERADOS E RECHEADOS","273":"LATICÍNIOS","274":"TEMPERADOS E RECHEADOS","275":"TEMPERADOS E RECHEADOS","276":"TEMPERADOS E RECHEADOS","286":"LINGUIÇAS","287":"LINGUIÇAS","288":"CARCAÇAS","289":"CARCAÇAS","291":"KITS","292":"FRANGOS E AVES","293":"FRANGOS E AVES","294":"USO INTERNO","295":"USO INTERNO","296":"USO INTERNO","297":"USO INTERNO","303":"OUTROS","304":"USO INTERNO","311":"USO INTERNO","312":"USO INTERNO","313":"KITS","314":"ESPETINHOS","338":"ESPETINHOS","344":"CARCAÇAS","345":"CARCAÇAS","349":"KITS","356":"FRANGOS E AVES","357":"CARNES BOVINAS","358":"CARNES BOVINAS","359":"LINGUIÇAS","360":"TEMPERADOS E RECHEADOS","361":"KITS","362":"CARNES SUINAS","366":"TEMPERADOS E RECHEADOS","371":"KITS","372":"KITS","373":"KITS","374":"KITS","375":"KITS","376":"KITS","377":"KITS","378":"KITS","379":"KITS","380":"KITS","381":"KITS","382":"KITS","383":"KITS","384":"KITS","385":"KITS","386":"FRANGOS E AVES","387":"KITS","388":"KITS","389":"KITS","390":"KITS","391":"KITS","392":"KITS","393":"KITS","395":"OUTROS","396":"LATICÍNIOS","397":"LATICÍNIOS","400":"TEMPERADOS E RECHEADOS"};
@@ -262,6 +261,18 @@ function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;'
 function tick(){var d;try{d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));}catch(e){d=new Date();}var dias=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];var meses=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];document.getElementById('hora').textContent=z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds());document.getElementById('data').textContent=dias[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()]+' de '+d.getFullYear();var an=document.getElementById('anos');if(an)an.textContent=(d.getFullYear()-1997);}
 
 var PAGES=[], cur=0;
+/* ====== Telas especiais: Clima e Kit do dia ====== */
+var GEO={lat:-19.8975,lon:-45.1736,nome:'Perdigão'};
+var KIT_DIA={
+  ativo:true,
+  titulo:'Kit Churrasco da Casa',
+  itens:['1,2 kg de Picanha maturada','1 kg de Linguiça toscana','600 g de Coração de frango','2 Pães de alho'],
+  preco:'129,90',
+  serve:'serve 6 a 8 pessoas'
+};
+var CLIMA={ok:false};
+var _lastFulls=[];
+function rebuildSEQ(){ try{ SEQ=montarSequencia(PAGES,_lastFulls); if(cur>=SEQ.length)cur=0; }catch(e){} }
 
 function agoraBR(){try{return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));}catch(e){return new Date();}}
 function hojeBR(){var d=agoraBR();return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());}
@@ -397,6 +408,96 @@ function lancFullHTML(p){
     +'<div class="cat">'+catIcon(cat)+'<span>'+esc(cat)+'</span></div><div class="nm">'+esc(nome)+'</div><div class="rule"></div>'
     +preco+'<div class="ate">Exclusividade <b>Filezão</b></div></div></div>';
 }
+/* ---- Clima + dia de churrasco ---- */
+function climaIcon(code,big){
+  var s=big?'climabig':'climasm';
+  function w(inner){return '<svg class="'+s+'" viewBox="0 0 64 64" fill="none" stroke="var(--bone)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>';}
+  var sun='<circle cx="32" cy="32" r="11"/><path d="M32 6v6M32 52v6M6 32h6M52 32h6M13 13l4 4M47 47l4 4M51 13l-4 4M17 47l-4 4"/>';
+  var cloud='<path d="M20 44h26a10 10 0 0 0 .5-20A14 14 0 0 0 19 27a9 9 0 0 0 1 17z"/>';
+  var suncloud='<circle cx="22" cy="22" r="8"/><path d="M22 6v4M8 22h4M11 11l3 3M33 11l-3 3"/><path d="M26 48h22a9 9 0 0 0 .4-18A12 12 0 0 0 25 33a8 8 0 0 0 1 15z" fill="var(--ink)"/>';
+  var rain=cloud+'<path d="M24 50l-2 6M34 50l-2 6M44 50l-2 6"/>';
+  var storm=cloud+'<path d="M34 46l-6 10h7l-5 8"/>';
+  if(code===0)return w(sun);
+  if(code===1||code===2)return w(suncloud);
+  if(code===3||code===45||code===48)return w(cloud);
+  if(code>=95)return w(storm);
+  if((code>=51&&code<=67)||(code>=80&&code<=82)||(code>=71&&code<=77))return w(rain);
+  return w(suncloud);
+}
+function climaLabel(code){
+  if(code===0)return 'Céu limpo';
+  if(code===1||code===2)return 'Sol entre nuvens';
+  if(code===3)return 'Nublado';
+  if(code===45||code===48)return 'Névoa';
+  if(code>=95)return 'Tempestade';
+  if(code>=80&&code<=82)return 'Pancadas de chuva';
+  if(code>=71&&code<=77)return 'Geada/neve';
+  if(code>=51&&code<=67)return 'Chuva';
+  return 'Tempo instável';
+}
+function diaSemanaCurto(iso){var d=new Date(iso+'T12:00:00');var n=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];return n[d.getDay()];}
+function parseClima(j){
+  try{
+    var cu=j.current||{}, dl=j.daily||{};
+    var dias=[];
+    for(var i=0;i<(dl.time||[]).length;i++){
+      dias.push({data:dl.time[i],code:dl.weather_code[i],tmax:Math.round(dl.temperature_2m_max[i]),tmin:Math.round(dl.temperature_2m_min[i]),chuva:dl.precipitation_probability_max?dl.precipitation_probability_max[i]:null});
+    }
+    var churras=null;
+    for(var k=0;k<dias.length;k++){
+      var dd=new Date(dias[k].data+'T12:00:00');var wd=dd.getDay();
+      if(wd===6||wd===0){
+        var bom=(dias[k].chuva==null||dias[k].chuva<40)&&dias[k].tmax>=24&&dias[k].code<=3;
+        if(bom){churras={dia:dias[k],hoje:(k===0)};break;}
+      }
+    }
+    return {ok:true,nome:GEO.nome,tempAgora:Math.round(cu.temperature_2m),codeAgora:cu.weather_code,dias:dias.slice(0,7),churras:churras};
+  }catch(e){return {ok:false};}
+}
+function climaHTML(){
+  var c=CLIMA;if(!c||!c.ok)return infoHTML('fidelidade');
+  var strip='';var lim=Math.min(4,c.dias.length);
+  for(var i=0;i<lim;i++){var d=c.dias[i];strip+='<div class="cd'+(i===0?' on':'')+'"><b>'+(i===0?'Hoje':diaSemanaCurto(d.data))+'</b>'+climaIcon(d.code,false)+'<span class="t">'+d.tmax+'°<i>'+d.tmin+'°</i></span></div>';}
+  var banner='';
+  if(c.churras){
+    var dd=c.churras.dia; var quando=c.churras.hoje?'Hoje':(diaSemanaCurto(dd.data)==='Sáb'?'Sábado':'Domingo');
+    banner='<div class="churras"><b>'+(c.churras.hoje?'Hoje é dia de churrasco!':quando+' tá pra churrasco!')+'</b><span>'+climaLabel(dd.code)+' · máx '+dd.tmax+'° · chuva '+(dd.chuva==null?'—':dd.chuva+'%')+'. Já separa a picanha aqui com a gente.</span></div>';
+  }else{
+    banner='<div class="churras alt"><b>Carne na brasa cai bem em qualquer tempo</b><span>Passa aqui e leva o seu corte preferido.</span></div>';
+  }
+  return '<div class="info clima"><div class="kick">Tempo em '+esc(c.nome)+'</div>'
+    +'<div class="climanow">'+climaIcon(c.codeAgora,true)+'<div class="cnT"><span class="cnTemp">'+(isFinite(c.tempAgora)?c.tempAgora+'°':'—')+'</span><span class="cnDesc">'+climaLabel(c.codeAgora)+' agora</span></div></div>'
+    +'<div class="climastrip">'+strip+'</div>'+banner+'</div>';
+}
+/* ---- Kit do dia + carne por pessoa ---- */
+function kitHTML(){
+  var k=KIT_DIA||{};
+  var itens=(k.itens||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+  var guia=[['Adulto (homem)','400 g'],['Adulto (mulher)','300 g'],['Criança','200 g'],['Com acompanhamentos','-20%']];
+  var grows=guia.map(function(g){return '<div class="krow"><b>'+g[0]+'</b><span class="ln"></span><span>'+g[1]+'</span></div>';}).join('');
+  var tab=[['6 pessoas','~2,5 kg'],['10 pessoas','~4 kg'],['15 pessoas','~6 kg'],['20 pessoas','~8 kg']];
+  var trows=tab.map(function(t){return '<div class="kqty"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>';}).join('');
+  return '<div class="info kit"><div class="kick">Sugestão da casa</div>'
+    +'<div class="kitgrid">'
+    +'<div class="kitcombo"><div class="kt">'+esc(k.titulo||'Kit Churrasco')+'</div><ul>'+itens+'</ul>'
+    +(k.preco?'<div class="kitpreco"><span class="cif">R$</span><span class="val">'+esc(k.preco)+'</span></div>':'')
+    +(k.serve?'<div class="kitserve">'+esc(k.serve)+'</div>':'')+'</div>'
+    +'<div class="kitguia"><div class="kgh">Quanto de carne por pessoa?</div>'+grows
+    +'<div class="kgsub">Pra facilitar:</div><div class="kqtys">'+trows+'</div></div>'
+    +'</div></div>';
+}
+/* ---- Carregamentos das telas especiais ---- */
+async function carregarClima(){
+  try{
+    var u='https://api.open-meteo.com/v1/forecast?latitude='+GEO.lat+'&longitude='+GEO.lon
+      +'&current=temperature_2m,weather_code'
+      +'&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+      +'&timezone=America%2FSao_Paulo&forecast_days=7';
+    var r=await fetch(u);if(!r.ok)return;
+    var j=await r.json();var nc=parseClima(j);
+    if(nc.ok){CLIMA=nc;rebuildSEQ();}
+  }catch(e){}
+}
 function montarSequencia(pages,fulls){
   fulls=fulls||[];
   var infoSeq=['fidelidade','instagram','fidelidade','horario','fidelidade','pagamento','fidelidade','endereco'];
@@ -405,14 +506,25 @@ function montarSequencia(pages,fulls){
     for(var a=0;a<fulls.length;a++)seq.push(fulls[a]);
     for(var k=0;k<infoSeq.length;k++)seq.push({tipo:'info',id:infoSeq[k]});
     if(!seq.length)seq.push({tipo:'info',id:'fidelidade'});
-    return seq;
+  }else{
+    for(var i=0;i<pages.length;i++){
+      seq.push({tipo:'prod',page:pages[i]});
+      if(fulls.length&&(i+1)%2===0){seq.push(fulls[pi%fulls.length]);pi++;}
+      if((i+1)%3===0){seq.push({tipo:'info',id:infoSeq[ii%infoSeq.length]});ii++;}
+    }
+    if(ii===0)seq.push({tipo:'info',id:infoSeq[0]});
   }
-  for(var i=0;i<pages.length;i++){
-    seq.push({tipo:'prod',page:pages[i]});
-    if(fulls.length&&(i+1)%2===0){seq.push(fulls[pi%fulls.length]);pi++;}
-    if((i+1)%3===0){seq.push({tipo:'info',id:infoSeq[ii%infoSeq.length]});ii++;}
+  var extras=[];
+  if(KIT_DIA&&KIT_DIA.ativo)extras.push({tipo:'kit'});
+  if(CLIMA&&CLIMA.ok)extras.push({tipo:'clima'});
+  if(extras.length){
+    if(seq.length){
+      var out=[],gap=Math.max(2,Math.floor(seq.length/(extras.length+1))),ei=0;
+      for(var s=0;s<seq.length;s++){out.push(seq[s]);if(ei<extras.length&&(s+1)%gap===0)out.push(extras[ei++]);}
+      while(ei<extras.length)out.push(extras[ei++]);
+      seq=out;
+    }else{seq=extras.slice();}
   }
-  if(ii===0)seq.push({tipo:'info',id:infoSeq[0]});
   return seq;
 }
 function showPage(){
@@ -427,6 +539,12 @@ function showPage(){
   }else if(sl.tipo==='lanc'){
     stage.className='';
     stage.innerHTML=lancFullHTML(sl.prod);
+  }else if(sl.tipo==='clima'){
+    stage.className='';
+    stage.innerHTML=climaHTML();
+  }else if(sl.tipo==='kit'){
+    stage.className='';
+    stage.innerHTML=kitHTML();
   }else{
     stage.className='';
     stage.innerHTML=infoHTML(sl.id);
@@ -438,7 +556,6 @@ var _rotTimer=null;
 function tempoTela(){var sl=SEQ[cur]||{};return DUR[sl.tipo]||ROTACAO_MS;}
 function agendarRotacao(){clearTimeout(_rotTimer);_rotTimer=setTimeout(rotate,tempoTela());}
 function rotate(){
-  if(tvAberta)return;
   if(SEQ.length<=1){agendarRotacao();return;}
   var stage=document.getElementById('stage');
   stage.style.opacity='0';
@@ -489,6 +606,7 @@ async function carregar(){
       if(_i<_lancs.length)fulls.push({tipo:'lanc',prod:_lancs[_i]});
     }
     PAGES=montarPaginas(_normais);
+    _lastFulls=fulls;
     SEQ=montarSequencia(PAGES,fulls);
     if(cur>=SEQ.length)cur=0;
     showPage();
@@ -621,47 +739,23 @@ document.addEventListener('keydown',falaUnlock);
 document.addEventListener('touchstart',falaUnlock);
 falaInit();
 
-/* ===== Modo TV / Notícias ao vivo (abre o canal oficial no YouTube) ===== */
-var TV_CANAIS=[
-  {nome:'Itatiaia',     tag:'Notícias Minas/BH · 24h',   ch:'UC9T0ZAarQHL4cJGFzORVsFg'},
-  {nome:'Band Minas',   tag:'Jornalismo de Minas',       ch:'UC4HvOqEHSll8ieikr6ffvqQ'},
-  {nome:'Record Minas', tag:'MG no Ar · Balanço Geral',   ch:'UC83lmzkypxbrGB6myovcR_g'},
-  {nome:'TV Horizonte', tag:'Canal de BH',               ch:'UC_n4rC_MIZVtpKHmtIc_QbQ'}
-];
-var tvAberta=false,_tvWasPlaying=false;
-function tvLink(ch){return 'https://www.youtube.com/channel/'+ch+'/live';}
-function tvMontaBotoes(){var w=document.getElementById('tvchans');if(!w)return;var h='';for(var i=0;i<TV_CANAIS.length;i++){var c=TV_CANAIS[i];h+='<a class="tvbig" href="'+tvLink(c.ch)+'" target="_blank" rel="noopener"><b>'+c.nome+'</b><span>'+c.tag+'</span><em>Assistir ao vivo \u25B8</em></a>';}w.innerHTML=h;}
-function abrirTV(){
-  if(tvAberta)return;tvAberta=true;
-  _tvWasPlaying=mplaying;
-  try{mWantPlay=false;mplayer.pause();mplaying=false;mClearFail();lsSet('playing','0');mUpd();}catch(e){}
-  clearTimeout(_rotTimer);
-  var m=document.getElementById('tvmode');if(m)m.style.display='flex';
-}
-function fecharTV(){
-  if(!tvAberta)return;tvAberta=false;
-  var m=document.getElementById('tvmode');if(m)m.style.display='none';
-  agendarRotacao();
-  if(_tvWasPlaying){try{mWantPlay=true;mTries=0;mPlay();}catch(e){}}
-}
-document.addEventListener('keydown',function(e){var k=e.key||e.keyCode;if(tvAberta&&(k==='Escape'||k==='Backspace'||k==='BrowserBack'||k==='GoBack'||k===27||k===8||k===461||k===10009)){e.preventDefault();fecharTV();}});
-tvMontaBotoes();
-
 var _wakeLock=null;
 function keepAwake(){var v=document.getElementById('nosleep');if(v){var pp=v.play();if(pp&&pp.catch)pp.catch(function(){});}if('wakeLock' in navigator && !_wakeLock){try{navigator.wakeLock.request('screen').then(function(w){_wakeLock=w;w.addEventListener('release',function(){_wakeLock=null;});}).catch(function(){});}catch(e){}}}
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){_wakeLock=null;keepAwake();}});
 document.addEventListener('click',keepAwake);document.addEventListener('keydown',keepAwake);
-document.addEventListener('keydown',function(e){var k=e.key||e.keyCode;if(tvAberta){return;}if(k==='MediaPlayPause'||k==='MediaPlay'||k==='MediaPause'||k==='Pause'||k===179||k===415||k===19){if(typeof toggleMusic==='function')toggleMusic();}else if(k==='MediaTrackNext'||k==='MediaNextTrack'||k===176||k===425){if(typeof nextStation==='function')nextStation();}});
+document.addEventListener('keydown',function(e){var k=e.key||e.keyCode;if(k==='MediaPlayPause'||k==='MediaPlay'||k==='MediaPause'||k==='Pause'||k===179||k===415||k===19){if(typeof toggleMusic==='function')toggleMusic();}else if(k==='MediaTrackNext'||k==='MediaNextTrack'||k===176||k===425){if(typeof nextStation==='function')nextStation();}});
 keepAwake();
 setInterval(keepAwake,60000);
 (function(){var t=document.getElementById('tickertrack');if(t){var u=('Preços sujeitos a alteração \u00A0\u00A0\u2022\u00A0\u00A0 ').repeat(8);t.innerHTML='<span>'+u+'</span><span>'+u+'</span>';}})();
 tick(); setInterval(tick,1000);
 carregarFotos().then(carregar);
+carregarClima();
 function mostrarPub(){var el=document.getElementById('pub');if(!el)return;fetch(location.href,{method:'HEAD',cache:'no-store'}).then(function(r){var lm=r.headers.get('last-modified');if(lm){var d=new Date(lm);try{el.textContent=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d);}catch(e){el.textContent=d.toLocaleString('pt-BR');}}else{el.textContent='\u2014';}}).catch(function(){el.textContent='\u2014';});}
 mostrarPub();
 agendarRotacao();
 setInterval(carregar, REFRESH_MS);
 setInterval(carregarFotos, 21600000);
+setInterval(carregarClima, 1800000);
 </script>
 </body>
 </html>

@@ -3339,6 +3339,17 @@ var AUTH_LS='fz_auth';
 function authSave(s){try{localStorage.setItem(AUTH_LS,JSON.stringify(s));}catch(e){}}
 function authLoad(){try{return JSON.parse(localStorage.getItem(AUTH_LS)||'null');}catch(e){return null;}}
 function authClear(){try{localStorage.removeItem(AUTH_LS);}catch(e){}}
+/* ===== Auto-logout por inatividade ===== */
+var AUTH_IDLE_MIN=15;                         /* desloga apos X minutos parado (mude aqui: 5, 10, 30...) */
+var AUTH_IDLE_MS=AUTH_IDLE_MIN*60*1000;
+var AUTH_LAST_LS='fz_auth_last';
+var AUTH_TAB_SS='fz_tab';
+function authTabAlive(){try{return sessionStorage.getItem(AUTH_TAB_SS)==='1';}catch(e){return false;}}
+function authTabMark(){try{sessionStorage.setItem(AUTH_TAB_SS,'1');}catch(e){}}
+function authTouch(){try{localStorage.setItem(AUTH_LAST_LS,String(Date.now()));}catch(e){}}
+function authLastSeen(){var v=parseInt(localStorage.getItem(AUTH_LAST_LS)||'0',10);return isFinite(v)?v:0;}
+function authIdleExpired(){var last=authLastSeen();return last>0 && (Date.now()-last>AUTH_IDLE_MS);}
+function authIdleLogout(){try{sessionStorage.setItem('fz_logout_reason','idle');}catch(e){}authClear();try{localStorage.removeItem(AUTH_LAST_LS);}catch(e){}authSetToken(null);location.reload();}
 function authSetToken(tok){SB_HDR['Authorization']='Bearer '+(tok||SB_KEY);}
 async function authPost(grant,body){
   var r=await fetch(SB_URL+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -3348,7 +3359,7 @@ async function authPost(grant,body){
 }
 var _authBooted=false;
 function authBootApp(){
-  if(_authBooted)return; _authBooted=true;
+  if(_authBooted)return; _authBooted=true; authTouch(); authTabMark();
   var g=document.getElementById('authgate'); if(g)g.style.display='none';
   var s=authLoad(), w=document.getElementById('au-who'); if(w&&s&&s.user)w.textContent='@'+s.user;
   init();
@@ -3415,16 +3426,31 @@ function authLogout(){
 }
 function mostrarVersao(){var el=document.getElementById('build-ts');if(!el)return;fetch(location.href,{method:'HEAD',cache:'no-store'}).then(function(r){var lm=r.headers.get('last-modified');if(lm){var d=new Date(lm);try{el.textContent=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d);}catch(e){el.textContent=d.toLocaleString('pt-BR');}}else{el.textContent='\u2014';}}).catch(function(){el.textContent='\u2014';});}
 mostrarVersao();
-/* mantém a sessão viva (renova o token a cada 45 min) */
-setInterval(function(){authTryRestore();},45*60*1000);
-/* Boot: tenta restaurar a sessão; se conseguir, abre o sistema; senão, mostra o login */
+/* mantém a sessão viva (renova o token a cada 45 min, só se estiver ativo) */
+setInterval(function(){ if(_authBooted && !authIdleExpired())authTryRestore(); },45*60*1000);
+/* segurança: registra atividade e desloga sozinho após inatividade */
+(function(){var _lt=0;function _touch(){var n=Date.now();if(n-_lt>15000){_lt=n;authTouch();}}['mousemove','mousedown','keydown','touchstart','scroll','click','wheel'].forEach(function(ev){try{document.addEventListener(ev,_touch,{passive:true});}catch(e){document.addEventListener(ev,_touch);}});})();
+setInterval(function(){ if(_authBooted && authIdleExpired())authIdleLogout(); },30*1000);
+document.addEventListener('visibilitychange',function(){ if(!document.hidden && _authBooted && authIdleExpired())authIdleLogout(); });
+/* Boot: restaura a sessão só se não passou do tempo de inatividade */
 (async function(){
   authLogoInit();
-  var ok=await authTryRestore();
-  if(ok){authBootApp();}
+  var expirou=authIdleExpired();
+  var abaViva=authTabAlive();
+  var tinhaSessao=false; try{var _s=authLoad(); tinhaSessao=!!(_s&&_s.refresh_token);}catch(e){}
+  if(expirou){ authClear(); try{localStorage.removeItem(AUTH_LAST_LS);}catch(e){} }
+  var ok = !expirou && abaViva && await authTryRestore();
+  if(ok){ authTouch(); authBootApp(); }
   else{
     var g=document.getElementById('authgate'); if(g)g.style.display='flex';
     authLogoInit();
+    var motivo=''; try{motivo=sessionStorage.getItem('fz_logout_reason')||'';}catch(e){}
+    var m=document.getElementById('au-msg');
+    if(m){
+      if(expirou||motivo==='idle'){ m.textContent='Sessão encerrada por inatividade. Entre de novo.'; }
+      else if(!abaViva&&tinhaSessao){ m.textContent='Por segurança, entre novamente.'; }
+    }
+    try{sessionStorage.removeItem('fz_logout_reason');}catch(e){}
     var f=document.getElementById('au-user'); if(f)setTimeout(function(){f.focus();},60);
   }
 })();
