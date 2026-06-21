@@ -1224,7 +1224,7 @@ function logRender(){
 /* ===================== ENERGIA (Roncador) ===================== */
 var ENG_INV=[
   {id:'inv_smperd', nome:'Solarman · Perdigão',local:'Perdigão'},
-  {id:'inv_fiperd', nome:'Fision · Perdigão',  local:'Perdigão'},
+  {id:'inv_fiperd', nome:'FusionSolar · Perdigão',  local:'Perdigão'},
   {id:'inv_smroca', nome:'Solarman · Roça',    local:'Roça'}
 ];
 var ENG_CONTA=[
@@ -1258,22 +1258,27 @@ function engNome(tipo,uni){var L=(tipo==='inversor'?ENG_INV:ENG_CONTA);for(var i
 function engUnitExists(tipo,uni){var L=(tipo==='inversor'?ENG_INV:ENG_CONTA);for(var i=0;i<L.length;i++){if(L[i].id===uni)return true;}return false;}
 
 function engToDB(r){return {id:r.id,mes:r.mes,tipo:r.tipo,unidade:r.unidade,local:r.local||'',nome:r.nome||'',
-  geracao:Number(r.geracao)||0,consumo:Number(r.consumo)||0,valor:Number(r.valor)||0,saldo:Number(r.saldo)||0,ts:new Date().toISOString()};}
+  geracao:Number(r.geracao)||0,consumo:Number(r.consumo)||0,valor:Number(r.valor)||0,saldo:Number(r.saldo)||0,injecao:Number(r.injecao)||0,ts:new Date().toISOString()};}
 function engFromDB(d){return {id:d.id,mes:d.mes,tipo:d.tipo,unidade:d.unidade,local:d.local||'',nome:d.nome||'',
-  geracao:Number(d.geracao)||0,consumo:Number(d.consumo)||0,valor:Number(d.valor)||0,saldo:Number(d.saldo)||0};}
+  geracao:Number(d.geracao)||0,consumo:Number(d.consumo)||0,valor:Number(d.valor)||0,saldo:Number(d.saldo)||0,injecao:Number(d.injecao)||0};}
 
 function engSeed(){
   /* dados reais que o Diogo mandou — contas pelo mês "Referente a"; pode editar/excluir */
   ENG=[
+    /* ABRIL/2026 (4 contas) */
+    {id:engId('2026-04','conta','ct_loja1'),mes:'2026-04',tipo:'conta',unidade:'ct_loja1',local:'Perdigão',nome:'Loja 1',consumo:375,valor:478.83,saldo:0,geracao:0},
+    {id:engId('2026-04','conta','ct_loja2'),mes:'2026-04',tipo:'conta',unidade:'ct_loja2',local:'Perdigão',nome:'Loja 2',consumo:3655,valor:402.86,saldo:173.10,geracao:0},
+    {id:engId('2026-04','conta','ct_casa'),mes:'2026-04',tipo:'conta',unidade:'ct_casa',local:'Perdigão',nome:'Casa',consumo:128,valor:85.80,saldo:0,geracao:0,injecao:1126},
+    {id:engId('2026-04','conta','ct_roca'),mes:'2026-04',tipo:'conta',unidade:'ct_roca',local:'Roça',nome:'Roça',consumo:191,valor:100.72,saldo:0,geracao:0,injecao:1231},
     /* MAIO/2026 */
     {id:engId('2026-05','inversor','inv_smperd'),mes:'2026-05',tipo:'inversor',unidade:'inv_smperd',local:'Perdigão',nome:'Solarman · Perdigão',geracao:517.6,consumo:0,valor:0,saldo:0},
-    {id:engId('2026-05','inversor','inv_fiperd'),mes:'2026-05',tipo:'inversor',unidade:'inv_fiperd',local:'Perdigão',nome:'Fision · Perdigão',geracao:834.96,consumo:0,valor:0,saldo:0},
+    {id:engId('2026-05','inversor','inv_fiperd'),mes:'2026-05',tipo:'inversor',unidade:'inv_fiperd',local:'Perdigão',nome:'FusionSolar · Perdigão',geracao:834.96,consumo:0,valor:0,saldo:0},
     {id:engId('2026-05','inversor','inv_smroca'),mes:'2026-05',tipo:'inversor',unidade:'inv_smroca',local:'Roça',nome:'Solarman · Roça',geracao:1080,consumo:0,valor:0,saldo:0},
     {id:engId('2026-05','conta','ct_loja1'),mes:'2026-05',tipo:'conta',unidade:'ct_loja1',local:'Perdigão',nome:'Loja 1',consumo:260,valor:341.48,saldo:0,geracao:0},
     {id:engId('2026-05','conta','ct_loja2'),mes:'2026-05',tipo:'conta',unidade:'ct_loja2',local:'Perdigão',nome:'Loja 2',consumo:2479,valor:1030.12,saldo:0,geracao:0},
     /* JUNHO/2026 */
-    {id:engId('2026-06','conta','ct_casa'),mes:'2026-06',tipo:'conta',unidade:'ct_casa',local:'Perdigão',nome:'Casa',consumo:147,valor:91.95,saldo:0,geracao:0},
-    {id:engId('2026-06','conta','ct_roca'),mes:'2026-06',tipo:'conta',unidade:'ct_roca',local:'Roça',nome:'Roça',consumo:339,valor:70.63,saldo:0,geracao:0}
+    {id:engId('2026-06','conta','ct_casa'),mes:'2026-06',tipo:'conta',unidade:'ct_casa',local:'Perdigão',nome:'Casa',consumo:147,valor:91.95,saldo:0,geracao:0,injecao:1177},
+    {id:engId('2026-06','conta','ct_roca'),mes:'2026-06',tipo:'conta',unidade:'ct_roca',local:'Roça',nome:'Roça',consumo:339,valor:70.63,saldo:0,geracao:0,injecao:1535}
   ];
 }
 
@@ -1303,7 +1308,7 @@ function energiaInit(){
 
 /* ---- cálculo do resumo de um mês ---- */
 function engResumo(mes){
-  var ger=0,cons=0,val=0,porLocal={};
+  var ger=0,cons=0,val=0,inj=0,porLocal={};
   ['Perdigão','Roça'].forEach(function(l){porLocal[l]={ger:0,cons:0,val:0};});
   ENG.forEach(function(r){
     if(r.mes!==mes)return;
@@ -1311,9 +1316,9 @@ function engResumo(mes){
     var l=r.local||(engNome(r.tipo,r.unidade).local)||'—';
     if(!porLocal[l])porLocal[l]={ger:0,cons:0,val:0};
     if(r.tipo==='inversor'){ger+=Number(r.geracao)||0;porLocal[l].ger+=Number(r.geracao)||0;}
-    else{cons+=Number(r.consumo)||0;val+=Number(r.valor)||0;porLocal[l].cons+=Number(r.consumo)||0;porLocal[l].val+=Number(r.valor)||0;}
+    else{cons+=Number(r.consumo)||0;val+=Number(r.valor)||0;inj+=Number(r.injecao)||0;porLocal[l].cons+=Number(r.consumo)||0;porLocal[l].val+=Number(r.valor)||0;}
   });
-  return {ger:ger,cons:cons,val:val,dif:ger-cons,porLocal:porLocal};
+  return {ger:ger,cons:cons,val:val,inj:inj,dif:ger-cons,porLocal:porLocal};
 }
 function engMeses(){
   var s={};ENG.forEach(function(r){if(r.mes)s[r.mes]=1;});
@@ -1344,12 +1349,13 @@ function engFormHTML(mes){
   /* contas */
   h+='<div style="font-size:12px;font-weight:700;color:#FE0000;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px">Consumo — contas CEMIG</div>';
   h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
-  h+='<thead><tr style="color:#888;text-align:left"><th style="padding:4px 6px">Conta</th><th style="padding:4px 6px">Consumo (kWh)</th><th style="padding:4px 6px">Valor (R$)</th><th style="padding:4px 6px">Saldo créditos (kWh)</th></tr></thead><tbody>';
+  h+='<thead><tr style="color:#888;text-align:left"><th style="padding:4px 6px">Conta</th><th style="padding:4px 6px">Consumo (kWh)</th><th style="padding:4px 6px">Injetada CEMIG (kWh)</th><th style="padding:4px 6px">Valor (R$)</th><th style="padding:4px 6px">Saldo créditos (kWh)</th></tr></thead><tbody>';
   ENG_CONTA.forEach(function(u){
     var r=engGet(mes,'conta',u.id);
     h+='<tr style="border-top:1px solid #eee">'
       +'<td style="padding:6px">'+u.nome+' <span style="color:#bbb;font-size:11px">· '+u.local+'</span></td>'
       +'<td style="padding:6px"><input id="en-c-'+u.id+'-cons" inputmode="decimal" value="'+(r?engFmtIn(r.consumo):'')+'" placeholder="0" style="width:120px;height:34px;border:1px solid #ddd;border-radius:6px;padding:0 8px"></td>'
+      +'<td style="padding:6px"><input id="en-c-'+u.id+'-inj" inputmode="decimal" value="'+(r&&r.injecao?engFmtIn(r.injecao):'')+'" placeholder="0" style="width:120px;height:34px;border:1px solid #ddd;border-radius:6px;padding:0 8px"></td>'
       +'<td style="padding:6px"><input id="en-c-'+u.id+'-val" inputmode="decimal" value="'+(r&&r.valor?engFmtIn(r.valor):'')+'" placeholder="0,00" style="width:110px;height:34px;border:1px solid #ddd;border-radius:6px;padding:0 8px"></td>'
       +'<td style="padding:6px"><input id="en-c-'+u.id+'-sal" inputmode="decimal" value="'+(r&&r.saldo?engFmtIn(r.saldo):'')+'" placeholder="0" style="width:110px;height:34px;border:1px solid #ddd;border-radius:6px;padding:0 8px"></td>'
       +'</tr>';
@@ -1390,6 +1396,26 @@ function engResumoHTML(mes){
     h+='<div style="display:flex;justify-content:space-between;font-size:13px;color:#555;padding:3px 0"><span>'+u.nome+'</span><b>'+engKwh(c)+(v?' · '+fmt(v):'')+'</b></div>';});
   h+='</div>';
   h+='</div>';
+  /* auditoria de injeção: tudo que é produzido é injetado -> geração deve bater com a injeção da CEMIG */
+  if(R.inj>0||R.ger>0){
+    var difInj=R.ger-R.inj, temAmbos=(R.ger>0&&R.inj>0);
+    var status='',stCor='#888';
+    if(temAmbos){
+      var perc=Math.abs(difInj)/R.ger;
+      if(perc<=0.03){status='✓ Bateu — a CEMIG recebeu o que foi gerado';stCor='#2E7D32';}
+      else if(difInj>0){status='⚠ A CEMIG registrou '+engKwh(difInj)+' a MENOS do que os inversores geraram — verificar';stCor='#C62828';}
+      else{status='⚠ A CEMIG registrou MAIS do que os inversores geraram ('+engKwh(-difInj)+') — conferir';stCor='#E65100';}
+    }
+    h+='<div class="card" style="margin:0 0 14px;padding:14px;border-left:3px solid #1565C0">';
+    h+='<div style="font-weight:700;color:#333;margin-bottom:8px">Auditoria de injeção (a CEMIG recebeu o que os inversores geraram?)</div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:#555">'
+      +'<span>Geração dos inversores: <b style="color:#2E7D32">'+engKwh(R.ger)+'</b></span>'
+      +'<span>Injetado na rede (CEMIG): <b style="color:#1565C0">'+engKwh(R.inj)+'</b></span>'
+      +(temAmbos?'<span>Diferença: <b style="color:'+stCor+'">'+(difInj>=0?'':'+')+engKwh(Math.abs(difInj))+'</b></span>':'')+'</div>';
+    if(status)h+='<div style="font-size:13px;color:'+stCor+';font-weight:600;margin-top:8px">'+status+'</div>';
+    h+='<div style="font-size:12px;color:#999;margin-top:6px">Como tudo que é produzido é injetado, esses dois números devem bater. Falta a geração e a injeção do mesmo mês pra comparar.</div>';
+    h+='</div>';
+  }
   h+='<div style="font-size:12px;color:#999;margin:0 0 14px">A energia que sobra na Roça e na Casa vira crédito pra Loja 2 — por isso o que vale é o <b>total</b> (tudo somado).</div>';
   return h;
 }
@@ -1399,10 +1425,11 @@ function engHistHTML(){
   var meses=engMeses();
   if(!meses.length)return '';
   var h='<div class="card" style="margin-bottom:14px"><b style="font-size:15px;color:#222">Histórico mensal</b>';
-  var tg=0,tc=0;meses.forEach(function(m){var Rr=engResumo(m);tg+=Rr.ger;tc+=Rr.cons;});var tsd=tg-tc;
+  var tg=0,tc=0,ti=0;meses.forEach(function(m){var Rr=engResumo(m);tg+=Rr.ger;tc+=Rr.cons;ti+=Rr.inj;});var tsd=tg-tc;
   h+='<div style="display:flex;flex-wrap:wrap;gap:16px;margin:8px 0 2px;font-size:13px;color:#555">'
     +'<span>Acumulado · Gerou: <b style="color:#2E7D32">'+engKwh(tg)+'</b></span>'
     +'<span>Consumiu: <b style="color:#C62828">'+engKwh(tc)+'</b></span>'
+    +(ti>0?'<span>Injetado p/ rede (CEMIG): <b style="color:#1565C0">'+engKwh(ti)+'</b></span>':'')
     +'<span>Saldo: <b style="color:'+(tsd>=0?'#2E7D32':'#C62828')+'">'+(tsd>=0?'+':'−')+engKwh(Math.abs(tsd))+'</b></span></div>';
   /* gráfico de barras (últimos 12) */
   var ult=meses.slice(-12);
@@ -1485,9 +1512,10 @@ function engSalvarMes(){
   });
   ENG_CONTA.forEach(function(u){
     var cons=engNum((document.getElementById('en-c-'+u.id+'-cons')||{}).value);
+    var inj=engNum((document.getElementById('en-c-'+u.id+'-inj')||{}).value);
     var val=engNum((document.getElementById('en-c-'+u.id+'-val')||{}).value);
     var sal=engNum((document.getElementById('en-c-'+u.id+'-sal')||{}).value);
-    upsertEng(mes,'conta',u.id,{consumo:cons,valor:val,saldo:sal});
+    upsertEng(mes,'conta',u.id,{consumo:cons,injecao:inj,valor:val,saldo:sal});
     var r=engGet(mes,'conta',u.id);if(r)alterados.push(r);
   });
   engPersistLocal();
