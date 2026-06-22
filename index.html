@@ -3614,6 +3614,7 @@ function iaContexto(){
   ctx+='CHEQUES A COMPENSAR: '+cPend.length+' cheque(s), total '+fmt(cPendV)+'.'+(cProx.length?('\nProximos: '+cProx.join('; ')):'')+'\n';
   return ctx;
 }
+var IA_SYS_CURTO='/no_think\nResponda em portugues do Brasil, direto e curto, com base nos dados. Valores em R$ 0,00.';
 var IA_MODEL_TEXTO='qwen/qwen3.6-27b';
 var IA_MODEL_VISAO='qwen/qwen3.6-27b';
 function iaLimpa(t){return ((t||'')+'').replace(/<think>[\s\S]*?<\/think>/gi,'').replace(/<\/?think>/gi,'').trim();}
@@ -3638,7 +3639,7 @@ function iaConsultar(args){
   var arr,campoValor,fmtRec;
   if(tab==='entradas'){arr=E.slice();campoValor='valor';fmtRec=function(e){return {data:e.data,tipo:e.tipo,valor:e.valor};};}
   else if(tab==='saidas'){arr=S.slice();campoValor='valor';fmtRec=function(s){return {data:s.data,descricao:s.descricao,valor:s.valor,forma:s.formaPgto};};}
-  else if(tab==='gado'){arr=G.slice();campoValor='total';fmtRec=function(g){return {registro:g.registro,data:g.data,fornecedor:g.fornecedor,qtd:g.qtd,tipo:g.tipo,kg:g.kg,preco:g.preco,total:g.total,status:g.status};};}
+  else if(tab==='gado'){arr=G.slice();campoValor='total';fmtRec=function(g){return {data:g.data,fornecedor:g.fornecedor,total:g.total,status:g.status};};}
   else if(tab==='cheques'){arr=C.slice();campoValor='valor';fmtRec=function(c){return {numero:c.numero,data:c.data,credor:c.credor,valor:c.valor,vencimento:c.vencimento,situacao:(c.compensado?'COMPENSADO':'PENDENTE')};};}
   else return {erro:'tabela invalida'};
   if(args.de)arr=arr.filter(function(x){return (x.data||'')>=args.de;});
@@ -3650,16 +3651,26 @@ function iaConsultar(args){
   if(tab==='cheques'){if(args.vence_de)arr=arr.filter(function(c){return (c.vencimento||'')>=args.vence_de;});if(args.vence_ate)arr=arr.filter(function(c){return (c.vencimento||'')<=args.vence_ate;});}
   var soma=r2(arr.reduce(function(a,x){return a+(+x[campoValor]||0);},0));
   arr.sort(function(a,b){return (a.data||'')<(b.data||'')?1:-1;});
-  var lim=Math.max(1,Math.min(parseInt(args.limite)||25,40));
+  var lim=Math.max(1,Math.min(parseInt(args.limite)||8,15));
   return {tabela:tab,total_encontrado:arr.length,soma:soma,registros:arr.slice(0,lim).map(fmtRec)};
 }
 function iaContextoCurto(){
-  var hoje=td();
+  var hoje=td(),d7=addDays(hoje,-6);
   var eHoje=iaSomaE(E.filter(function(x){return x.data===hoje;}));
-  var sl={};try{sl=saldoGet()||{};}catch(e){}var slTot=0;Object.keys(sl).forEach(function(k){slTot+=(+sl[k].saldo||0);});
-  var gPend=G.filter(function(g){return g.status==='PENDENTE';});var gV=r2(gPend.reduce(function(a,b){return a+(+b.total||0);},0));
-  var cPend=C.filter(function(c){return !c.compensado;});var cV=r2(cPend.reduce(function(a,b){return a+(+b.valor||0);},0));
-  return 'Hoje: '+fd(hoje)+'. Vendas hoje: '+fmt(eHoje.total)+'. Saldo total bancos: '+fmt(slTot)+'. Gado pendente: '+gPend.length+' ('+fmt(gV)+'). Cheques a compensar: '+cPend.length+' ('+fmt(cV)+').';
+  var eSem=iaSomaE(E.filter(function(x){return x.data>=d7&&x.data<=hoje;}));
+  var sl={};try{sl=saldoGet()||{};}catch(e){}var slTot=0,slLin=[];
+  Object.keys(sl).forEach(function(k){var c=sl[k];slTot+=(+c.saldo||0);slLin.push((c.label||k)+' '+fmt(c.saldo));});
+  var gP=G.filter(function(g){return g.status==='PENDENTE';});var gV=r2(gP.reduce(function(a,b){return a+(+b.total||0);},0));
+  gP.sort(function(a,b){return (a.data||'')<(b.data||'')?-1:1;});
+  var gL=gP.slice(0,10).map(function(g){return fd(g.data)+' '+(g.fornecedor||'?')+' '+fmt(g.total);});
+  var cP=C.filter(function(c){return !c.compensado;});var cV=r2(cP.reduce(function(a,b){return a+(+b.valor||0);},0));
+  cP.sort(function(a,b){return (a.vencimento||'')<(b.vencimento||'')?-1:1;});
+  var cL=cP.slice(0,12).map(function(c){return 'no'+(c.numero||'?')+' '+fmt(c.valor)+' vence '+(c.vencimento?fd(c.vencimento):'-')+' '+(c.credor||'');});
+  var t='Hoje '+fd(hoje)+'. Vendas hoje '+fmt(eHoje.total)+' | 7 dias '+fmt(eSem.total)+'.\n';
+  t+='Saldos (total '+fmt(slTot)+'): '+(slLin.join(' | ')||'-')+'.\n';
+  t+='GADO pendente ('+gP.length+', '+fmt(gV)+'): '+(gL.join(' ; ')||'-')+(gP.length>10?(' ; +'+(gP.length-10)+' mais'):'')+'.\n';
+  t+='CHEQUES a compensar ('+cP.length+', '+fmt(cV)+'): '+(cL.join(' ; ')||'-')+(cP.length>12?(' ; +'+(cP.length-12)+' mais'):'')+'.';
+  return t;
 }
 function iaSystemPrompt(){
   return '/no_think\n'
@@ -3674,7 +3685,7 @@ function iaSystemPrompt(){
     +'Apagar: {"acao":"excluir","alvo":"entrada|saida|gado|cheque", e pistas pra achar o registro}\n'
     +'Alterar: {"acao":"editar","alvo":"entrada|saida|gado|cheque", pistas pra achar, "campos":{"campo":"novo valor"}}  (campos editaveis: saida=descricao/valor/data/forma; entrada=tipo/valor/data; gado=fornecedor/kg/preco/qtd/tipo/data; cheque=numero/valor/vencimento/credor/data)\n'
     +'Pistas pra achar: saida usa data/descricao/valor; entrada usa data/forma/valor; gado usa registro (ex "0944") ou fornecedor+valor; cheque usa numero ou credor+valor.\n'
-    +'Se a data nao for dita, use hoje ('+td()+'). valor com ponto decimal. NUNCA invente dados: se faltar algo essencial, pergunte. O sistema mostra sua proposta pro Diogo CONFIRMAR antes de gravar/alterar/apagar.\n'
+    +'Se a data nao for dita, use a data de hoje (esta em SITUACAO ATUAL). valor com ponto decimal. NUNCA invente dados: se faltar algo essencial, pergunte. O sistema mostra sua proposta pro Diogo CONFIRMAR antes de gravar/alterar/apagar.\n'
     +'Se vier uma IMAGEM (foto de comprovante/papel de saida/recibo de cartao): leia os dados e responda com o JSON do lancamento (geralmente "saida" ou "entrada") pra ele confirmar.\n\n'
     +'=== SITUACAO ATUAL (pra qualquer outro numero/data/detalhe, USE a ferramenta consultar_planilha) ===\n'+iaContextoCurto();
 }
@@ -3793,13 +3804,13 @@ async function iaSend(){
     if(img&&enviadas.length)enviadas[enviadas.length-1]={role:'user',content:userContent};
     var modelo=img?IA_MODEL_VISAO:IA_MODEL_TEXTO;var usarTools=!img;var txt='';var rounds=0;
     while(rounds++<5){
-      var reqBody={model:modelo,system:system,messages:enviadas,max_tokens:800};
+      var reqBody={model:modelo,system:(rounds===1?system:IA_SYS_CURTO),messages:enviadas,max_tokens:650};
       if(usarTools){reqBody.tools=IA_TOOLS;reqBody.tool_choice='auto';}
       var r,data;
-      for(var att=0;att<3;att++){
+      for(var att=0;att<5;att++){
         r=await fetch(IA_FN_URL,{method:'POST',headers:{'content-type':'application/json','apikey':SB_KEY,'authorization':'Bearer '+token},body:JSON.stringify(reqBody)});
         data={};try{data=await r.json();}catch(e){}
-        if(r.status===429&&att<2){
+        if(r.status===429&&att<4){
           var em429=(data&&data.error&&(data.error.message||data.error))||'';
           var mm=/try again in ([0-9.]+)s/i.exec(''+em429);var espera=mm?Math.ceil(parseFloat(mm[1])*1000)+600:9000;
           if(pensando)pensando.textContent='Limite do Groq (gratis) atingido — aguardo '+Math.ceil(espera/1000)+'s e tento de novo...';
