@@ -1,6 +1,6 @@
 # Como ligar o agente "Filezão IA" (de graça, com Groq)
 
-O chat **já está dentro do sistema** (aba **Filezão IA** no menu). Falta só ligar o "motor" gratuito. Você faz isso **uma vez**, leva ~10 min e **não precisa de cartão**.
+O chat **já está dentro do sistema** (um **botão flutuante** do robô, no canto inferior direito, que aparece depois que você loga). Falta só ligar o "motor" gratuito. Você faz isso **uma vez**, leva ~10 min e **não precisa de cartão**.
 
 ## 1) Pegar a chave grátis do Groq (sem cartão)
 1. Entre em **console.groq.com** e faça login (pode ser com e-mail, Google ou GitHub).
@@ -26,7 +26,7 @@ No painel do Supabase:
 
 ## 4) Testar
 1. Abra o sistema, faça login normalmente.
-2. Clique na aba **Filezão IA** no menu.
+2. Clique no **botão flutuante do robô** (canto inferior direito).
 3. Pergunte: **"Quanto vendi essa semana?"** ou clique num dos botões de exemplo.
 
 Pronto. 🎉

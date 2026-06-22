@@ -1,7 +1,8 @@
 # CHANGELOG — Sistema Filezão
 
 ## 2026-06-21 — Sistema: agente "Filezão IA" (Fase 1 · só leitura)
-- Nova aba **Filezão IA** no menu: um chat onde você pergunta em linguagem normal sobre o negócio ("quanto vendi essa semana?", "qual o saldo dos bancos?", "quanto gastei de gado esse mês?", "tenho cheque pra compensar?").
+- **Botão flutuante** (robô vermelho, canto inferior direito) disponível em qualquer tela depois que você loga. Clicou, abre um **chat** por cima do sistema; clicou de novo (ou no X), fecha.
+- No chat você pergunta em linguagem normal sobre o negócio ("quanto vendi essa semana?", "qual o saldo dos bancos?", "quanto gastei de gado esse mês?", "tenho cheque pra compensar?").
 - A IA recebe um **resumo dos seus números** (vendas por mês/dia, saídas, saldos bancários, gado e cheques pendentes) e responde — **sem alterar nada** nesta fase.
 - **Motor gratuito (Groq · Llama 3.3 70B), sem cartão.** A chave fica numa **Edge Function do Supabase** (`filezao-ia`), nunca no site. A função só responde pra quem está **logado**. Passo a passo no arquivo `COMO_INSTALAR_IA.md`.
 - Próxima fase: a IA poderá **sugerir lançamentos** com **confirmação obrigatória** e registro no log.
