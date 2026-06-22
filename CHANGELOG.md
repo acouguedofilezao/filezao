@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — TV: QR maior e sem caixa de fundo
+- Tirei a caixa (fundo, borda e sombra) atrás do QR. Agora é **só o QR com o texto embaixo**, sem moldura, e o QR ficou **bem maior** (de 58% pra 78% da altura). O quadradinho branco em volta do QR foi mantido — é o que faz o celular conseguir ler.
+
+
 ## 2026-06-22 — Celular: botão do menu não fica mais embaixo da barra do iPhone
 - O `viewport-fit=cover` (que ativei pra usar a tela toda) jogava o topo do cabeçalho **por baixo da barra de status do iPhone** — e o botão ☰ de abrir o menu lateral ficava escondido, sem dá pra clicar. Agora o cabeçalho **desce pra baixo da barra** (safe-area), e o corpo e a sidebar foram acertados junto pra não desalinhar.
 
