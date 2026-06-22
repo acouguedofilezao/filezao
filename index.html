@@ -3363,7 +3363,75 @@ var AUTH_DOMAIN='@filezao.app';   /* sufixo oculto: usuário "diogo" => diogo@fi
 /* ===== Filezão IA — assistente (Fase 1: somente leitura) ===== */
 var IA_FN_URL=SB_URL+'/functions/v1/filezao-ia';
 var IA_MSGS=[];
+var IA_PEND={};var IA_AID=1;
 var IA_BUSY=false;
+/* ---- Fase 2: propor e confirmar lançamentos ---- */
+function iaParseAcao(txt){
+  if(!txt)return null;
+  var cand=txt;
+  var m=txt.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if(m)cand=m[1];
+  var i=cand.indexOf('{'),j=cand.lastIndexOf('}');
+  if(i<0||j<0||j<i)return null;
+  try{var o=JSON.parse(cand.slice(i,j+1));if(o&&o.acao)return o;}catch(e){}
+  return null;
+}
+function iaResumoAcao(a){
+  var hoje=td();
+  if(a.acao==='entrada'){
+    var tipo=(a.tipo||'').toUpperCase();if(['DINHEIRO','PIX','CARTÃO'].indexOf(tipo)<0)return null;
+    var v=r2(+a.valor||0);if(v<=0)return null;
+    var data=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
+    return '<b>Entrada</b> &middot; '+fd(data)+' &middot; '+tipo+' &middot; '+fmt(v);
+  }
+  if(a.acao==='saida'){
+    var dc=((a.descricao||'')+'').trim();if(!dc)return null;
+    var v2=r2(+a.valor||0);if(v2<=0)return null;
+    var data2=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
+    var fp=(a.forma||a.formaPgto||'PIX').toUpperCase();
+    return '<b>Saída</b> &middot; '+fd(data2)+' &middot; '+dc.toUpperCase()+' &middot; '+fmt(v2)+' ('+fp+')';
+  }
+  return null;
+}
+function iaExecAcao(a){
+  var hoje=td();
+  if(a.acao==='entrada'){
+    var data=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
+    var tipo=(a.tipo||'').toUpperCase();if(['DINHEIRO','PIX','CARTÃO'].indexOf(tipo)<0)tipo='DINHEIRO';
+    var v=r2(+a.valor||0);if(v<=0)return {ok:false,msg:'valor inválido, não lancei.'};
+    E.push({id:uid(),data:data,tipo:tipo,valor:v});
+    try{logReg('Entradas','Adicionou (IA)',fd(data)+' · '+tipo,'',fmt(v));}catch(e){}
+    save('fz_entradas',E);
+    try{if(typeof renderEnt==='function')renderEnt();}catch(e){}
+    try{if(typeof renderDash==='function')renderDash();}catch(e){}
+    return {ok:true,msg:'Entrada lançada: '+fd(data)+' · '+tipo+' · '+fmt(v)+'.'};
+  }
+  if(a.acao==='saida'){
+    var data2=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
+    var dc=((a.descricao||'')+'').trim().toUpperCase();if(!dc)return {ok:false,msg:'descrição vazia, não lancei.'};
+    var v2=r2(+a.valor||0);if(v2<=0)return {ok:false,msg:'valor inválido, não lancei.'};
+    var fp=(a.forma||a.formaPgto||'PIX').toUpperCase();
+    S.push({id:uid(),data:data2,descricao:dc,valor:v2,formaPgto:fp});
+    try{logReg('Saídas','Adicionou (IA)',fd(data2)+' · '+dc,'',fmt(v2));}catch(e){}
+    save('fz_saidas',S);
+    try{if(typeof renderSai==='function')renderSai();}catch(e){}
+    try{if(typeof renderDash==='function')renderDash();}catch(e){}
+    return {ok:true,msg:'Saída lançada: '+fd(data2)+' · '+dc+' · '+fmt(v2)+'.'};
+  }
+  return {ok:false,msg:'não entendi a ação.'};
+}
+function iaConfirmar(id){
+  var p=IA_PEND[id];if(!p||p.done)return;p.done=true;
+  var r=iaExecAcao(p.a);
+  if(p.el)p.el.textContent=(r.ok?'\u2713 ':'\u26a0 ')+r.msg;
+  IA_MSGS.push({role:'assistant',content:(r.ok?'(lançado) ':'(não lançado) ')+r.msg});
+}
+function iaCancelar(id){
+  var p=IA_PEND[id];if(!p||p.done)return;p.done=true;
+  if(p.el)p.el.textContent='Beleza, cancelei — não lancei nada.';
+  IA_MSGS.push({role:'assistant',content:'(cancelado pelo Diogo)'});
+}
+
 function iaToggle(){var p=document.getElementById('ia-panel');if(!p)return;if(p.style.display==='flex'){iaFechar();}else{iaAbrir();}}
 function iaAbrir(){var p=document.getElementById('ia-panel');if(!p)return;p.style.display='flex';var ic=document.getElementById('ia-fab-ic');if(ic)ic.className='ti ti-x';iaInit();}
 function iaFechar(){var p=document.getElementById('ia-panel');if(!p)return;p.style.display='none';var ic=document.getElementById('ia-fab-ic');if(ic)ic.className='ti ti-robot';}
@@ -3371,14 +3439,14 @@ function iaInit(){
   var box=document.getElementById('ia-msgs');
   if(box&&!box.getAttribute('data-init')){
     box.setAttribute('data-init','1');
-    iaBolha('assistant','Opa, Diogo! Sou o Filezão IA. Posso te ajudar a entender suas vendas, saldos, gado e cheques. Pode perguntar à vontade — por enquanto eu só leio e respondo, não mexo em nada.');
+    iaBolha('assistant','Opa, Diogo! Sou o Filezão IA. Posso te dar os números do negócio (vendas, saldos, gado, cheques) e também lançar entradas e saídas pra você — sempre te mostrando pra confirmar antes de gravar. Manda ver!');
   }
   iaChips();
   var inp=document.getElementById('ia-inp');if(inp)setTimeout(function(){try{inp.focus();}catch(e){}},80);
 }
 function iaChips(){
   var c=document.getElementById('ia-chips');if(!c)return;
-  var ex=['Quanto vendi hoje?','Quanto vendi essa semana?','Qual o saldo dos bancos?','Quanto gastei de gado esse mês?','Tenho cheques pra compensar?'];
+  var ex=['Quanto vendi hoje?','Quanto vendi essa semana?','Qual o saldo dos bancos?','Lança saída de 200 conta de luz','Tenho cheques pra compensar?'];
   c.innerHTML=ex.map(function(t){return '<button type="button" onclick="iaUsarChip(this)" style="background:#fff;border:1px solid #e3e3e3;border-radius:20px;padding:7px 13px;font-size:12.5px;color:#444;cursor:pointer">'+t+'</button>';}).join('');
 }
 function iaUsarChip(b){var inp=document.getElementById('ia-inp');if(inp){inp.value=b.textContent;iaSend();}}
@@ -3443,9 +3511,12 @@ async function iaSend(){
     if(!token){if(pensando)pensando.textContent='Preciso que você esteja logado pra usar a IA. Faça login e tente de novo.';return;}
     var system='Você é o "Filezão IA", assistente do sistema de gestão da Casa de Carnes Filezão (açougue em Perdigão/MG, do Diogo). '
       +'Fale sempre em português do Brasil, direto, claro e caloroso, tratando o usuário por "Diogo". '
-      +'Responda SOMENTE com base nos dados fornecidos abaixo. Se a informação não estiver nos dados, diga com sinceridade que ainda não tem esse dado. '
-      +'Valores sempre em reais no formato R$ 0,00. Seja objetivo; pode usar listas curtas. '
-      +'Você só LÊ e responde — NÃO altera, lança nem apaga nada. Se pedirem para alterar/lançar algo, explique que essa função será liberada numa próxima fase, sempre com confirmação.\n\n'
+      +'Para PERGUNTAS: responda em texto, SOMENTE com base nos dados abaixo; se não tiver o dado, diga com sinceridade. Valores em R$ 0,00; seja objetivo.\n'
+      +'Quando o Diogo pedir para LANÇAR/ADICIONAR um movimento (entrada de venda OU saída/despesa), NÃO escreva texto: responda APENAS com um bloco JSON, exatamente nesses formatos:\n'
+      +'Entrada: {"acao":"entrada","data":"AAAA-MM-DD","tipo":"DINHEIRO|PIX|CARTÃO","valor":0.00}\n'
+      +'Saída: {"acao":"saida","data":"AAAA-MM-DD","descricao":"...","valor":0.00,"forma":"PIX|DINHEIRO|CARTÃO|BOLETO|CHEQUE"}\n'
+      +'Se a data não for dita, use a data de hoje. valor é número com ponto decimal. NUNCA invente valor: se faltar, pergunte em texto. Só dá pra lançar entrada e saída; para gado ou cheque, diga em texto que ainda não dá por aqui.\n'
+      +'O sistema vai mostrar sua proposta pro Diogo CONFIRMAR antes de gravar — você nunca grava direto.\n\n'
       +'=== DADOS ATUAIS DO SISTEMA ===\n'+iaContexto();
     var msgs=IA_MSGS.slice(-8);
     var r=await fetch(IA_FN_URL,{method:'POST',headers:{'content-type':'application/json','apikey':SB_KEY,'authorization':'Bearer '+token},body:JSON.stringify({system:system,messages:msgs,max_tokens:1000})});
@@ -3453,8 +3524,22 @@ async function iaSend(){
     if(!r.ok){if(pensando)pensando.textContent='Deu erro ('+r.status+'): '+((data&&(data.error||data.message))||'tenta de novo daqui a pouco. Se persistir, confere se a função filezao-ia está no ar.');return;}
     var txt=(data&&data.text)||'';
     if(!txt)txt='Não consegui gerar uma resposta agora. Tenta de novo?';
-    if(pensando)pensando.textContent=txt;
-    IA_MSGS.push({role:'assistant',content:txt});
+    var acao=iaParseAcao(txt);
+    var resumo=acao?iaResumoAcao(acao):null;
+    if(acao&&resumo){
+      var aid='a'+(IA_AID++);
+      IA_PEND[aid]={a:acao,done:false,el:pensando};
+      if(pensando)pensando.innerHTML='<div style="font-weight:700;margin-bottom:6px">Confirmar lançamento?</div>'
+        +'<div style="font-size:13.5px;line-height:1.55;margin-bottom:11px">'+resumo+'</div>'
+        +'<div style="display:flex;gap:8px">'
+        +'<button type="button" onclick="iaConfirmar(\''+aid+'\')" style="background:#1a7a3c;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Confirmar</button>'
+        +'<button type="button" onclick="iaCancelar(\''+aid+'\')" style="background:#ececec;color:#555;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>'
+        +'</div>';
+      IA_MSGS.push({role:'assistant',content:'(proposta de lançamento aguardando confirmação do Diogo)'});
+    }else{
+      if(pensando)pensando.textContent=txt;
+      IA_MSGS.push({role:'assistant',content:txt});
+    }
   }catch(e){
     if(pensando)pensando.textContent='Falha ao falar com a IA: '+((e&&e.message)||e)+'.';
   }finally{
@@ -3591,7 +3676,7 @@ document.addEventListener('visibilitychange',function(){ if(!document.hidden && 
     <i class="ti ti-robot" style="font-size:20px;color:#FE5a5a"></i>
     <div style="flex:1;min-width:0">
       <div style="font-weight:700;font-size:15px;line-height:1.1">Filezão IA</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.55)">só leitura — não altera nada</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.55)">pergunto e lanço — você confirma antes</div>
     </div>
     <button onclick="iaFechar()" title="Fechar" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ti ti-x" style="font-size:16px"></i></button>
   </div>

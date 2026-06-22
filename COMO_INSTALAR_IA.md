@@ -36,8 +36,8 @@ Pronto. 🎉
 ## Detalhes importantes
 - **Segurança:** a chave do Groq fica **só no Supabase**, nunca no site. A função só responde pra quem está **logado** no Filezão (usa seu login). Como o Groq é grátis, mesmo no pior caso **não há cobrança** — no máximo um limite de uso por minuto.
 - **Privacidade:** mando pra IA só **números totais** (vendas, saldos, gado, cheques) — sem nome de cliente nem nada pessoal. E o Groq não treina com seus dados.
-- **Fase 1 (agora):** a IA só **lê e responde** ("quanto vendi hoje?", "qual o saldo dos bancos?", "tenho cheque pra compensar?"). Não altera nada.
-- **Fase 2 (depois):** a IA vai poder **sugerir lançamentos** (ex.: lançar uma saída), mas **sempre pedindo sua confirmação** antes de gravar, e **tudo fica registrado** no log.
+- **Perguntas:** a IA lê e responde ("quanto vendi hoje?", "qual o saldo dos bancos?", "tenho cheque pra compensar?").
+- **Lançamentos:** você também pode pedir pra ela **lançar entrada ou saída** (ex.: "lança saída de 200 conta de luz"). Ela monta a proposta e você **confirma** antes de gravar. Tudo fica no log.
 
 ## Se der erro
 - **"Falta configurar o segredo GROQ_API_KEY"** → você pulou o passo 3.
