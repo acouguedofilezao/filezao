@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — TV: QR com folga (não encosta em cima nem corta o texto)
+- Dei folga no topo do QR (não encosta mais na caixa de cima) e ajustei o tamanho (62%) pra o texto embaixo caber inteiro, sem cortar. Continua sem caixa de fundo e bem maior que o original.
+
+
 ## 2026-06-22 — TV: QR maior e sem caixa de fundo
 - Tirei a caixa (fundo, borda e sombra) atrás do QR. Agora é **só o QR com o texto embaixo**, sem moldura, e o QR ficou **bem maior** (de 58% pra 78% da altura). O quadradinho branco em volta do QR foi mantido — é o que faz o celular conseguir ler.
 
