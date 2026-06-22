@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — TV: letra maior pra ver de longe
+- **Cards do painel maiores** (preenchem a tela toda; antes sobrava um terço vazio embaixo) e **nome e preço bem maiores** — nome ~56% maior, preço ~67% maior. Categoria, cifrão, unidade e "de/por" também subiram junto.
+- **Nome em até 2 linhas:** produto de nome comprido não fica mais cortado.
+- Continua 5 produtos por tela; só ficou tudo maior e mais legível à distância.
+
+
 ## 2026-06-22 — IA: apagar/editar/lançar via ferramenta (fim do "fingir que apagou")
 - **A IA agora APAGA de verdade.** Antes ela "conversava" sobre apagar e às vezes dizia "excluída" sem ter excluído (ou dizia que não tinha função). Agora adicionar, editar e apagar são **ferramentas que o modelo chama** — o sistema intercepta e mostra o **card de confirmação** (Apagar/Alterar/Confirmar). Sem clique, nada acontece; e a IA não consegue mais alegar que fez algo sem ter chamado a ferramenta.
 - **"Apaga o último que lancei"** funciona direto: o sistema lembra o último registro que a IA lançou na conversa (ultimo=true).
