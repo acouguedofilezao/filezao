@@ -1,228 +1,133 @@
-# Sistema Filezão — Documentação Completa de Reconstrução
+# SISTEMA FILEZÃO — Guia mestre (recuperação / handoff)
 
-> **Este documento contém tudo necessário para reconstruir o sistema do zero caso o arquivo seja perdido.**
-
----
-
-## 1. IDENTIDADE DO PROJETO
-
-| Campo | Valor |
-|-------|-------|
-| Nome | Sistema de Gestão Casa de Carnes Filezão |
-| URL do site | https://acouguedofilezao.github.io/filezao/ |
-| Repositório GitHub | https://github.com/acouguedofilezao/filezao |
-| Conta GitHub | acouguedofilezao |
-| Banco de dados | Supabase |
-| Projeto Supabase | acouguedofilezao's Project |
-| Supabase URL | https://vfrgqtuvbflkexapdzho.supabase.co |
-| Supabase Publishable Key | sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5 |
+> **Para que serve este arquivo:** se eu (Diogo) perder a conversa onde isto foi construído, basta abrir um chat novo, enviar **este README + o CHANGELOG.md + o index.html** (e, se for mexer na TV ou na IA, o **tv.html** e o **filezao-ia.index.ts**) e dizer o que quero. Com isso a IA entende todo o contexto e continua de onde paramos.
+>
+> **Atenção (privacidade):** o repositório é **público**. Por isso este guia NÃO contém números sensíveis (salários, percentuais de comissão, saldos). Esses ficam só dentro do sistema/dados, nunca aqui.
 
 ---
 
-## 2. IDENTIDADE VISUAL
+## 1. O que é o sistema
 
-| Elemento | Valor |
-|----------|-------|
-| Cor principal | #FE0000 (vermelho) |
-| Cor fundo | #F5F5F5 (cinza claro) |
-| Cor header | #0a0a0a (preto) |
-| Cor secundária | #6D0909 (vermelho escuro) |
-| Fonte principal | Inter (Google Fonts) |
-| Fonte do título FILEZÃO | Locatro (cdnfonts) |
-| Logo | Boi vermelho com texto FILEZÃO — arquivo Prancheta_10.png |
+Sistema de gestão da **Casa de Carnes Filezão** (açougue em Perdigão/MG, do Diogo). É um **app de um arquivo só** (`index.html`) que roda no navegador, guarda os dados no **Supabase** e fica hospedado de graça no **GitHub Pages**. Tem também um **painel de preços para TV** (`tv.html`) e um **assistente de IA** dentro do sistema (o "Filezão IA").
+
+Tudo é pensado para um usuário **não técnico**, em **português**, com cara de negócio de família.
 
 ---
 
-## 3. ESTRUTURA DO BANCO DE DADOS (Supabase)
+## 2. Onde fica tudo (infra)
 
-### Tabela: `entradas`
-```sql
-id text PRIMARY KEY
-data date NOT NULL
-tipo text NOT NULL  -- valores: DINHEIRO, PIX, CARTÃO
-valor numeric(12,2) NOT NULL
-created_at timestamptz DEFAULT now()
-```
-
-### Tabela: `saidas`
-```sql
-id text PRIMARY KEY
-data date NOT NULL
-descricao text NOT NULL
-valor numeric(12,2) NOT NULL
-forma_pgto text  -- valores: DINHEIRO, PIX, BOLETO, CARTÃO
-created_at timestamptz DEFAULT now()
-```
-
-### Tabela: `gado`
-```sql
-id text PRIMARY KEY
-registro text NOT NULL  -- ex: 0001, 0002
-data date NOT NULL
-qtd numeric(6,2) NOT NULL
-tipo text NOT NULL  -- BOI, VACA, PORCO, NOVILHA, DIANTEIRO, TRASEIRO
-kg numeric(10,2) NOT NULL
-preco numeric(10,4) NOT NULL
-total numeric(12,2) NOT NULL
-fornecedor text NOT NULL
-status text DEFAULT 'PENDENTE'  -- PENDENTE ou PAGO
-pagamento text DEFAULT 'PENDENTE'  -- DINHEIRO, PIX, CHEQUE, BOLETO, MISTO, PENDENTE
-formas_pgto jsonb DEFAULT '[]'  -- [{forma: 'DINHEIRO', valor: 100.00}]
-cheques jsonb DEFAULT '[]'  -- ['700001', '700002']
-cheque text  -- número(s) do cheque separados por vírgula
-data_pagamento date
-created_at timestamptz DEFAULT now()
-```
-
-### Tabela: `cheques`
-```sql
-id text PRIMARY KEY
-data date NOT NULL
-numero text NOT NULL
-valor numeric(12,2) NOT NULL
-vencimento date
-credor text
-compensado boolean DEFAULT false
-data_compensacao date
-gado_reg text  -- registro(s) do gado vinculado, ex: "0001,0002"
-created_at timestamptz DEFAULT now()
-```
-
-### Políticas RLS (Row Level Security)
-```sql
--- Todas as tabelas com acesso público (sem autenticação)
-CREATE POLICY "acesso_publico" ON [tabela] FOR ALL USING (true) WITH CHECK (true);
-```
+- **Site (sistema):** https://acouguedofilezao.github.io/filezao/  → `index.html`
+- **Painel TV:** https://acouguedofilezao.github.io/filezao/tv.html  → `tv.html`
+- **Repositório (público):** https://github.com/acouguedofilezao/filezao
+- **Pasta local (PC do Diogo):** `C:\Users\Diogo\OneDrive\Documentos\GitHub\filezao`
+- **Banco de dados (Supabase):** projeto `vfrgqtuvbflkexapdzho` → URL `https://vfrgqtuvbflkexapdzho.supabase.co`
+  - A chave usada no site é a **publishable** (pública por design, protegida por RLS) — já está dentro do `index.html`/`tv.html`. Nada de chave secreta no repositório.
+  - **Tabelas:** `entradas`, `saidas`, `gado`, `cheques`, `produtos`, `energia`, `saldos`, `saldos_dia`, `cotacoes`, `logs`, `folha`. (Os funcionários ficam só no aparelho, na chave `fz_func`.)
+  - **Edge Function:** `filezao-ia` (é a "ponte" da IA com o Groq — ver seção 7).
 
 ---
 
-## 4. FUNCIONALIDADES DO SISTEMA
+## 3. Como publicar mudanças (importante)
 
-### Abas / Seções
-1. **Painel** — resumo do período com filtros rápidos (Hoje/Ontem/Semana/Mês/Anterior/Retrasado)
-2. **Entradas** — lançamento e histórico (tipos: Dinheiro, Pix, Cartão)
-3. **Saídas** — lançamento e histórico (formas: Dinheiro, Pix, Boleto, Cartão)
-4. **Gado** — registro de compras com filtros (Todos/Em aberto/A pagar esta semana/Pagos)
-5. **Cheques** — controle com compensação e data de compensação
-6. **Fechamento** — cálculo mensal com comissões
-7. **Relatórios** — 3 relatórios para WhatsApp
+1. Coloco os arquivos novos num **.zip** e rodo o **`sincronizar_filezao.bat`**.
+   - O `.bat` extrai os arquivos `*.html`, `*.md` e `*.mp3` e faz `git add -A` + `commit` + `push` (empurra a pasta inteira pro GitHub).
+2. Abro o site e dou **Ctrl+F5** (no Fire Stick da TV, forço atualizar) pra furar o cache.
 
-### Regras de Negócio Importantes
-- **Decimal automático**: campos de valor funcionam como caixa registradora (digita 5000 = R$ 50,00)
-- **Enter lança**: em qualquer campo, Enter confirma o registro
-- **Gado — pagamento**: validação obrigatória que soma das formas = total da compra
-- **Cheque múltiplo gado**: mesmo cheque pode vincular mais de uma compra de gado (gado_reg separado por vírgula)
-- **Abate energia**: R$ 2.500,00 abatidos antes do cálculo de comissões
-- **Base comissões**: Math.floor(entrada_liquida - 2500)
-
-### Cálculo de Comissões (Fechamento)
-```
-Entrada líquida = Total entradas - Total saídas
-Base = Math.floor(entrada_liquida - 2500)  ← abatimento energia
-Diogo  = Base × 1,5%
-Alberto = (Base - Diogo) × 1,625%
-André  = (Base - Diogo - Alberto) × 0,875%
-Saldo após comissões = Base - Diogo - Alberto - André
-Sobra do mês = Saldo após comissões - Total gasto com gado
-```
-
-### Relatórios WhatsApp (3 blocos)
-1. **SAIDA** (vermelho) — data + descrição + valor de cada saída
-2. **ENTRADAS POR DIA** (verde) — data + total do dia
-3. **GADO** (azul) — tipo + kg + R$/kg + total + fornecedor + status por compra
+**Convenção de entrega (quando a IA me manda arquivos):**
+- Sempre **`index.html` + `CHANGELOG.md`** juntos.
+- **`tv.html`** só quando a TV mudou.
+- **Não** mandar `tv_preview.html` por padrão (só se eu pedir).
+- A função da IA (`filezao-ia.index.ts`) só quando ela mudou — e exige redeploy no Supabase (ver seção 7).
 
 ---
 
-## 5. LAYOUT E NAVEGAÇÃO
+## 4. Regras de ouro (sempre valem)
 
-- **Menu lateral (sidebar)** — 220px largura, fundo #0d0d0d, colapsável
-- **Botão toggle** — 28×64px, posição fixed na borda do menu
-- **Mobile**: sidebar vira overlay e fecha ao navegar
-- **Header**: gradiente preto com logo + título FILEZÃO em Locatro
-- **Fonte geral**: Inter (400/500/600/700/800)
-- **Fonte título header**: Locatro
+- **Fuso de Brasília sempre** (`America/Sao_Paulo`, UTC−3) em qualquer data/hora exibida. Nunca UTC nem o fuso do aparelho. (Há um helper `nowBR()`/`td()` usado em todo lugar.)
+- Nada de mexer em lógica/IDs/estrutura quando o pedido é só visual.
+- Validar o JS antes de entregar (o `index.html` tem **um** `<script>` gigante; um erro de sintaxe quebra tudo).
+- Eu (Diogo) testo **ao vivo** a cada entrega (no sistema e na TV). Zero tolerância a bug ou número errado.
 
 ---
 
-## 6. DADOS HISTÓRICOS IMPORTADOS
+## 5. O sistema (`index.html`) — o que tem
 
-- **Período**: fevereiro/2022 até junho/2026
-- **Entradas**: 4.504 registros — total R$ 10.601.539,67
-- **Saídas**: 6.068 registros — total R$ 3.315.344,09
-- **Gado**: 950 registros — total R$ 5.723.873,95
-  - 939 pagos (verde na planilha original)
-  - 11 em aberto (branco na planilha original)
-- **Cheques**: 360 registros
-  - 354 compensados (verde na planilha)
-  - 6 pendentes
-- **Planilha original**: Açougue.xlsm (Excel com macros)
-- **Regras de importação**:
-  - Verde = PAGO (sem cheque = dinheiro, com cheque = cheque)
-  - Amarelo = PAGO mas cheque ainda não compensado
-  - Branco = PENDENTE (em aberto)
+- **Login** (Supabase Auth) com tela "Bordô", auto-logout por inatividade.
+- **Entradas** (vendas: Dinheiro / Pix / Cartão), **Saídas** (despesas), **Gado** (compras, pago/pendente), **Cheques** (a compensar/compensado).
+- **Fechamento mensal** com comissões em camadas e dedução de energia (percentuais e valores ficam **no código**, não aqui).
+- **Pagamento** de gado/cheques, com baixa.
+- **Saldo bancário** + **importador de extrato OFX** (Sicoob, com lógica de débito, cheques, baixa automática e reconstrução do **saldo de cada dia** → tabela `saldos_dia`) e importador **CSV (Sipag)**.
+- **Cotações** (comparar preço de fornecedor; guardadas no aparelho e no backup).
+- **Energia** (custos pro fechamento) e **Folha/Funcionários** (salários e pagamentos).
+- **Relatórios** (incl. extrato por período) e **WhatsApp** formatado.
+- **Backup e segurança** (ver seção 8).
+- **Tema "Bordô institucional"** (vinho `#8E1B2B`, dourado `#B8924F`, fonte Spectral) aplicado em tudo, incluindo o login com a logo em marca d'água.
 
 ---
 
-## 7. COMO RECONSTRUIR O SISTEMA
+## 6. O painel TV (`tv.html`)
 
-### Passo 1 — Criar arquivo HTML base
-O sistema é um **único arquivo HTML** (~1.3 MB) que contém:
-- CSS completo inline
-- JavaScript completo inline
-- Logo embutida em base64
-- Ícone iPhone embutido em base64
-- Conexão com Supabase via fetch API
-
-### Passo 2 — Conexão Supabase
-```javascript
-const SB_URL = 'https://vfrgqtuvbflkexapdzho.supabase.co';
-const SB_KEY = 'sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5';
-```
-
-### Passo 3 — Recriar tabelas no Supabase
-Usar o SQL da seção 3 acima no SQL Editor do Supabase.
-
-### Passo 4 — Os dados já estão no Supabase
-Os dados históricos já estão salvos no banco — **não precisam ser reimportados**.
-O sistema carrega automaticamente do Supabase ao abrir.
-
-### Passo 5 — Publicar no GitHub Pages
-1. Criar repositório `filezao` em github.com/acouguedofilezao
-2. Fazer upload do `index.html`
-3. Ativar GitHub Pages (Settings → Pages → main / root)
-4. Site disponível em https://acouguedofilezao.github.io/filezao/
+Mostra os preços dos produtos numa TV (Fire Stick), com:
+- Fotos dos produtos, telas de "Novidade Filezão" / "Oferta Filezão", transição em dissolve, relógio de Brasília, clima (com modo "Dia de caldo" no frio), rádio e anúncios em áudio.
+- **Busca os produtos no Supabase a cada 1 minuto** (`REFRESH_MS=60000`). Isso, na prática, **mantém o Supabase acordado** sozinho enquanto a TV está ligada (ver seção 9).
 
 ---
 
-## 8. CHANGELOG RESUMIDO
+## 7. A IA "Filezão IA"
 
-| Versão | Data | Principais mudanças |
-|--------|------|---------------------|
-| v1-v8 | 17/06/2026 | Sistema base, visual, decimal automático |
-| v9 | 17/06/2026 | Reescrita completa, bug exclusão corrigido |
-| v10 | 17/06/2026 | Aba Relatórios, dados Maio/26 |
-| v11 | 17/06/2026 | Correção Sobra do mês |
-| v12 | 17/06/2026 | Lançamentos colapsáveis, dados zerados |
-| v13 | 17/06/2026 | Filtro período no painel |
-| v14 | 17/06/2026 | Correção navegação e sintaxe JS |
-| v15 | 17/06/2026 | Importação planilha completa (fev/22→jun/26) |
-| v16 | 17/06/2026 | Integração Supabase, paginação corrigida |
-| v17 | 17/06/2026 | Inter font, mobile, 3 relatórios WhatsApp |
-| v17.1 | 17/06/2026 | Locatro removida, formato relatório corrigido |
-| v17.2 | 17/06/2026 | Logo no header, navbar refinada |
-| v17.3 | 17/06/2026 | Menu lateral (sidebar) com toggle |
-| v17.4 | 17/06/2026 | Toggle maior, sync na sidebar, ícone iPhone |
+**O que faz:** botão flutuante (robô, canto inferior direito, aparece depois do login). Ela:
+- **Responde perguntas** sobre o negócio (vendas, saldos, gado/cheques pendentes, vencimentos, etc.).
+- **Busca** qualquer coisa na planilha (ferramenta `consultar_planilha`, sobre as tabelas em memória).
+- **Adiciona, edita e apaga** lançamentos (entradas, saídas, gado, cheques) — **sempre com um card de confirmação**; nada grava sem eu clicar. Registra no log como "Adicionou/Editou/Excluiu (IA)".
+- **Lê foto** (botão da câmera): mando a foto de um comprovante/papel de saída e ela **propõe o lançamento** pra eu confirmar.
 
----
-
-## 9. CONTATOS E ACESSOS
-
-| Serviço | URL / Acesso |
-|---------|-------------|
-| Site | https://acouguedofilezao.github.io/filezao/ |
-| GitHub | https://github.com/acouguedofilezao/filezao |
-| Supabase | https://supabase.com/dashboard/project/vfrgqtuvbflkexapdzho |
+**Como funciona por dentro:**
+- A IA NÃO chama o Groq direto (a chave não pode ficar no site público). Ela chama a **Edge Function `filezao-ia`** no Supabase, que guarda o segredo `GROQ_API_KEY` e repassa o pedido pro **Groq** (grátis, sem cartão).
+- A função atual é uma **ponte que repassa tudo** (v3) — não precisa mais ser editada; qualquer ajuste futuro de parâmetro passa sozinho.
+- **Modelos (no `index.html`, fáceis de trocar — são 2 constantes):**
+  - Texto/busca: `IA_MODEL_TEXTO = 'openai/gpt-oss-20b'`
+  - Imagem/foto: `IA_MODEL_VISAO = 'qwen/qwen3.6-27b'`
+  - Observação: o Groq **aposenta modelos de tempos em tempos** (ex.: Llama 3.3 70B e Llama 4 Scout foram aposentados em jun/2026). Se um modelo parar de funcionar, é só **trocar a constante** pelo equivalente atual do Groq.
+- **Limite do plano grátis do Groq:** ~8.000 tokens por minuto. Por isso o sistema: manda o pedido **enxuto** (resumo curto + busca só quando precisa), usa **`reasoning_effort: low`** no texto (resposta rápida, sem "pensar demais"), **espera e tenta de novo sozinho** quando bate no limite (429), e deixa as instruções **fixas** pra o Groq cachear (cache não conta no limite).
+- **Setup da IA:** ver **`COMO_INSTALAR_IA.md`** (pegar chave grátis no console.groq.com, criar/colar a função `filezao-ia`, guardar o segredo `GROQ_API_KEY`). Ao atualizar o código da função, é só **Edit → colar → Deploy** no Supabase; a chave continua a mesma.
 
 ---
 
-*Documento gerado em 17/06/2026 — atualizar a cada nova versão do sistema*
+## 8. Backup
+
+- Aba **Backup → Baixar backup**: gera um arquivo `backup-filezao-AAAA-MM-DD.json` com **tudo**: entradas, saídas, gado, cheques, **produtos da TV**, cotações, saldos, **saldos diários**, **folha e funcionários**, **energia** e **logs** (formato `versao 2`).
+- **Restaurar de um backup**: lê o arquivo e **repõe sem apagar** o que já existe.
+- Recomendação: baixar **um por semana** e guardar no Google Drive / e-mail. O plano grátis do Supabase **não tem backup automático**, então esse arquivo é a real proteção contra perda de dados.
+
+---
+
+## 9. "Robozinho" que mantém o Supabase acordado
+
+- O plano grátis do Supabase **pausa o projeto após 7 dias sem atividade** (os dados não somem; é só religar, mas fica fora do ar até lá).
+- No dia a dia **não é problema**: a TV cutuca o banco a cada 1 minuto e o sistema é usado todo dia.
+- Como **seguro para fechamento longo** (férias/reforma com a TV desligada), existe um **GitHub Actions** (`.github/workflows/keepalive.yml`) que faz uma leitura levíssima no banco **1x por dia**, sozinho e de graça. (Já está instalado e testado.)
+
+---
+
+## 10. Estado atual / pendências
+
+- ✅ Tema Bordô aplicado (sistema + login).
+- ✅ Filezão IA: pergunta, busca, adiciona, edita, apaga (com confirmação) e lê foto.
+- ✅ Backup completo + restauração.
+- ✅ Robozinho keep-alive instalado.
+- ⚠️ **Vigiar:** o Groq pode aposentar modelos — se a IA reclamar de "modelo não encontrado", trocar `IA_MODEL_TEXTO`/`IA_MODEL_VISAO`.
+- ⚠️ **Limite grátis do Groq** (8.000 tokens/min): em rajada de muitas perguntas no mesmo minuto, a IA pausa uns segundos e se recupera. Pra tirar o teto, existe o **Dev Tier** do Groq (pague-o-que-usar, centavos/mês pro volume do açougue).
+- 💡 Ajuste opcional "na gaveta": rodar o texto com **`reasoning_effort: low`** + função **v3** (já documentado) caso volte a aparecer "não consegui responder".
+
+---
+
+## 11. Como retomar numa conversa nova (passo a passo)
+
+1. Abra um chat novo.
+2. Anexe: **este `SISTEMA_FILEZAO_README.md`**, o **`CHANGELOG.md`** e o **`index.html`** atual. (Se for mexer na TV, anexe o `tv.html`; se for mexer na IA por dentro, anexe o `filezao-ia.index.ts`.)
+3. Diga algo como: *"Esse é o meu sistema Filezão, leia o README e o CHANGELOG pra entender tudo. Quero que você faça X."*
+4. Pronto — o contexto inteiro estará ali, e dá pra continuar sem reexplicar nada.
+
+---
+
+*Última atualização deste guia: junho/2026. Mantenha-o junto do CHANGELOG.md — os dois contam, juntos, toda a história do sistema.*

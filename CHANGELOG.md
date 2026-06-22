@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Celular: fim dos conflitos de zoom
+- **Acabou o auto-zoom do iPhone:** os campos passaram a usar fonte de 16px no celular (abaixo disso o iOS aproxima a tela sozinho ao tocar num campo) e o zoom manual ficou travado. Fim do "fica dando zoom toda hora", da barra bugando e do conteúdo saindo pela esquerda.
+- **Chat da IA no celular:** agora abre quase em tela cheia, ancorado certinho — não sobe mais por cima das outras coisas.
+- **Sem rolagem horizontal** sobrando e respeito às bordas do iPhone (safe-area).
+
+
 ## 2026-06-21 — Backup agora é completo
 - O **Baixar backup** passou a salvar **tudo num arquivo só**: entradas, saídas, gado, cheques, **produtos da TV**, cotações, saldos, **saldos diários**, **folha e funcionários**, **energia** e **logs**.
 - O **Restaurar** entende todos esses dados e **repõe sem apagar** o que já existe (folha, funcionários e saldos diários entram só o que estiver faltando; o resto é reposto por id).
@@ -19,6 +25,7 @@
 - **Editar/alterar:** peça pra mudar **descrição, valor, data, forma — qualquer campo** de entrada, saída, gado ou cheque ("muda o valor da saída de luz pra 230", "corrige o fornecedor do gado nº 0944"). Mostra **de → para** e só altera depois do seu **Alterar**.
 - **Lançar por foto:** toque no **botão da câmera**, mande a foto do **papel de saída / recibo de cartão**, e a IA lê e **propõe o lançamento** na aba certa pra você confirmar.
 - Continua tudo com **confirmação** — nada grava, altera ou apaga sem você clicar. Log registra como "Adicionou/Editou/Excluiu (IA)".
+- **Fim do "nao consegui responder":** o modelo de texto agora roda com raciocinio minimo (`reasoning_effort: low`) — responde rapido e o texto nunca mais sai vazio. A funcao virou uma ponte que repassa tudo (v3), entao este e o ultimo redeploy dela.
 - **Respostas mais firmes:** a conversa passou a usar o modelo `openai/gpt-oss-20b` (mais direto, sem "pensar demais" — acabou o "nao consegui responder"), e a IA agora responde **na hora, do resumo**, quando o dado ja esta a vista (saldo, vendas de hoje, pendentes e vencimentos), usando a busca so pro historico. O qwen ficou so pra ler foto.
 - **Mais leve e sem travar no limite:** o pedido pra IA ficou enxuto (ela busca o detalhe em vez de receber um resumão), o "pensar" do modelo foi desligado (`/no_think`) e, se bater no limite grátis do Groq (8000 tokens/min), o sistema **espera e tenta de novo sozinho** em vez de dar erro.
 - **Modelo único e à prova de futuro:** tudo (busca, edição e leitura de imagem) roda no **`qwen/qwen3.6-27b`** — o modelo que o Groq indica manter, que lê foto E usa ferramentas. Some o risco do antigo Llama 4 Scout (que estava sendo aposentado) e simplifica: um motor só.
