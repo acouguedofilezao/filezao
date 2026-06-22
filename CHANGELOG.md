@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — TV: nome maior e sem cortar embaixo
+- **Nome não corta mais embaixo:** a entrelinha estava apertada (cortava o pé das letras com acento, tipo Ç/Ã, e a 2ª linha). Dei respiro na entrelinha (1.06) e **travei a legenda pra nunca encolher** — quem cede espaço agora é a foto, não o texto.
+- **Letra maior:** nome subiu de 3.9 → 4.6vh e o preço de 5.0 → 5.4vh. Bem mais legível de longe.
+
+
 ## 2026-06-22 — TV: ajuste de altura (não invade o rodapé) + anúncio de áudio menos frequente
 - **Corrigido o estouro:** os cards estavam altos demais (46vh) e a 2ª fileira invadia o QR e o letreiro de baixo. Baixei pra 37vh — agora cabe certinho na faixa entre o cabeçalho e o rodapé, com a letra ainda grande.
 - **Anúncio em áudio menos frequente:** a locução da loja (`anuncio.mp3`) tocava a cada 5 minutos e enjoava — agora toca a cada **15 minutos**. Fácil de mudar na linha `FALA_INTERVALO` no script (ex.: `20*60*1000` = 20 min). (Os slides visuais de promoção ficaram como estavam.)
