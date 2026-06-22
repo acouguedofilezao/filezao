@@ -1,0 +1,22 @@
+# Robozinho que mantém o Supabase acordado (de graça, pelo GitHub).
+# Roda sozinho 1x por dia e faz uma leitura levíssima no banco (1 produto),
+# o que zera o cronômetro de "7 dias parado" do plano free do Supabase.
+# Só é útil pra quando o açougue ficar dias fechado COM a TV desligada.
+name: Manter Supabase acordado
+
+on:
+  schedule:
+    - cron: '0 9 * * *'      # todo dia ~06:00 de Brasília (09:00 UTC)
+  workflow_dispatch:          # permite rodar na mão pelo botão "Run workflow"
+
+jobs:
+  cutucar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ler 1 produto (acorda o banco)
+        run: |
+          echo "Cutucando o Supabase..."
+          curl -s -o /dev/null -w "Resposta do Supabase: %{http_code}\n" \
+            "https://vfrgqtuvbflkexapdzho.supabase.co/rest/v1/produtos?select=id&limit=1" \
+            -H "apikey: sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5" \
+            -H "Authorization: Bearer sb_publishable_mDc22ezigbtBUR30-Fi5yA_sm9rKSX5"
