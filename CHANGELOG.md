@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — TV: ajuste de altura (não invade o rodapé) + anúncio de áudio menos frequente
+- **Corrigido o estouro:** os cards estavam altos demais (46vh) e a 2ª fileira invadia o QR e o letreiro de baixo. Baixei pra 37vh — agora cabe certinho na faixa entre o cabeçalho e o rodapé, com a letra ainda grande.
+- **Anúncio em áudio menos frequente:** a locução da loja (`anuncio.mp3`) tocava a cada 5 minutos e enjoava — agora toca a cada **15 minutos**. Fácil de mudar na linha `FALA_INTERVALO` no script (ex.: `20*60*1000` = 20 min). (Os slides visuais de promoção ficaram como estavam.)
+
+
 ## 2026-06-22 — TV: letra maior pra ver de longe
 - **Cards do painel maiores** (preenchem a tela toda; antes sobrava um terço vazio embaixo) e **nome e preço bem maiores** — nome ~56% maior, preço ~67% maior. Categoria, cifrão, unidade e "de/por" também subiram junto.
 - **Nome em até 2 linhas:** produto de nome comprido não fica mais cortado.
