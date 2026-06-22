@@ -1,5 +1,12 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — IA: apagar/editar/lançar via ferramenta (fim do "fingir que apagou")
+- **A IA agora APAGA de verdade.** Antes ela "conversava" sobre apagar e às vezes dizia "excluída" sem ter excluído (ou dizia que não tinha função). Agora adicionar, editar e apagar são **ferramentas que o modelo chama** — o sistema intercepta e mostra o **card de confirmação** (Apagar/Alterar/Confirmar). Sem clique, nada acontece; e a IA não consegue mais alegar que fez algo sem ter chamado a ferramenta.
+- **"Apaga o último que lancei"** funciona direto: o sistema lembra o último registro que a IA lançou na conversa (ultimo=true).
+- **Ler foto também usa as ferramentas** (comprovante → propõe a saída/entrada pra confirmar).
+- **Zoom no celular:** destravei o zoom manual (dá pra abrir tabela larga com os dedos de novo); o auto-zoom ao tocar nos campos continua barrado pelos 16px. Chat da IA ancorado embaixo, perto do botão.
+
+
 ## 2026-06-22 — Celular: fim dos conflitos de zoom
 - **Acabou o auto-zoom do iPhone:** os campos passaram a usar fonte de 16px no celular (abaixo disso o iOS aproxima a tela sozinho ao tocar num campo) e o zoom manual ficou travado. Fim do "fica dando zoom toda hora", da barra bugando e do conteúdo saindo pela esquerda.
 - **Chat da IA no celular:** agora abre quase em tela cheia, ancorado certinho — não sobe mais por cima das outras coisas.
