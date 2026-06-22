@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Celular: botão do menu não fica mais embaixo da barra do iPhone
+- O `viewport-fit=cover` (que ativei pra usar a tela toda) jogava o topo do cabeçalho **por baixo da barra de status do iPhone** — e o botão ☰ de abrir o menu lateral ficava escondido, sem dá pra clicar. Agora o cabeçalho **desce pra baixo da barra** (safe-area), e o corpo e a sidebar foram acertados junto pra não desalinhar.
+
+
 ## 2026-06-22 — TV: grade automática (acaba o corte na 2ª fileira de vez)
 - **Causa real do corte:** os cards tinham altura fixa em vh (% da tela cheia), mas o cabeçalho e o rodapé comem altura — aí a 2ª fileira passava do limite e a borda de baixo do palco cortava o nome/preço. Troquei pra **grade automática**: o painel mede o espaço que sobra e encaixa as 2 fileiras certinho, sempre. Não importa o tamanho do cabeçalho/rodapé — cabe.
 - Mantido o nome grande (4.6vh), preço (5.4vh) e a legenda que não encolhe.

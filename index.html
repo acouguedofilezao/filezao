@@ -20,7 +20,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F3F0EC;color:#1a1a1a;font-size:15px}
 .loc{font-weight:800;letter-spacing:-.3px}
-.header{background:linear-gradient(135deg,#0a0a0a 0%,#1a0000 50%,#0a0a0a 100%);border-bottom:3px solid #8E1B2B;padding:0;display:flex;align-items:stretch;position:relative;overflow:hidden}
+.header{background:linear-gradient(135deg,#0a0a0a 0%,#1a0000 50%,#0a0a0a 100%);border-bottom:3px solid #8E1B2B;padding:env(safe-area-inset-top, 0px) 0 0 0;display:flex;align-items:stretch;position:relative;overflow:hidden}
 .header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(142,27,43,0.03) 60px,rgba(142,27,43,0.03) 61px);pointer-events:none}
 .header-logo-wrap{display:flex;align-items:center;justify-content:center;padding:8px 12px;background:rgba(0,0,0,0.3)}
 .header-logo-wrap img{width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(142,27,43,0.4))}
@@ -32,7 +32,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F3F0EC;c
 .hamburger{display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:8px;cursor:pointer;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;margin-right:4px}
 .hamburger:hover{background:rgba(142,27,43,0.3);border-color:#8E1B2B}
 /* ── LAYOUT LATERAL ── */
-.app-body{display:flex;height:calc(100vh - 91px);overflow:hidden}
+.app-body{display:flex;height:calc(100vh - 91px - env(safe-area-inset-top, 0px));overflow:hidden}
 .modsel{display:flex;gap:6px;padding:10px 12px 6px}
 .modbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;font-size:12.5px;font-weight:700;padding:9px 6px;border-radius:9px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.55);transition:all .15s}
 .modbtn:hover{color:rgba(255,255,255,0.85)}
@@ -54,7 +54,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#F3F0EC;c
 .section{display:none;padding:22px}.section.active{display:block}
 /* Mobile: sidebar vira overlay */
 @media(max-width:768px){
-  .sidebar{position:fixed;top:91px;left:0;height:calc(100vh - 91px);z-index:200;box-shadow:4px 0 20px rgba(0,0,0,0.5);transform:translateX(0);transition:transform .25s}
+  .sidebar{position:fixed;top:calc(91px + env(safe-area-inset-top, 0px));left:0;height:calc(100vh - 91px - env(safe-area-inset-top, 0px));z-index:200;box-shadow:4px 0 20px rgba(0,0,0,0.5);transform:translateX(0);transition:transform .25s}
   .sidebar.collapsed{transform:translateX(-100%)}
   .main-content{width:100%!important;margin-left:0!important}
   .sidebar-toggle{display:none!important}
