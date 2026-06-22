@@ -13,6 +13,7 @@
 - **Editar/alterar:** peça pra mudar **descrição, valor, data, forma — qualquer campo** de entrada, saída, gado ou cheque ("muda o valor da saída de luz pra 230", "corrige o fornecedor do gado nº 0944"). Mostra **de → para** e só altera depois do seu **Alterar**.
 - **Lançar por foto:** toque no **botão da câmera**, mande a foto do **papel de saída / recibo de cartão**, e a IA lê e **propõe o lançamento** na aba certa pra você confirmar.
 - Continua tudo com **confirmação** — nada grava, altera ou apaga sem você clicar. Log registra como "Adicionou/Editou/Excluiu (IA)".
+- **Mais leve e sem travar no limite:** o pedido pra IA ficou enxuto (ela busca o detalhe em vez de receber um resumão), o "pensar" do modelo foi desligado (`/no_think`) e, se bater no limite grátis do Groq (8000 tokens/min), o sistema **espera e tenta de novo sozinho** em vez de dar erro.
 - **Modelo único e à prova de futuro:** tudo (busca, edição e leitura de imagem) roda no **`qwen/qwen3.6-27b`** — o modelo que o Groq indica manter, que lê foto E usa ferramentas. Some o risco do antigo Llama 4 Scout (que estava sendo aposentado) e simplifica: um motor só.
 - **Importante:** essas três novidades exigem **redeployar a função `filezao-ia` (v2)** no Supabase (a ponte nova que aceita busca e imagem). Veja o COMO_INSTALAR_IA.md.
 

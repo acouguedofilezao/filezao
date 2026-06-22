@@ -3650,11 +3650,20 @@ function iaConsultar(args){
   if(tab==='cheques'){if(args.vence_de)arr=arr.filter(function(c){return (c.vencimento||'')>=args.vence_de;});if(args.vence_ate)arr=arr.filter(function(c){return (c.vencimento||'')<=args.vence_ate;});}
   var soma=r2(arr.reduce(function(a,x){return a+(+x[campoValor]||0);},0));
   arr.sort(function(a,b){return (a.data||'')<(b.data||'')?1:-1;});
-  var lim=Math.max(1,Math.min(parseInt(args.limite)||40,80));
+  var lim=Math.max(1,Math.min(parseInt(args.limite)||25,40));
   return {tabela:tab,total_encontrado:arr.length,soma:soma,registros:arr.slice(0,lim).map(fmtRec)};
 }
+function iaContextoCurto(){
+  var hoje=td();
+  var eHoje=iaSomaE(E.filter(function(x){return x.data===hoje;}));
+  var sl={};try{sl=saldoGet()||{};}catch(e){}var slTot=0;Object.keys(sl).forEach(function(k){slTot+=(+sl[k].saldo||0);});
+  var gPend=G.filter(function(g){return g.status==='PENDENTE';});var gV=r2(gPend.reduce(function(a,b){return a+(+b.total||0);},0));
+  var cPend=C.filter(function(c){return !c.compensado;});var cV=r2(cPend.reduce(function(a,b){return a+(+b.valor||0);},0));
+  return 'Hoje: '+fd(hoje)+'. Vendas hoje: '+fmt(eHoje.total)+'. Saldo total bancos: '+fmt(slTot)+'. Gado pendente: '+gPend.length+' ('+fmt(gV)+'). Cheques a compensar: '+cPend.length+' ('+fmt(cV)+').';
+}
 function iaSystemPrompt(){
-  return 'Voce e o "Filezao IA", assistente do sistema de gestao da Casa de Carnes Filezao (acougue em Perdigao/MG, do Diogo). '
+  return '/no_think\n'
+    +'Voce e o "Filezao IA", assistente do sistema de gestao da Casa de Carnes Filezao (acougue em Perdigao/MG, do Diogo). '
     +'Fale em portugues do Brasil, direto, claro e caloroso, tratando o usuario por "Diogo". Valores em R$ 0,00.\n'
     +'Voce TEM ACESSO TOTAL aos dados. Para QUALQUER pergunta sobre dado especifico (datas, valores, vencimentos, fornecedores, totais por periodo, o que pagar/vencer essa semana, etc.) USE a ferramenta consultar_planilha. NUNCA diga que nao sabe ou que nao pode procurar. Pode chamar a ferramenta quantas vezes precisar.\n'
     +'Para ADICIONAR, ALTERAR ou APAGAR um dado, NAO escreva texto: responda APENAS com um bloco JSON, num destes formatos:\n'
@@ -3667,7 +3676,7 @@ function iaSystemPrompt(){
     +'Pistas pra achar: saida usa data/descricao/valor; entrada usa data/forma/valor; gado usa registro (ex "0944") ou fornecedor+valor; cheque usa numero ou credor+valor.\n'
     +'Se a data nao for dita, use hoje ('+td()+'). valor com ponto decimal. NUNCA invente dados: se faltar algo essencial, pergunte. O sistema mostra sua proposta pro Diogo CONFIRMAR antes de gravar/alterar/apagar.\n'
     +'Se vier uma IMAGEM (foto de comprovante/papel de saida/recibo de cartao): leia os dados e responda com o JSON do lancamento (geralmente "saida" ou "entrada") pra ele confirmar.\n\n'
-    +'=== RESUMO RAPIDO (use a ferramenta pra detalhes) ===\n'+iaContexto();
+    +'=== SITUACAO ATUAL (pra qualquer outro numero/data/detalhe, USE a ferramenta consultar_planilha) ===\n'+iaContextoCurto();
 }
 function iaCamposEditaveis(tbl){
   if(tbl==='ent')return {tipo:'Tipo',valor:'Valor',data:'Data'};
@@ -3780,14 +3789,24 @@ async function iaSend(){
     var token=iaToken();
     if(!token){if(pensando)pensando.textContent='Preciso que voce esteja logado. Faca login e tente de novo.';return;}
     var system=iaSystemPrompt();
-    var enviadas=IA_MSGS.slice(-8).map(function(m){return {role:m.role,content:m.content};});
+    var enviadas=IA_MSGS.slice(-4).map(function(m){return {role:m.role,content:m.content};});
     if(img&&enviadas.length)enviadas[enviadas.length-1]={role:'user',content:userContent};
     var modelo=img?IA_MODEL_VISAO:IA_MODEL_TEXTO;var usarTools=!img;var txt='';var rounds=0;
     while(rounds++<5){
-      var reqBody={model:modelo,system:system,messages:enviadas,max_tokens:1100};
+      var reqBody={model:modelo,system:system,messages:enviadas,max_tokens:800};
       if(usarTools){reqBody.tools=IA_TOOLS;reqBody.tool_choice='auto';}
-      var r=await fetch(IA_FN_URL,{method:'POST',headers:{'content-type':'application/json','apikey':SB_KEY,'authorization':'Bearer '+token},body:JSON.stringify(reqBody)});
-      var data={};try{data=await r.json();}catch(e){}
+      var r,data;
+      for(var att=0;att<3;att++){
+        r=await fetch(IA_FN_URL,{method:'POST',headers:{'content-type':'application/json','apikey':SB_KEY,'authorization':'Bearer '+token},body:JSON.stringify(reqBody)});
+        data={};try{data=await r.json();}catch(e){}
+        if(r.status===429&&att<2){
+          var em429=(data&&data.error&&(data.error.message||data.error))||'';
+          var mm=/try again in ([0-9.]+)s/i.exec(''+em429);var espera=mm?Math.ceil(parseFloat(mm[1])*1000)+600:9000;
+          if(pensando)pensando.textContent='Limite do Groq (gratis) atingido — aguardo '+Math.ceil(espera/1000)+'s e tento de novo...';
+          await new Promise(function(rs){setTimeout(rs,espera);});continue;
+        }
+        break;
+      }
       if(!r.ok){var em=(data&&data.error&&(data.error.message||data.error))||(data&&data.message)||'tenta de novo. Confere se a funcao filezao-ia (v2) esta no ar.';if(pensando)pensando.textContent='Deu erro ('+r.status+'): '+em;IA_MSGS.push({role:'assistant',content:'(erro)'});return;}
       var msg=(data&&data.choices&&data.choices[0]&&data.choices[0].message)||{};
       if(msg.tool_calls&&msg.tool_calls.length){
