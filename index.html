@@ -3365,70 +3365,143 @@ var IA_FN_URL=SB_URL+'/functions/v1/filezao-ia';
 var IA_MSGS=[];
 var IA_PEND={};var IA_AID=1;
 var IA_BUSY=false;
-/* ---- Fase 2: propor e confirmar lançamentos ---- */
+/* ---- IA: propor/confirmar AÇÕES (adicionar e apagar nas 4 tabelas) ---- */
 function iaParseAcao(txt){
   if(!txt)return null;
-  var cand=txt;
-  var m=txt.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if(m)cand=m[1];
+  var cand=txt;var m=txt.match(/```(?:json)?\s*([\s\S]*?)```/);if(m)cand=m[1];
   var i=cand.indexOf('{'),j=cand.lastIndexOf('}');
   if(i<0||j<0||j<i)return null;
   try{var o=JSON.parse(cand.slice(i,j+1));if(o&&o.acao)return o;}catch(e){}
   return null;
 }
+function iaDetalheRec(tbl,r){
+  if(tbl==='ent')return 'Entrada · '+fd(r.data)+' · '+r.tipo+' · '+fmt(r.valor);
+  if(tbl==='sai')return 'Saída · '+fd(r.data)+' · '+(r.descricao||'')+' · '+fmt(r.valor);
+  if(tbl==='gad')return 'Gado Reg #'+r.registro+' · '+(r.fornecedor||'')+' · '+fmtKg(r.kg)+' · '+fmt(r.total);
+  if(tbl==='chq')return 'Cheque nº '+r.numero+' · '+(r.credor||'')+' · vence '+fd(r.vencimento)+' · '+fmt(r.valor);
+  return '';
+}
+function iaAcharRegistros(a){
+  var norm=function(s){return (((s||'')+'')).trim().toUpperCase();};
+  var v=(a.valor!=null&&a.valor!=='')?r2(+a.valor):null;
+  var alvo=norm(a.alvo||a.tabela||'').toLowerCase();
+  if(alvo.indexOf('gad')>=0){
+    var arr=G.slice();
+    if(a.registro!=null&&a.registro!==''){var rg=norm(a.registro).replace(/[#\s]/g,'').replace(/^0+/,'');arr=arr.filter(function(g){return norm(g.registro).replace(/^0+/,'')===rg;});}
+    else{if(a.fornecedor)arr=arr.filter(function(g){return norm(g.fornecedor).indexOf(norm(a.fornecedor))>=0;});if(v!=null)arr=arr.filter(function(g){return r2(g.total)===v;});if(a.data)arr=arr.filter(function(g){return g.data===a.data;});}
+    return {tbl:'gad',recs:arr};
+  }
+  if(alvo.indexOf('cheq')>=0){
+    var arrc=C.slice();
+    if(a.numero!=null&&a.numero!==''){var nu=norm(a.numero).replace(/[#\s]/g,'');arrc=arrc.filter(function(c){return norm(c.numero).replace(/[#\s]/g,'')===nu;});}
+    else{if(a.credor)arrc=arrc.filter(function(c){return norm(c.credor).indexOf(norm(a.credor))>=0;});if(v!=null)arrc=arrc.filter(function(c){return r2(c.valor)===v;});if(a.data)arrc=arrc.filter(function(c){return c.data===a.data;});}
+    return {tbl:'chq',recs:arrc};
+  }
+  if(alvo.indexOf('entrad')>=0){
+    var arre=E.slice();
+    if(a.data)arre=arre.filter(function(e){return e.data===a.data;});
+    if(a.forma||a.tipo){var f=norm(a.forma||a.tipo);arre=arre.filter(function(e){return norm(e.tipo)===f;});}
+    if(v!=null)arre=arre.filter(function(e){return r2(e.valor)===v;});
+    return {tbl:'ent',recs:arre};
+  }
+  var arrs=S.slice();
+  if(a.data)arrs=arrs.filter(function(s){return s.data===a.data;});
+  if(a.descricao)arrs=arrs.filter(function(s){return norm(s.descricao).indexOf(norm(a.descricao))>=0;});
+  if(v!=null)arrs=arrs.filter(function(s){return r2(s.valor)===v;});
+  return {tbl:'sai',recs:arrs};
+}
 function iaResumoAcao(a){
-  var hoje=td();
+  var hoje=td();var dOK=function(d){return d&&/^\d{4}-\d{2}-\d{2}$/.test(d);};
   if(a.acao==='entrada'){
     var tipo=(a.tipo||'').toUpperCase();if(['DINHEIRO','PIX','CARTÃO'].indexOf(tipo)<0)return null;
     var v=r2(+a.valor||0);if(v<=0)return null;
-    var data=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
-    return '<b>Entrada</b> &middot; '+fd(data)+' &middot; '+tipo+' &middot; '+fmt(v);
+    return '<b>Entrada</b> &middot; '+fd(dOK(a.data)?a.data:hoje)+' &middot; '+tipo+' &middot; '+fmt(v);
   }
   if(a.acao==='saida'){
-    var dc=((a.descricao||'')+'').trim();if(!dc)return null;
-    var v2=r2(+a.valor||0);if(v2<=0)return null;
-    var data2=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
+    var dc=((a.descricao||'')+'').trim();if(!dc)return null;var v2=r2(+a.valor||0);if(v2<=0)return null;
     var fp=(a.forma||a.formaPgto||'PIX').toUpperCase();
-    return '<b>Saída</b> &middot; '+fd(data2)+' &middot; '+dc.toUpperCase()+' &middot; '+fmt(v2)+' ('+fp+')';
+    return '<b>Saída</b> &middot; '+fd(dOK(a.data)?a.data:hoje)+' &middot; '+dc.toUpperCase()+' &middot; '+fmt(v2)+' ('+fp+')';
+  }
+  if(a.acao==='gado'){
+    var kg=r2(+a.kg||0),pr=r2(+(a.preco!=null?a.preco:a['preço'])||0);if(kg<=0||pr<=0)return null;
+    var fn=((a.fornecedor||'')+'').trim();if(!fn)return null;
+    var qt=parseFloat(a.qtd)||1;var tp=(a.tipo||'BOI').toUpperCase();
+    return '<b>Gado</b> &middot; '+fd(dOK(a.data)?a.data:hoje)+' &middot; '+qt+'x '+tp+' &middot; '+fmtKg(kg)+' x '+fmt(pr)+'/kg = <b>'+fmt(r2(kg*pr))+'</b> &middot; '+fn.toUpperCase();
+  }
+  if(a.acao==='cheque'){
+    var nm=((a.numero||'')+'').trim();var v3=r2(+a.valor||0);var cr=((a.credor||'')+'').trim();
+    if(!nm||v3<=0||!cr)return null;
+    var vc=dOK(a.vencimento)?a.vencimento:(dOK(a.data)?a.data:hoje);
+    return '<b>Cheque</b> &middot; nº '+nm+' &middot; '+cr.toUpperCase()+' &middot; vence '+fd(vc)+' &middot; '+fmt(v3);
   }
   return null;
 }
-function iaExecAcao(a){
-  var hoje=td();
+async function iaExecAcao(a){
+  var hoje=td();var dOK=function(d){return d&&/^\d{4}-\d{2}-\d{2}$/.test(d);};
   if(a.acao==='entrada'){
-    var data=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
-    var tipo=(a.tipo||'').toUpperCase();if(['DINHEIRO','PIX','CARTÃO'].indexOf(tipo)<0)tipo='DINHEIRO';
+    var data=dOK(a.data)?a.data:hoje;var tipo=(a.tipo||'').toUpperCase();if(['DINHEIRO','PIX','CARTÃO'].indexOf(tipo)<0)tipo='DINHEIRO';
     var v=r2(+a.valor||0);if(v<=0)return {ok:false,msg:'valor inválido, não lancei.'};
     E.push({id:uid(),data:data,tipo:tipo,valor:v});
     try{logReg('Entradas','Adicionou (IA)',fd(data)+' · '+tipo,'',fmt(v));}catch(e){}
-    save('fz_entradas',E);
-    try{if(typeof renderEnt==='function')renderEnt();}catch(e){}
-    try{if(typeof renderDash==='function')renderDash();}catch(e){}
+    save('fz_entradas',E);try{if(typeof renderEnt==='function')renderEnt();}catch(e){}try{if(typeof renderDash==='function')renderDash();}catch(e){}
     return {ok:true,msg:'Entrada lançada: '+fd(data)+' · '+tipo+' · '+fmt(v)+'.'};
   }
   if(a.acao==='saida'){
-    var data2=(a.data&&/^\d{4}-\d{2}-\d{2}$/.test(a.data))?a.data:hoje;
-    var dc=((a.descricao||'')+'').trim().toUpperCase();if(!dc)return {ok:false,msg:'descrição vazia, não lancei.'};
+    var data2=dOK(a.data)?a.data:hoje;var dc=((a.descricao||'')+'').trim().toUpperCase();if(!dc)return {ok:false,msg:'descrição vazia, não lancei.'};
     var v2=r2(+a.valor||0);if(v2<=0)return {ok:false,msg:'valor inválido, não lancei.'};
     var fp=(a.forma||a.formaPgto||'PIX').toUpperCase();
     S.push({id:uid(),data:data2,descricao:dc,valor:v2,formaPgto:fp});
     try{logReg('Saídas','Adicionou (IA)',fd(data2)+' · '+dc,'',fmt(v2));}catch(e){}
-    save('fz_saidas',S);
-    try{if(typeof renderSai==='function')renderSai();}catch(e){}
-    try{if(typeof renderDash==='function')renderDash();}catch(e){}
+    save('fz_saidas',S);try{if(typeof renderSai==='function')renderSai();}catch(e){}try{if(typeof renderDash==='function')renderDash();}catch(e){}
     return {ok:true,msg:'Saída lançada: '+fd(data2)+' · '+dc+' · '+fmt(v2)+'.'};
+  }
+  if(a.acao==='gado'){
+    var kg=r2(+a.kg||0),pr=r2(+(a.preco!=null?a.preco:a['preço'])||0);if(kg<=0||pr<=0)return {ok:false,msg:'kg/preço inválido.'};
+    var fn=((a.fornecedor||'')+'').trim().toUpperCase();if(!fn)return {ok:false,msg:'fornecedor vazio.'};
+    var qt=parseFloat(a.qtd)||1;var tp=(a.tipo||'BOI').toUpperCase();var data3=dOK(a.data)?a.data:hoje;
+    var n=G.length?Math.max.apply(null,G.map(function(g){return parseInt(g.registro)||0;}))+1:1;var reg=String(n).padStart(4,'0');
+    G.push({id:uid(),registro:reg,data:data3,qtd:qt,tipo:tp,kg:kg,preco:pr,total:r2(kg*pr),fornecedor:fn,status:'PENDENTE',formasPgto:[],cheques:[],cheque:null,pagamento:'PENDENTE',dataPagamento:null});
+    try{logReg('Gado','Adicionou (IA)','Reg #'+reg+' · '+fn+' · '+fmtKg(kg),'',fmt(r2(kg*pr)));}catch(e){}
+    save('fz_gado',G);try{if(typeof proxReg==='function')proxReg();}catch(e){}try{if(typeof renderGad==='function')renderGad();}catch(e){}try{if(typeof renderDash==='function')renderDash();}catch(e){}
+    return {ok:true,msg:'Gado lançado: Reg #'+reg+' · '+qt+'x '+tp+' · '+fmtKg(kg)+' · '+fmt(r2(kg*pr))+' · '+fn+'.'};
+  }
+  if(a.acao==='cheque'){
+    var nm=((a.numero||'')+'').trim();var v3=r2(+a.valor||0);var cr=((a.credor||'')+'').trim().toUpperCase();
+    if(!nm||v3<=0||!cr)return {ok:false,msg:'faltou número, valor ou credor.'};
+    var data4=dOK(a.data)?a.data:hoje;var vc=dOK(a.vencimento)?a.vencimento:data4;
+    C.push({id:uid(),data:data4,numero:nm,valor:v3,vencimento:vc,credor:cr,compensado:false,dataCompensacao:null});
+    try{logReg('Cheques','Adicionou (IA)','Nº '+nm+' · '+cr+' · vence '+fd(vc),'',fmt(v3));}catch(e){}
+    save('fz_cheques',C);try{if(typeof renderChq==='function')renderChq();}catch(e){}try{if(typeof renderDash==='function')renderDash();}catch(e){}
+    return {ok:true,msg:'Cheque lançado: nº '+nm+' · '+cr+' · '+fmt(v3)+'.'};
   }
   return {ok:false,msg:'não entendi a ação.'};
 }
-function iaConfirmar(id){
+async function iaApagarId(tbl,id){
+  var map={ent:['entradas',E,'Entradas',null],sai:['saidas',S,'Saídas',null],gad:['gado',G,'Gado',null],chq:['cheques',C,'Cheques',null]};
+  var cfg=map[tbl];if(!cfg)return {ok:false,msg:'tipo inválido.'};
+  var arr=cfg[1];var idx=arr.findIndex(function(x){return x.id===id;});if(idx<0)return {ok:false,msg:'registro não encontrado (já apagado?).'};
+  var det=iaDetalheRec(tbl,arr[idx]);
+  try{await sbDelete(cfg[0],id);}catch(e){return {ok:false,msg:'erro ao apagar na nuvem: '+((e&&e.message)||e)};}
+  try{logReg(cfg[2],'Excluiu (IA)','Registro removido',det,'');}catch(e){}
+  arr.splice(idx,1);
+  var rmap={ent:(typeof renderEnt==='function'?renderEnt:null),sai:(typeof renderSai==='function'?renderSai:null),gad:(typeof renderGad==='function'?renderGad:null),chq:(typeof renderChq==='function'?renderChq:null)};
+  try{if(rmap[tbl])rmap[tbl]();}catch(e){}
+  try{if(typeof renderDash==='function')renderDash();}catch(e){}
+  try{if(typeof updStatus==='function')updStatus();}catch(e){}
+  return {ok:true,msg:'Apagado: '+det+'.'};
+}
+async function iaConfirmar(id){
   var p=IA_PEND[id];if(!p||p.done)return;p.done=true;
-  var r=iaExecAcao(p.a);
+  if(p.el)p.el.textContent='processando...';
+  var r;
+  if(p.kind==='del'){r=await iaApagarId(p.tbl,p.id);}
+  else{r=await iaExecAcao(p.a);}
   if(p.el)p.el.textContent=(r.ok?'\u2713 ':'\u26a0 ')+r.msg;
-  IA_MSGS.push({role:'assistant',content:(r.ok?'(lançado) ':'(não lançado) ')+r.msg});
+  IA_MSGS.push({role:'assistant',content:(r.ok?'(feito) ':'(falhou) ')+r.msg});
 }
 function iaCancelar(id){
   var p=IA_PEND[id];if(!p||p.done)return;p.done=true;
-  if(p.el)p.el.textContent='Beleza, cancelei — não lancei nada.';
+  if(p.el)p.el.textContent='Beleza, cancelei — não fiz nada.';
   IA_MSGS.push({role:'assistant',content:'(cancelado pelo Diogo)'});
 }
 
@@ -3439,7 +3512,7 @@ function iaInit(){
   var box=document.getElementById('ia-msgs');
   if(box&&!box.getAttribute('data-init')){
     box.setAttribute('data-init','1');
-    iaBolha('assistant','Opa, Diogo! Sou o Filezão IA. Posso te dar os números do negócio (vendas, saldos, gado, cheques) e também lançar entradas e saídas pra você — sempre te mostrando pra confirmar antes de gravar. Manda ver!');
+    iaBolha('assistant','Opa, Diogo! Sou o Filezão IA. Te dou os números do negócio e também adiciono ou apago lançamentos (entradas, saídas, gado, cheques) — sempre te mostrando pra confirmar antes. Manda ver!');
   }
   iaChips();
   var inp=document.getElementById('ia-inp');if(inp)setTimeout(function(){try{inp.focus();}catch(e){}},80);
@@ -3512,10 +3585,13 @@ async function iaSend(){
     var system='Você é o "Filezão IA", assistente do sistema de gestão da Casa de Carnes Filezão (açougue em Perdigão/MG, do Diogo). '
       +'Fale sempre em português do Brasil, direto, claro e caloroso, tratando o usuário por "Diogo". '
       +'Para PERGUNTAS: responda em texto, SOMENTE com base nos dados abaixo; se não tiver o dado, diga com sinceridade. Valores em R$ 0,00; seja objetivo.\n'
-      +'Quando o Diogo pedir para LANÇAR/ADICIONAR um movimento (entrada de venda OU saída/despesa), NÃO escreva texto: responda APENAS com um bloco JSON, exatamente nesses formatos:\n'
-      +'Entrada: {"acao":"entrada","data":"AAAA-MM-DD","tipo":"DINHEIRO|PIX|CARTÃO","valor":0.00}\n'
-      +'Saída: {"acao":"saida","data":"AAAA-MM-DD","descricao":"...","valor":0.00,"forma":"PIX|DINHEIRO|CARTÃO|BOLETO|CHEQUE"}\n'
-      +'Se a data não for dita, use a data de hoje. valor é número com ponto decimal. NUNCA invente valor: se faltar, pergunte em texto. Só dá pra lançar entrada e saída; para gado ou cheque, diga em texto que ainda não dá por aqui.\n'
+      +'Quando o Diogo pedir para ADICIONAR ou APAGAR um dado, NÃO escreva texto: responda APENAS com um bloco JSON, num destes formatos:\n'
+      +'Adicionar entrada (venda): {"acao":"entrada","data":"AAAA-MM-DD","tipo":"DINHEIRO|PIX|CARTÃO","valor":0.00}\n'
+      +'Adicionar saida (despesa): {"acao":"saida","data":"AAAA-MM-DD","descricao":"...","valor":0.00,"forma":"PIX|DINHEIRO|CARTÃO|BOLETO|CHEQUE"}\n'
+      +'Adicionar gado: {"acao":"gado","data":"AAAA-MM-DD","qtd":1,"tipo":"BOI|VACA|PORCO|DIANTEIRO|TRASEIRO|NOVILHA","kg":0.0,"preco":0.00,"fornecedor":"..."} (preco e R$/kg)\n'
+      +'Adicionar cheque: {"acao":"cheque","data":"AAAA-MM-DD","numero":"...","valor":0.00,"vencimento":"AAAA-MM-DD","credor":"..."}\n'
+      +'Apagar: {"acao":"excluir","alvo":"entrada|saida|gado|cheque", e pistas pra achar o registro}. Pistas: saida usa data/descricao/valor; entrada usa data/forma/valor; gado usa registro (ex "0944") ou fornecedor+valor; cheque usa numero ou credor+valor.\n'
+      +'Se a data não for dita, use a data de hoje. valor com ponto decimal. NUNCA invente dados: se faltar algo essencial, pergunte em texto.\n'
       +'O sistema vai mostrar sua proposta pro Diogo CONFIRMAR antes de gravar — você nunca grava direto.\n\n'
       +'=== DADOS ATUAIS DO SISTEMA ===\n'+iaContexto();
     var msgs=IA_MSGS.slice(-8);
@@ -3525,20 +3601,42 @@ async function iaSend(){
     var txt=(data&&data.text)||'';
     if(!txt)txt='Não consegui gerar uma resposta agora. Tenta de novo?';
     var acao=iaParseAcao(txt);
-    var resumo=acao?iaResumoAcao(acao):null;
-    if(acao&&resumo){
-      var aid='a'+(IA_AID++);
-      IA_PEND[aid]={a:acao,done:false,el:pensando};
-      if(pensando)pensando.innerHTML='<div style="font-weight:700;margin-bottom:6px">Confirmar lançamento?</div>'
-        +'<div style="font-size:13.5px;line-height:1.55;margin-bottom:11px">'+resumo+'</div>'
-        +'<div style="display:flex;gap:8px">'
-        +'<button type="button" onclick="iaConfirmar(\''+aid+'\')" style="background:#1a7a3c;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Confirmar</button>'
-        +'<button type="button" onclick="iaCancelar(\''+aid+'\')" style="background:#ececec;color:#555;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>'
-        +'</div>';
-      IA_MSGS.push({role:'assistant',content:'(proposta de lançamento aguardando confirmação do Diogo)'});
+    if(acao&&acao.acao==='excluir'){
+      var found=iaAcharRegistros(acao);var recs=found.recs||[];
+      if(recs.length===0){
+        if(pensando)pensando.textContent='Não achei nenhum registro com esses dados pra apagar. Me dá mais detalhes (data, valor, nº/registro...).';
+        IA_MSGS.push({role:'assistant',content:'(não achei registro pra apagar)'});
+      }else if(recs.length===1){
+        var did='a'+(IA_AID++);
+        IA_PEND[did]={kind:'del',tbl:found.tbl,id:recs[0].id,done:false,el:pensando};
+        if(pensando)pensando.innerHTML='<div style="font-weight:700;margin-bottom:6px;color:#b91c1c">Apagar este registro?</div>'
+          +'<div style="font-size:13.5px;line-height:1.55;margin-bottom:11px">'+iaDetalheRec(found.tbl,recs[0])+'</div>'
+          +'<div style="display:flex;gap:8px">'
+          +'<button type="button" onclick="iaConfirmar(\''+did+'\')" style="background:#b91c1c;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Apagar</button>'
+          +'<button type="button" onclick="iaCancelar(\''+did+'\')" style="background:#ececec;color:#555;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>'
+          +'</div>';
+        IA_MSGS.push({role:'assistant',content:'(proposta de exclusão aguardando confirmação)'});
+      }else{
+        var lst=recs.slice(0,8).map(function(rr){return '&bull; '+iaDetalheRec(found.tbl,rr);}).join('<br>');
+        if(pensando)pensando.innerHTML='<div style="margin-bottom:6px">Achei '+recs.length+' registros parecidos. Me diz a <b>data</b>, o <b>valor</b> ou o <b>nº/registro</b> exato pra eu apagar o certo:</div><div style="font-size:12.5px;line-height:1.6;color:#444">'+lst+'</div>';
+        IA_MSGS.push({role:'assistant',content:'(vários registros encontrados, pedindo detalhe)'});
+      }
     }else{
-      if(pensando)pensando.textContent=txt;
-      IA_MSGS.push({role:'assistant',content:txt});
+      var resumo=acao?iaResumoAcao(acao):null;
+      if(acao&&resumo){
+        var aid='a'+(IA_AID++);
+        IA_PEND[aid]={kind:'add',a:acao,done:false,el:pensando};
+        if(pensando)pensando.innerHTML='<div style="font-weight:700;margin-bottom:6px">Confirmar lançamento?</div>'
+          +'<div style="font-size:13.5px;line-height:1.55;margin-bottom:11px">'+resumo+'</div>'
+          +'<div style="display:flex;gap:8px">'
+          +'<button type="button" onclick="iaConfirmar(\''+aid+'\')" style="background:#1a7a3c;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Confirmar</button>'
+          +'<button type="button" onclick="iaCancelar(\''+aid+'\')" style="background:#ececec;color:#555;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>'
+          +'</div>';
+        IA_MSGS.push({role:'assistant',content:'(proposta de lançamento aguardando confirmação)'});
+      }else{
+        if(pensando)pensando.textContent=txt;
+        IA_MSGS.push({role:'assistant',content:txt});
+      }
     }
   }catch(e){
     if(pensando)pensando.textContent='Falha ao falar com a IA: '+((e&&e.message)||e)+'.';
@@ -3676,7 +3774,7 @@ document.addEventListener('visibilitychange',function(){ if(!document.hidden && 
     <i class="ti ti-robot" style="font-size:20px;color:#FE5a5a"></i>
     <div style="flex:1;min-width:0">
       <div style="font-weight:700;font-size:15px;line-height:1.1">Filezão IA</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.55)">pergunto e lanço — você confirma antes</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.55)">pergunto, lanço e apago — você confirma</div>
     </div>
     <button onclick="iaFechar()" title="Fechar" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="ti ti-x" style="font-size:16px"></i></button>
   </div>

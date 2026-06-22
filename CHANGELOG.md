@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — Filezão IA: adicionar E apagar em tudo (com confirmação)
+- A IA agora **adiciona** e **apaga** nas 4 tabelas: **entradas, saídas, gado e cheques** — é só pedir em linguagem normal ("lança gado da Frigoserrana, 3 bois, 1500 kg a 12,50", "apaga o cheque nº 426", "exclui a saída de 200 da conta de luz").
+- **Sempre com confirmação:** a IA monta a proposta e mostra um card. **Adicionar** → botão verde **Confirmar**. **Apagar** → card vermelho **Apagar**. Nada acontece sem você clicar.
+- **Apagar com segurança:** a IA procura o registro pelos dados que você deu e mostra **exatamente qual** vai sair. Se achar **vários parecidos**, ela lista e pede pra você especificar (data/valor/nº) — não apaga no chute. Se não achar, avisa.
+- Apagar remove também da **nuvem (Supabase)** e registra no log como **"Excluiu (IA)"**; adicionar registra como **"Adicionou (IA)"**.
+
 ## 2026-06-21 — Filezão IA: correção do "gado pendente"
 - **Bug:** ao perguntar sobre gado, a IA mostrava um total de pendentes gigante e errado (ex.: 952 compras / R$ 5,7 mi). Motivo: o resumo olhava o campo `pagamento` (que nas compras já pagas guarda a forma/data), contando quase tudo como pendente.
 - **Correção:** agora o "em aberto" usa a **mesma regra do painel** (`status === 'PENDENTE'`), batendo com o "Gado a pagar".
