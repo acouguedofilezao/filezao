@@ -1,5 +1,21 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — Visual novo: tema "Bordô institucional"
+- **Repaginada completa do visual** do sistema e da **tela de login**, sem mexer em nenhuma função, dado, ID ou estrutura. Só cor, tipografia e acabamento.
+- Vermelho vivo deu lugar ao **bordô #8E1B2B** (com hover #5E0F1C); detalhes em **dourado #B8924F**; fundo creme suave; bordas dos cards mais quentes.
+- **Cabeçalho** com gradiente bordô e fio dourado embaixo; **menu lateral** escuro com item ativo em dourado.
+- **Wordmark "Filezão"** em fonte serifada **Spectral**; subtítulo dourado.
+- **Painel:** KPIs com faixa superior colorida (verde nas entradas, bordô nas saídas) e o card de **Saldo** virou destaque em gradiente bordô com valor branco.
+- **Login:** fundo bordô profundo, **logo como marca d'água** atrás do cartão, cartão com topo bordô e botão Entrar bordô.
+
+## 2026-06-21 — Filezão IA: acesso total, editar e ler imagem
+- **Acesso total à planilha:** a IA agora **pesquisa** qualquer coisa nos dados (datas, valores, vencimentos, fornecedores, totais por período) usando uma ferramenta de busca interna. Pergunte "quanto tenho pra pagar essa semana e quando vence?" que ela acha as datas — não diz mais que "não sabe".
+- **Editar/alterar:** peça pra mudar **descrição, valor, data, forma — qualquer campo** de entrada, saída, gado ou cheque ("muda o valor da saída de luz pra 230", "corrige o fornecedor do gado nº 0944"). Mostra **de → para** e só altera depois do seu **Alterar**.
+- **Lançar por foto:** toque no **botão da câmera**, mande a foto do **papel de saída / recibo de cartão**, e a IA lê e **propõe o lançamento** na aba certa pra você confirmar.
+- Continua tudo com **confirmação** — nada grava, altera ou apaga sem você clicar. Log registra como "Adicionou/Editou/Excluiu (IA)".
+- **Modelo único e à prova de futuro:** tudo (busca, edição e leitura de imagem) roda no **`qwen/qwen3.6-27b`** — o modelo que o Groq indica manter, que lê foto E usa ferramentas. Some o risco do antigo Llama 4 Scout (que estava sendo aposentado) e simplifica: um motor só.
+- **Importante:** essas três novidades exigem **redeployar a função `filezao-ia` (v2)** no Supabase (a ponte nova que aceita busca e imagem). Veja o COMO_INSTALAR_IA.md.
+
 ## 2026-06-21 — Filezão IA: adicionar E apagar em tudo (com confirmação)
 - A IA agora **adiciona** e **apaga** nas 4 tabelas: **entradas, saídas, gado e cheques** — é só pedir em linguagem normal ("lança gado da Frigoserrana, 3 bois, 1500 kg a 12,50", "apaga o cheque nº 426", "exclui a saída de 200 da conta de luz").
 - **Sempre com confirmação:** a IA monta a proposta e mostra um card. **Adicionar** → botão verde **Confirmar**. **Apagar** → card vermelho **Apagar**. Nada acontece sem você clicar.

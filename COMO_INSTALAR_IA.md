@@ -1,5 +1,8 @@
 # Como ligar o agente "Filezão IA" (de graça, com Groq)
 
+> **JÁ TEM A FUNÇÃO NO AR? (atualização v2)** Se você já criou a `filezao-ia` antes, agora é só **atualizar o código**: abra a função no Supabase → **Edit/Code** → apague tudo → **cole o novo `filezao-ia.index.ts`** → **Deploy**. A chave `GROQ_API_KEY` continua a mesma (não precisa recriar). Essa v2 é o que faz a **busca na planilha** e a **leitura de imagem** funcionarem.
+
+
 O chat **já está dentro do sistema** (um **botão flutuante** do robô, no canto inferior direito, que aparece depois que você loga). Falta só ligar o "motor" gratuito. Você faz isso **uma vez**, leva ~10 min e **não precisa de cartão**.
 
 ## 1) Pegar a chave grátis do Groq (sem cartão)
