@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-21 — Filezão IA: correção do "gado pendente"
+- **Bug:** ao perguntar sobre gado, a IA mostrava um total de pendentes gigante e errado (ex.: 952 compras / R$ 5,7 mi). Motivo: o resumo olhava o campo `pagamento` (que nas compras já pagas guarda a forma/data), contando quase tudo como pendente.
+- **Correção:** agora o "em aberto" usa a **mesma regra do painel** (`status === 'PENDENTE'`), batendo com o "Gado a pagar".
+
 ## 2026-06-21 — Filezão IA (Fase 2 · lançar com confirmação)
 - Agora você pode **pedir pra IA lançar** uma **entrada de venda** ou uma **saída/despesa** em linguagem normal (ex.: "lança saída de 200 conta de luz", "entrada de 1500 no pix hoje").
 - A IA **monta a proposta** e mostra um **card com Confirmar / Cancelar**. Nada é gravado sem você clicar em **Confirmar**.

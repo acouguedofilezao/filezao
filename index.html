@@ -3480,7 +3480,7 @@ function iaContexto(){
   var sl={};try{sl=saldoGet()||{};}catch(e){}
   var slLin=[],slTot=0;
   Object.keys(sl).forEach(function(k){var c=sl[k];var nome=c.label||((c.banco||'')+' '+k);slLin.push(nome+': '+fmt(c.saldo)+' (em '+fd(c.data)+')');slTot+=(+c.saldo||0);});
-  var gPend=G.filter(function(g){var st=(g.pagamento||g.status||'').toUpperCase();return st!=='PAGO'&&st!=='COMPENSADO';});
+  var gPend=G.filter(function(g){return g.status==='PENDENTE';});
   var gPendV=r2(gPend.reduce(function(a,b){return a+(+b.total||0);},0));
   var mesAtual=meses[0];
   var gMes=G.filter(function(g){return mesDe(g.data)===mesAtual;});var gMesV=r2(gMes.reduce(function(a,b){return a+(+b.total||0);},0));
