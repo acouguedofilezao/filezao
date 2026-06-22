@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — TV: grade automática (acaba o corte na 2ª fileira de vez)
+- **Causa real do corte:** os cards tinham altura fixa em vh (% da tela cheia), mas o cabeçalho e o rodapé comem altura — aí a 2ª fileira passava do limite e a borda de baixo do palco cortava o nome/preço. Troquei pra **grade automática**: o painel mede o espaço que sobra e encaixa as 2 fileiras certinho, sempre. Não importa o tamanho do cabeçalho/rodapé — cabe.
+- Mantido o nome grande (4.6vh), preço (5.4vh) e a legenda que não encolhe.
+
+
 ## 2026-06-22 — TV: nome maior e sem cortar embaixo
 - **Nome não corta mais embaixo:** a entrelinha estava apertada (cortava o pé das letras com acento, tipo Ç/Ã, e a 2ª linha). Dei respiro na entrelinha (1.06) e **travei a legenda pra nunca encolher** — quem cede espaço agora é a foto, não o texto.
 - **Letra maior:** nome subiu de 3.9 → 4.6vh e o preço de 5.0 → 5.4vh. Bem mais legível de longe.
