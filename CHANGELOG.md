@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Escala: calendário único do mês, branco e maior
+- O painel mostra **só o calendário do mês atual** (mesmo com folgas de vários meses cadastradas). Quando virar o mês, troca sozinho pro novo e some o antigo.
+- Como é um só, o calendário ficou **bem maior** e em **quadro branco** (fundo branco, datas em destaque) pra enxergar de longe. Folga de hoje em azul, próxima em verde, passadas riscadas, com legenda embaixo.
+
+
 ## 2026-06-22 — Meta: barra por porcentagem com cor de esperança + frase fixa no painel
 - Tela da meta agora mostra **o valor + a barra**, sem exibir o valor da meta e sem "faltam R$".
 - Abaixo: **% concluída** e **% faltante**. A barra muda de cor conforme a proximidade — **quanto mais perto da meta, mais verde** (sinal de esperança); longe, mais vermelha.
