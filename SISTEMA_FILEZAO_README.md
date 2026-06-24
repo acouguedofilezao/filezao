@@ -101,7 +101,7 @@ Painel de TV **interno** (pros funcionários), separado do `tv.html` de preços.
 **SQL necessário (rodar 1x no Supabase):** criar a tabela `config` → está no **`CONFIG_ANOTACOES.md`**. Pra lançar a escala de junho/2026 da foto, há o **`ESCALA_JUNHO_2026.sql`** (opcional). Sem a tabela `config`, salvar a meta/escala avisa erro.
 
 **Duas versões do arquivo (IMPORTANTE):**
-- **`areainterna.html`** = versão **EM BREVE**: a tela de Meta fica **tapada** com um "EM BREVE" (os funcionários veem que vem novidade, mas **nenhum valor**); o **calendário/escala continua funcionando** normal. **É a que está no ar agora.**
+- **`areainterna.html`** = versão **EM BREVE**: só a **coluna da Meta** (vendas/progresso/bônus) fica **tapada** com um "EM BREVE" — os funcionários veem que vem novidade, mas **nenhum valor**. As **Anotações continuam visíveis** e o **calendário/escala funciona** normal. **É a que está no ar agora.**
 - **`areainterna_bkp.html`** = versão **COMPLETA** da meta (com os valores reais). Guardada de backup. **Quando o Diogo for liberar a meta pros funcionários, é só renomear `areainterna_bkp.html` → `areainterna.html` e subir pelo `.bat`.**
 
 ---

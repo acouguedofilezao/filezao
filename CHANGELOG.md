@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — EM BREVE tampa só a Meta (Anotações ficam visíveis)
+- Na versão `areainterna.html` (EM BREVE), o "EM BREVE" agora cobre **só a coluna da Meta** (vendas/progresso/bônus). As **Anotações** voltam a aparecer normalmente ao lado, e o calendário segue funcionando.
+
+
 ## 2026-06-24 — Painel Área Interna: versão EM BREVE no ar + backup da completa + manual atualizado
 - Criada a versão **EM BREVE** do painel: a tela de **Meta** fica **tapada** com um "EM BREVE" (funcionários veem que vem novidade, mas nenhum valor). O **calendário/escala continua funcionando** normal. **Essa é a `areainterna.html` (a que sobe agora).**
 - A versão **COMPLETA** da meta (com os valores) foi guardada como **`areainterna_bkp.html`**. Quando for liberar a meta pros funcionários: renomear `areainterna_bkp.html` → `areainterna.html` e subir pelo `.bat`.
