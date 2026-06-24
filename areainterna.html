@@ -84,6 +84,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .esc-card.prox .ed{color:var(--green)} .esc-card.prox .en{color:#c7eed2}
 .esc-card .badge{margin-left:auto;font-size:1.35vh;font-weight:700;letter-spacing:.05vw;text-transform:uppercase;padding:.4vh .7vw;border-radius:1vh;white-space:nowrap}
 .esc-card.hoje .badge{background:var(--blue);color:#fff} .esc-card.prox .badge{background:var(--green);color:#06210f}
+.esc-card.passado{opacity:.38}
+.esc-card.passado .ed,.esc-card.passado .ew,.esc-card.passado .en{text-decoration:line-through}
 .esc-card .top{display:flex;align-items:center;gap:.7vw}
 .esc-card .ed{font-family:'Anton';font-size:3.2vh;color:var(--gold);line-height:1}
 .esc-card .ew{font-size:1.6vh;color:var(--muted);text-transform:uppercase;letter-spacing:.04vw}
@@ -147,7 +149,6 @@ footer .st i{color:var(--green);font-style:normal}
           <div id="nota-view"></div>
         </div>
       </div>
-      <section class="dias" id="dias"></section>
     </section>
 
     <!-- TELA 2: ESCALA DE FOLGA -->
@@ -244,15 +245,6 @@ async function carregarMeta(){
   var tot=0,porDia={};
   ent.forEach(function(r){var v=valEnt(r);tot+=v;var k=dt(r);porDia[k]=(porDia[k]||0)+v;});
   setVendas(tot);renderProgresso(tot);
-  var box=document.getElementById('dias');box.innerHTML='';
-  var nomes=['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
-  s.dias.forEach(function(d,i){
-    var key=ymd(d),val=porDia[key]||0,ehHoje=(key===s.hoje),futuro=(key>s.hoje);
-    var c=document.createElement('div');c.className='dia'+(ehHoje?' hoje':'')+(futuro?' fut':'');
-    c.innerHTML='<div class="dn">'+nomes[i]+'</div><div class="dd">'+ddmm(d)+'</div>'
-      +'<div class="dv '+(futuro||val<=0?'zero':'pos')+'">'+(futuro?'—':money(val))+'</div>';
-    box.appendChild(c);
-  });
   document.getElementById('status').innerHTML='<i>●</i> atualizado às '+horaBR();
 }
 
@@ -279,8 +271,8 @@ function renderEscala(){
   grid.innerHTML='';
   lista.forEach(function(it){
     var d=dataDeStr(it.data);
-    var ehHoje=(it.data===hojeS),ehProx=(it.data===proxima);
-    var cls='esc-card'+(ehHoje?' hoje':(ehProx?' prox':''));
+    var ehHoje=(it.data===hojeS),ehProx=(it.data===proxima),ehPassado=(it.data<hojeS);
+    var cls='esc-card'+(ehHoje?' hoje':(ehProx?' prox':(ehPassado?' passado':'')));
     var badge=ehHoje?'<span class="badge">De folga hoje</span>':(ehProx?'<span class="badge">Próxima folga</span>':'');
     var c=document.createElement('div');c.className=cls;
     c.innerHTML='<div class="top"><div class="ed">'+ddmm(d)+'</div><div class="ew">'+DIAS_SEM[d.getDay()]+'</div>'+badge+'</div>'

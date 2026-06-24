@@ -1,5 +1,14 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Painel meta: removida a régua de vendas por dia
+- A tela da meta agora mostra só o **VENDAS DA SEMANA** no geral (total da semana + barra da meta + anotações). Tirada a régua que mostrava o valor de cada dia.
+
+
+## 2026-06-22 — Escala: folgas passadas apagadas + conserto do conflito do CHANGELOG
+- Na escala, as **folgas que já passaram** aparecem **apagadas e riscadas**, destacando só o que está por vir (hoje em azul, próxima em verde).
+- Arquivo **`corrigir_changelog.bat`**: rode UMA vez pra o git resolver sozinho o conflito do CHANGELOG (mantém sempre a sua versão). Depois disso o sync não trava mais nessa tela.
+
+
 ## 2026-06-22 — Escala: mês atual + próximo, folga de hoje em azul e a próxima em verde
 - O painel de escala agora mostra **o mês atual e o próximo** na mesma tela.
 - **Quem está de folga hoje** aparece em **azul** (selo "De folga hoje") e **a próxima folga** em **verde** (selo "Próxima folga") — sempre dá pra ver quem tá de folga e quem vai folgar.
