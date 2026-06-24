@@ -1699,6 +1699,7 @@ function setModulo(m){
 }
 /* ===== Cadastro de funcionarios (nome + nascimento) -> config.funcionarios ===== */
 var CAD_LIST=[];var CAD_EDIT=-1;
+function cadDedup(l){var seen={},out=[];(l||[]).forEach(function(f){if(!f||!(f.nome||'').trim())return;var k=(f.nome+'').trim().toLowerCase();if(seen[k]){if(!out[seen[k]-1].nasc&&f.nasc)out[seen[k]-1].nasc=f.nasc;return;}out.push({nome:(f.nome+'').trim(),nasc:f.nasc||''});seen[k]=out.length;});return out;}
 function cadDataBR(s){if(!s)return '';var p=String(s).slice(0,10).split('-');return p.length===3?(p[2]+'/'+p[1]+'/'+p[0]):s;}
 async function cadFetch(){
   var r=await fetch(SB_URL+'/rest/v1/config?chave=eq.funcionarios&select=valor',{headers:SB_HDR});
@@ -1711,7 +1712,7 @@ async function cadLoadCad(){
   var box=document.getElementById('cad-lista');if(box)box.innerHTML='<div style="color:#888;padding:10px 0">Carregando...</div>';
   var l=[];try{l=await cadFetch();}catch(e){}
   if(!l.length){try{l=(funcGet()||[]).map(function(f){return {nome:f.nome,nasc:''};});}catch(e){l=[];}}
-  CAD_LIST=l;CAD_EDIT=-1;cadRender();
+  CAD_LIST=cadDedup(l);CAD_EDIT=-1;cadRender();
 }
 function cadRender(){
   var box=document.getElementById('cad-lista');if(!box)return;
@@ -1756,6 +1757,7 @@ function cadDel(i){
   CAD_LIST.splice(i,1);if(CAD_EDIT===i)CAD_EDIT=-1;cadRender();
 }
 async function cadSave(){
+  CAD_LIST=cadDedup(CAD_LIST);cadRender();
   var st=document.getElementById('cad-status');if(st){st.style.color='#666';st.textContent='Salvando...';}
   try{
     var r=await fetch(SB_URL+'/rest/v1/config?on_conflict=chave',{method:'POST',headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{chave:'funcionarios',valor:JSON.stringify(CAD_LIST)}])});
