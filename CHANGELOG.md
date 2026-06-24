@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Área Interna: anti-sono (a tela não apaga mais)
+- Adicionado o mesmo "anti-sono" da TV: um vídeo minúsculo invisível em loop + Wake Lock (trava de tela), reativando a cada 1 min. Evita o Fire Stick dormir e cair pra "HDMI"/tela preta.
+- Aplicado nas duas versões (EM BREVE e completa/`areainterna_bkp.html`).
+
+
 ## 2026-06-24 — Permissões por usuário (acesso restrito) + aba Permissões
 - Novo **controle de acesso por usuário**: aba **"Permissões"** (Administração) onde o Diogo escolhe **quais abas cada usuário vê**. Quem não está na lista = acesso total; quem está = só as abas marcadas (o resto some do menu, junto com o seletor de módulo e o robô da IA). Bloqueio reforçado no `showSec`. Guardado na chave `permissoes` do `config`.
 - **Trava de segurança:** usuário `diogo` sempre tem acesso total (não se tranca fora). Sem "flash": permissões carregadas antes de abrir a tela.
