@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Painel: fontes maiores (anotação, topo e legenda)
+- **Anotação** bem maior, mais fácil de ler de longe.
+- **Semana, data e hora** no topo aumentadas.
+- **Legenda do calendário** (folga/feriado/sáb-dom/outro mês) aumentada.
+
+
 ## 2026-06-22 — Escala: feriado com cor própria, bolinhas de troca, meses adjacentes e nomes em MAIÚSCULO
 - **Cores:** dia de **folga** continua **amarelo**; dia de **feriado** ganhou cor própria (**vermelho clarinho**). Se cair folga num feriado, vale o amarelo da folga e o nome do feriado aparece em vermelho.
 - **Bolinhas de troca de tela** no rodapé (igual à TV): clique pra alternar entre Meta e Escala aqui no notebook quando quiser visualizar. Ao clicar, o tempo de 30s reinicia.
