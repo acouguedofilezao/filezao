@@ -1,5 +1,13 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Escala: feriado com cor própria, bolinhas de troca, meses adjacentes e nomes em MAIÚSCULO
+- **Cores:** dia de **folga** continua **amarelo**; dia de **feriado** ganhou cor própria (**vermelho clarinho**). Se cair folga num feriado, vale o amarelo da folga e o nome do feriado aparece em vermelho.
+- **Bolinhas de troca de tela** no rodapé (igual à TV): clique pra alternar entre Meta e Escala aqui no notebook quando quiser visualizar. Ao clicar, o tempo de 30s reinicia.
+- **Meses adjacentes:** quando a semana vira o mês, os dias do mês seguinte (e anterior) aparecem em **cinza bem clarinho**, mostrando que é outro mês. Assim, uma **folga lançada no próximo mês** já aparece no fim do mês atual (e fica verde se for a próxima folga).
+- **Nomes em MAIÚSCULO** no painel.
+- **Nomes padronizados pela aba de Pagamento de funcionários:** a aba "Escala mensal" agora sugere os nomes exatamente como estão na folha (Alberto, André, Wilson, Magela, Gustavo, Alex) + Diogo e Rosemir. Se você digitar "andre" ou "ANDRÉ", o sistema corrige sozinho pra grafia oficial.
+
+
 ## 2026-06-22 — Calendário de Escala com feriados de Perdigão/MG + sáb/dom
 - O calendário da Área Interna agora mostra os **feriados** com o nome dentro do quadradinho: nacionais, o estadual de MG (Tiradentes/Data Magna) e os **municipais de Perdigão** (15/08, 08/12 e 12/12 Aniversário da cidade).
 - Os feriados **móveis** (Carnaval, Quarta de Cinzas, Sexta-feira Santa, Corpus Christi) são **calculados automaticamente pela Páscoa** — funcionam em qualquer ano, sem precisar cadastrar. Quando virar o mês/ano, o calendário troca sozinho.

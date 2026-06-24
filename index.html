@@ -543,7 +543,7 @@ body,.main-content{background:#F3F0EC}
     <div style="flex:1 1 180px">
       <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Funcionário</label>
       <input id="esc-nome" list="esc-nomes" placeholder="Nome" onkeydown="if(event.key==='Enter')escalaAdd()" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px">
-      <datalist id="esc-nomes"><option>Wilson</option><option>André</option><option>Alberto</option><option>Magela</option><option>Gustavo</option><option>Rosemir</option><option>Diogo</option></datalist>
+      <datalist id="esc-nomes"></datalist>
     </div>
     <div style="flex:0 1 170px">
       <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Dia da folga</label>
@@ -1727,6 +1727,22 @@ async function metaCfgSave(){
   }catch(e){toast('Sem conexão ao salvar.','erro');}
 }
 var ESCALA_SYS=[], ESC_EDIT=-1;
+function escalaNomesCanon(){
+  var base=[];try{base=funcGet().map(function(f){return f.nome;});}catch(e){}
+  ['Diogo','Rosemir'].forEach(function(n){if(base.indexOf(n)<0)base.push(n);});
+  return base;
+}
+function _semAcento(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+function nomeCanonico(s){
+  var t=(s||'').trim();if(!t)return t;
+  var k=_semAcento(t),lista=escalaNomesCanon();
+  for(var i=0;i<lista.length;i++){if(_semAcento(lista[i])===k)return lista[i];}
+  return t;
+}
+function escalaNomesFill(){
+  var dl=document.getElementById('esc-nomes');if(!dl)return;
+  dl.innerHTML=escalaNomesCanon().map(function(n){return '<option>'+n.replace(/</g,'&lt;')+'</option>';}).join('');
+}
 async function escalaLoad(){
   var s=document.getElementById('esc-status');if(s)s.textContent='';
   try{
@@ -1734,7 +1750,7 @@ async function escalaLoad(){
     if(r.ok){var a=await r.json();ESCALA_SYS=[];if(a&&a.length&&a[0].valor){try{ESCALA_SYS=JSON.parse(a[0].valor)||[];}catch(e){}}}
     else if(s){s.style.color='#b91c1c';s.textContent='Não consegui ler (a tabela config existe no Supabase?).';}
   }catch(e){if(s){s.style.color='#b91c1c';s.textContent='Sem conexão.';}}
-  ESC_EDIT=-1;escalaModo();escalaRender();
+  ESC_EDIT=-1;escalaModo();escalaRender();escalaNomesFill();
 }
 function escalaModo(){
   var b=document.getElementById('esc-btn');if(!b)return;
@@ -1761,7 +1777,7 @@ function escalaRender(){
   box.innerHTML=html+'</table>';
 }
 function escalaAdd(){
-  var nome=(document.getElementById('esc-nome').value||'').trim();
+  var nome=nomeCanonico(document.getElementById('esc-nome').value||'');
   var data=document.getElementById('esc-data').value;
   if(!nome||!data){toast('Preencha o nome e o dia da folga.','erro');return;}
   if(ESC_EDIT>=0&&ESC_EDIT<ESCALA_SYS.length){ESCALA_SYS[ESC_EDIT]={nome:nome,data:data};ESC_EDIT=-1;toast('Folga alterada');}

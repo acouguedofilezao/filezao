@@ -110,9 +110,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .cal-cell .dnum{font-family:'Anton';font-size:2.5vh;color:#555;line-height:1}
 .cal-cell .nomes{margin-top:.4vh;display:flex;flex-direction:column;gap:.2vh;overflow:hidden}
 .cal-cell .fer{font-size:1.5vh;color:#C20000;font-weight:700;line-height:1.08;margin-top:.25vh;white-space:normal;overflow:hidden}
-.cal-cell .nm{font-size:2.1vh;line-height:1.16;color:#1a1a1a;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-cell.tem{background:#fff5db}
+.cal-cell .nm{font-size:2.1vh;line-height:1.16;color:#1a1a1a;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.cal-cell.outro{background:#f7f8fa}
 .cal-cell.feriado{background:#fde9e9}
+.cal-cell.tem{background:#fff5db}
+.cal-cell.outro .dnum{color:#b9bec5}
+.cal-cell.outro .fer{color:#d49a9a}
+.cal-cell.outro .nm{color:#aab0b8;font-weight:600}
 .cal-cell.hoje{background:#e7f0ff;border-color:#3a86ff;box-shadow:inset 0 0 0 .28vh #3a86ff}
 .cal-cell.hoje .dnum{color:#1d4ed8} .cal-cell.hoje .nm{color:#1d4ed8}
 .cal-cell.prox{background:#e6f8ee;border-color:#1f9d57;box-shadow:inset 0 0 0 .28vh #1f9d57}
@@ -122,7 +126,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .cal-legend .lg{font-size:1.6vh;color:#555;font-weight:600;display:flex;align-items:center;gap:.5vw}
 .cal-legend .lg::before{content:'';width:1.5vh;height:1.5vh;border-radius:.3vh;display:inline-block}
 .cal-legend .lg.blue::before{background:#3a86ff} .cal-legend .lg.green::before{background:#1f9d57}
-.cal-legend .lg.red::before{background:#C20000} .cal-legend .lg.gray::before{background:#7c8794}
+.cal-legend .lg.red::before{background:#C20000} .cal-legend .lg.gray::before{background:#7c8794} .cal-legend .lg.lgray::before{background:#dfe3e9;border:.13vh solid #cfd4db}
 
 footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:2vw;margin-top:1.1vh;
   border-top:.18vh solid var(--line);padding-top:.9vh}
@@ -132,6 +136,10 @@ footer .verse{font-size:1.95vh;color:var(--gold);font-style:italic;font-weight:5
 footer .verse span{color:var(--muted);font-style:normal;font-size:1.5vh}
 footer .st{font-size:1.5vh;color:var(--muted);text-align:right;white-space:nowrap}
 footer .st i{color:var(--green);font-style:normal}
+.dots{display:flex;gap:1.1vw;align-items:center;justify-content:center}
+.dots .d{height:1.7vh;width:1.7vh;border-radius:999px;background:rgba(255,255,255,.18);border:none;padding:0;cursor:pointer;transition:all .3s cubic-bezier(.6,0,.2,1)}
+.dots .d:hover,.dots .d:focus{background:var(--cream);transform:scale(1.22);box-shadow:0 0 1.4vh var(--glow);outline:none}
+.dots .d.on{width:5vh;background:var(--red);box-shadow:0 0 1.6vh var(--glow)}
 
 @media(max-width:820px){
   .board{flex-direction:column;gap:1.2vh}
@@ -194,6 +202,7 @@ footer .st i{color:var(--green);font-style:normal}
 
   <footer>
     <div class="verse">"Deus recompensa quem n'Ele crê e confia." <span>— Hebreus 11:6</span></div>
+    <div class="dots" id="dots"></div>
     <div class="st" id="status">conectando…</div>
   </footer>
 </div>
@@ -327,12 +336,18 @@ function feriadosDoAno(y){
   return f;
 }
 
+function allFolgas(){
+  var mp={};
+  (ESCALA||[]).forEach(function(e){if(!e||!e.data||!e.nome)return;(mp[e.data]=mp[e.data]||[]).push(e.nome);});
+  return mp;
+}
 function renderEscala(){
   var cont=document.getElementById('esc-cals');if(!cont)return;
   var hoje=agoraBR();var y=hoje.getFullYear(),m=hoje.getMonth();var hojeS=ymd(hoje);
-  var fmap=mapMesAtual();var fer=feriadosDoAno(y);
+  var fmap=allFolgas();
   var datas=Object.keys(fmap).sort();
   var proxS='';for(var i=0;i<datas.length;i++){if(datas[i]>hojeS){proxS=datas[i];break;}}
+  var ferCache={};function ferDe(yy){if(!ferCache[yy])ferCache[yy]=feriadosDoAno(yy);return ferCache[yy];}
   cont.innerHTML='';
   var card=document.createElement('div');card.className='cal-card';
   var tt=document.createElement('div');tt.className='cal-tt';tt.textContent=(MESES[m]+' '+y).toUpperCase();card.appendChild(tt);
@@ -340,26 +355,32 @@ function renderEscala(){
   ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'].forEach(function(n,ix){var c=document.createElement('div');c.textContent=n;if(ix>=5)c.className='wd';head.appendChild(c);});
   card.appendChild(head);
   var grid=document.createElement('div');grid.className='cal-grid';
-  var off=(new Date(y,m,1).getDay()+6)%7;var col=0;
-  function fds(){return (col%7)>=5;}
-  for(var k=0;k<off;k++){var ev=document.createElement('div');ev.className='cal-cell vazio'+(fds()?' fds':'');grid.appendChild(ev);col++;}
+  var off=(new Date(y,m,1).getDay()+6)%7;
   var N=diasNoMes(y,m);
-  for(var d=1;d<=N;d++){
-    var ds=y+'-'+z(m+1)+'-'+z(d);var nomes=fmap[ds]||null;var ferNome=fer[ds]||null;
-    var cls='cal-cell';
-    if(fds())cls+=' fds';
-    if(nomes)cls+=' tem';
-    if(ferNome)cls+=' feriado';
-    if(ds===hojeS)cls+=' hoje';else if(nomes&&ds===proxS)cls+=' prox';else if(nomes&&ds<hojeS)cls+=' passado';
+  var linhas=Math.ceil((off+N)/7);var celulas=linhas*7;
+  var ini=new Date(y,m,1);ini.setDate(ini.getDate()-off);
+  for(var k=0;k<celulas;k++){
+    var cur=new Date(ini);cur.setDate(ini.getDate()+k);
+    var ds=ymd(cur);var col=k%7;var noMes=(cur.getMonth()===m&&cur.getFullYear()===y);
+    var nomes=fmap[ds]||null;var ferNome=ferDe(cur.getFullYear())[ds]||null;
+    var cls='cal-cell'+(noMes?'':' outro');
+    if(col>=5)cls+=' fds';
+    if(noMes){
+      if(ferNome)cls+=' feriado';
+      if(nomes)cls+=' tem';
+      if(ds===hojeS)cls+=' hoje';
+      else if(nomes&&ds===proxS)cls+=' prox';
+      else if(nomes&&ds<hojeS)cls+=' passado';
+    }else if(ds===proxS){cls+=' prox';}
     var cell=document.createElement('div');cell.className=cls;
-    var html='<div class="dnum">'+d+'</div>';
+    var html='<div class="dnum">'+cur.getDate()+'</div>';
     if(ferNome)html+='<div class="fer">'+ferNome.replace(/</g,'&lt;')+'</div>';
     if(nomes)html+='<div class="nomes">'+nomes.map(function(n){return '<div class="nm">'+n.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
-    cell.innerHTML=html;grid.appendChild(cell);col++;
+    cell.innerHTML=html;grid.appendChild(cell);
   }
   card.appendChild(grid);
   var lg=document.createElement('div');lg.className='cal-legend';
-  lg.innerHTML='<span class="lg blue">De folga hoje</span><span class="lg green">Próxima folga</span><span class="lg red">Feriado</span><span class="lg gray">Sáb / Dom</span>';
+  lg.innerHTML='<span class="lg blue">De folga hoje</span><span class="lg green">Próxima folga</span><span class="lg red">Feriado</span><span class="lg gray">Sáb / Dom</span><span class="lg lgray">Outro mês</span>';
   card.appendChild(lg);
   cont.appendChild(card);
 }
@@ -378,8 +399,21 @@ function setScreen(nome){
     document.getElementById('sub').textContent=(MESES[hoje.getMonth()]+' '+hoje.getFullYear()).toUpperCase();
     renderEscala();
   }
+  renderDots();
 }
+var SCREENS=['meta','escala'];var _rotTimer=null;
 function rotaciona(){ setScreen(tela==='meta'?'escala':'meta'); }
+function renderDots(){
+  var el=document.getElementById('dots');if(!el)return;
+  var s='';for(var i=0;i<SCREENS.length;i++)s+='<button type="button" class="d'+(SCREENS[i]===tela?' on':'')+'" onclick="irParaTela('+i+')" aria-label="Tela '+(i+1)+'"></button>';
+  el.innerHTML=s;
+}
+function irParaTela(i){
+  if(i<0||i>=SCREENS.length)return;
+  if(_rotTimer)clearInterval(_rotTimer);
+  _rotTimer=setInterval(rotaciona,ROTACAO_MS);
+  setScreen(SCREENS[i]);
+}
 
 /* ===== loop principal ===== */
 async function carregar(){
@@ -405,7 +439,7 @@ function tick(){
 tick();setInterval(tick,1000);
 setScreen('meta');
 carregar();setInterval(carregar,REFRESH_MS);
-setInterval(rotaciona,ROTACAO_MS);
+_rotTimer=setInterval(rotaciona,ROTACAO_MS);
 </script>
 </body>
 </html>
