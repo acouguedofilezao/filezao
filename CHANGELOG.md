@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Calendário: legenda no topo (não corta mais)
+- A **legenda** saiu de baixo (estava cortando) e subiu pro **topo do calendário, ao lado do mês** ("JUNHO 2026"), em tamanho menor pra encaixar. Sobra mais espaço pros dias.
+
+
 ## 2026-06-22 — Painel: fontes maiores (anotação, topo e legenda)
 - **Anotação** bem maior, mais fácil de ler de longe.
 - **Semana, data e hora** no topo aumentadas.
