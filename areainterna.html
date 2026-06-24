@@ -12,6 +12,7 @@
   --bg:#0a0a0b; --bg2:#141416; --panel:#16161a;
   --red:#FF1A1A; --redDeep:#C20000; --green:#2fd06b; --greenDeep:#179a47;
   --cream:#F3ECE0; --muted:#9a948c; --gold:#E7B24B;
+  --blue:#3a86ff;
   --line:rgba(255,255,255,.08); --glow:rgba(255,26,26,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -77,8 +78,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
   grid-auto-rows:min-content;gap:1.3vh 1vw;align-content:start;overflow:auto;padding-right:.4vw}
 .esc-card{background:rgba(255,255,255,.03);border:.18vh solid var(--line);border-radius:1.3vh;padding:1.2vh 1.1vw;
   display:flex;flex-direction:column;gap:.4vh}
-.esc-card.hoje{border-color:var(--red);box-shadow:0 0 2.2vh var(--glow);background:rgba(255,26,26,.07)}
-.esc-card .top{display:flex;align-items:baseline;gap:.7vw}
+.esc-card.hoje{border-color:var(--blue);box-shadow:0 0 2.4vh rgba(58,134,255,.5);background:rgba(58,134,255,.1)}
+.esc-card.hoje .ed{color:var(--blue)} .esc-card.hoje .en{color:#cfe2ff}
+.esc-card.prox{border-color:var(--green);box-shadow:0 0 2.4vh rgba(47,208,107,.45);background:rgba(47,208,107,.09)}
+.esc-card.prox .ed{color:var(--green)} .esc-card.prox .en{color:#c7eed2}
+.esc-card .badge{margin-left:auto;font-size:1.35vh;font-weight:700;letter-spacing:.05vw;text-transform:uppercase;padding:.4vh .7vw;border-radius:1vh;white-space:nowrap}
+.esc-card.hoje .badge{background:var(--blue);color:#fff} .esc-card.prox .badge{background:var(--green);color:#06210f}
+.esc-card .top{display:flex;align-items:center;gap:.7vw}
 .esc-card .ed{font-family:'Anton';font-size:3.2vh;color:var(--gold);line-height:1}
 .esc-card .ew{font-size:1.6vh;color:var(--muted);text-transform:uppercase;letter-spacing:.04vw}
 .esc-card .en{font-size:2.5vh;color:var(--cream);font-weight:500;line-height:1.25}
@@ -252,11 +258,15 @@ async function carregarMeta(){
 
 /* ===== render ESCALA (mês atual) ===== */
 function escalaDoMes(){
-  var hoje=agoraBR();var pref=hoje.getFullYear()+'-'+z(hoje.getMonth()+1);
+  var hoje=agoraBR();
+  var cur=hoje.getFullYear()+'-'+z(hoje.getMonth()+1);
+  var nd=new Date(hoje.getFullYear(),hoje.getMonth()+1,1);
+  var prox=nd.getFullYear()+'-'+z(nd.getMonth()+1);
   var porData={};
   (ESCALA||[]).forEach(function(e){
     if(!e||!e.data||!e.nome)return;
-    if(String(e.data).slice(0,7)!==pref)return;
+    var ym=String(e.data).slice(0,7);
+    if(ym!==cur&&ym!==prox)return;
     (porData[e.data]=porData[e.data]||[]).push(e.nome);
   });
   var datas=Object.keys(porData).sort();
@@ -264,12 +274,16 @@ function escalaDoMes(){
 }
 function renderEscala(){
   var grid=document.getElementById('esc-grid');var lista=escalaDoMes();var hojeS=ymd(agoraBR());
-  if(!lista.length){grid.innerHTML='<div class="esc-empty">Sem escala cadastrada para este mês.</div>';return;}
+  if(!lista.length){grid.innerHTML='<div class="esc-empty">Sem escala cadastrada.</div>';return;}
+  var proxima='';for(var i=0;i<lista.length;i++){if(lista[i].data>hojeS){proxima=lista[i].data;break;}}
   grid.innerHTML='';
   lista.forEach(function(it){
-    var d=dataDeStr(it.data);var ehHoje=(it.data===hojeS);
-    var c=document.createElement('div');c.className='esc-card'+(ehHoje?' hoje':'');
-    c.innerHTML='<div class="top"><div class="ed">'+ddmm(d)+'</div><div class="ew">'+DIAS_SEM[d.getDay()]+'</div></div>'
+    var d=dataDeStr(it.data);
+    var ehHoje=(it.data===hojeS),ehProx=(it.data===proxima);
+    var cls='esc-card'+(ehHoje?' hoje':(ehProx?' prox':''));
+    var badge=ehHoje?'<span class="badge">De folga hoje</span>':(ehProx?'<span class="badge">Próxima folga</span>':'');
+    var c=document.createElement('div');c.className=cls;
+    c.innerHTML='<div class="top"><div class="ed">'+ddmm(d)+'</div><div class="ew">'+DIAS_SEM[d.getDay()]+'</div>'+badge+'</div>'
       +'<div class="en">'+it.nomes.map(function(n){return n.replace(/</g,'&lt;');}).join(' · ')+'</div>';
     grid.appendChild(c);
   });
@@ -287,7 +301,9 @@ function setScreen(nome){
     var s=semana();document.getElementById('sub').textContent='SEMANA '+ddmm(s.dias[0])+' A '+ddmm(s.dias[6]);
   }else{
     document.getElementById('titulo').textContent='ESCALA DE FOLGA';
-    document.getElementById('sub').textContent=(MESES[hoje.getMonth()]+' '+hoje.getFullYear()).toUpperCase();
+    var lst=escalaDoMes();var temProx=lst.some(function(it){return Number(it.data.slice(5,7))!==(hoje.getMonth()+1);});
+    var txt=MESES[hoje.getMonth()];if(temProx)txt+=' / '+MESES[(hoje.getMonth()+1)%12];
+    document.getElementById('sub').textContent=txt.toUpperCase();
     renderEscala();
   }
 }

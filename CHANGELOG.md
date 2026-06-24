@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Escala: mês atual + próximo, folga de hoje em azul e a próxima em verde
+- O painel de escala agora mostra **o mês atual e o próximo** na mesma tela.
+- **Quem está de folga hoje** aparece em **azul** (selo "De folga hoje") e **a próxima folga** em **verde** (selo "Próxima folga") — sempre dá pra ver quem tá de folga e quem vai folgar.
+
+
 ## 2026-06-22 — Painel vira "Área Interna" (alterna Meta e Escala) + aba Escala mensal
 - **`meta.html` renomeado para `areainterna.html`.** Agora o painel **alterna sozinho a cada 30s**: 30s mostrando **Meta + Anotações**, 30s mostrando **Escala de folga do mês**, e repete. (Deixei um `meta.html` que só redireciona pro novo, pra não quebrar link antigo.)
 - **Anotações vazia** aparece em branco (só o título "ANOTAÇÕES", sem texto).
