@@ -1,5 +1,15 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Correções nas abas Meta/Escala + bônus na TV + calendário de folga
+- **Nome corrigido:** Rosmari → **Rosemir**.
+- **`meta.html` removido** (não é mais usado; tudo é `areainterna.html`).
+- **Aba Meta/Anotações:** campos de dinheiro agora em **R$** no mesmo formato do sistema (digita os centavos), **Enter** salva, e novo campo **Valor da bonificação / brinde (R$)**.
+- **Bônus na TV:** aparece em destaque dourado e pulsante ("🏆 Bônus da equipe: R$ X") pra incentivar a equipe.
+- **Aba Escala mensal:** **Enter** lança, botão **alterar** (troca de folga), **remover** (com confirmação) e **Apagar todas** (pra virada de mês). Padrão do sistema (toast de confirmação).
+- **Painel da escala vira calendário** (SEG→DOM, mês atual + próximo): o nome de quem folga aparece no quadradinho do dia — folga de hoje em **azul**, próxima em **verde**, passadas riscadas.
+- **Escala de junho/2026 (da foto)** pronta pra lançar: rode `ESCALA_JUNHO_2026.sql` no Supabase uma vez.
+
+
 ## 2026-06-22 — Painel meta: removida a régua de vendas por dia
 - A tela da meta agora mostra só o **VENDAS DA SEMANA** no geral (total da semana + barra da meta + anotações). Tirada a régua que mostrava o valor de cada dia.
 

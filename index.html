@@ -524,7 +524,9 @@ body,.main-content{background:#F3F0EC}
   <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">O que você preencher aqui aparece no <strong>painel da Meta</strong> (o do monitor) em tempo real. Defina a <strong>meta de vendas</strong> da semana e escreva as <strong>anotações/avisos</strong> da equipe — substitui escrever no quadro.</p>
   <div style="max-width:680px">
     <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Meta de vendas da semana (R$)</label>
-    <input id="meta-valor" type="number" inputmode="decimal" step="0.01" placeholder="Ex: 50000" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px;margin-bottom:16px">
+    <input id="meta-valor" placeholder="0,00" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px;margin-bottom:16px">
+    <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Valor da bonificação / brinde (R$)</label>
+    <input id="meta-bonus" placeholder="0,00" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px;margin-bottom:16px">
     <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Anotações da semana</label>
     <textarea id="meta-anot" rows="6" placeholder="Avisos do dia, recados para a equipe, observações..." style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px;line-height:1.5;resize:vertical;margin-bottom:14px"></textarea>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -540,14 +542,14 @@ body,.main-content{background:#F3F0EC}
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;max-width:680px;margin-bottom:14px">
     <div style="flex:1 1 180px">
       <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Funcionário</label>
-      <input id="esc-nome" list="esc-nomes" placeholder="Nome" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px">
-      <datalist id="esc-nomes"><option>Wilson</option><option>André</option><option>Alberto</option><option>Magela</option><option>Gustavo</option><option>Rosmari</option><option>Diogo</option></datalist>
+      <input id="esc-nome" list="esc-nomes" placeholder="Nome" onkeydown="if(event.key==='Enter')escalaAdd()" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px">
+      <datalist id="esc-nomes"><option>Wilson</option><option>André</option><option>Alberto</option><option>Magela</option><option>Gustavo</option><option>Rosemir</option><option>Diogo</option></datalist>
     </div>
     <div style="flex:0 1 170px">
       <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Dia da folga</label>
-      <input id="esc-data" type="date" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px">
+      <input id="esc-data" type="date" onkeydown="if(event.key==='Enter')escalaAdd()" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px">
     </div>
-    <button class="btn btn-primary" onclick="escalaAdd()" style="height:46px"><i class="ti ti-plus"></i> Adicionar</button>
+    <button id="esc-btn" class="btn btn-primary" onclick="escalaAdd()" style="height:46px"><i class="ti ti-plus"></i> Adicionar</button>
   </div>
   <div id="esc-lista" style="max-width:680px"></div>
   <span id="esc-status" style="font-size:13px;font-weight:600"></span>
@@ -1704,27 +1706,27 @@ function showSec(id,el){
   else if(id==='energia')energiaInit();
 }
 async function metaCfgLoad(){
-  var s=document.getElementById('meta-status');if(s)s.textContent='';
+  mkDInput(document.getElementById('meta-valor'),metaCfgSave);
+  mkDInput(document.getElementById('meta-bonus'),metaCfgSave);
   try{
-    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,anotacoes)&select=chave,valor',{headers:SB_HDR});
+    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,bonus,anotacoes)&select=chave,valor',{headers:SB_HDR});
     if(r.ok){var a=await r.json(),map={};a.forEach(function(x){map[x.chave]=x.valor;});
-      if(map.meta_semanal!=null)document.getElementById('meta-valor').value=map.meta_semanal;
-      if(map.anotacoes!=null)document.getElementById('meta-anot').value=map.anotacoes;
-    }else if(s){s.style.color='#b91c1c';s.textContent='Não consegui ler (a tabela config existe no Supabase?).';}
-  }catch(e){if(s){s.style.color='#b91c1c';s.textContent='Sem conexão.';}}
+      setV('meta-valor', map.meta_semanal!=null?(parseFloat(String(map.meta_semanal).replace(',','.'))||0):0);
+      setV('meta-bonus', map.bonus!=null?(parseFloat(String(map.bonus).replace(',','.'))||0):0);
+      document.getElementById('meta-anot').value=(map.anotacoes!=null?map.anotacoes:'');
+    }else{toast('Não consegui ler a config (a tabela existe no Supabase?)','erro');}
+  }catch(e){toast('Sem conexão.','erro');}
 }
 async function metaCfgSave(){
-  var s=document.getElementById('meta-status');
-  var mv=(document.getElementById('meta-valor').value||'').replace(',','.').trim();
-  var an=document.getElementById('meta-anot').value;
-  var rows=[{chave:'meta_semanal',valor:mv},{chave:'anotacoes',valor:an}];
+  var mv=getDV('meta-valor'),bn=getDV('meta-bonus'),an=document.getElementById('meta-anot').value;
+  var rows=[{chave:'meta_semanal',valor:String(mv)},{chave:'bonus',valor:String(bn)},{chave:'anotacoes',valor:an}];
   try{
     var r=await fetch(SB_URL+'/rest/v1/config?on_conflict=chave',{method:'POST',headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)});
-    if(r.ok){if(s){s.style.color='#0a7a32';s.textContent='\u2713 Salvo! Já aparece no painel.';}}
-    else if(s){s.style.color='#b91c1c';s.textContent='Erro '+r.status+' ao salvar. Criou a tabela config no Supabase?';}
-  }catch(e){if(s){s.style.color='#b91c1c';s.textContent='Sem conexão ao salvar.';}}
+    if(r.ok)toast('Salvo! Já aparece no painel');
+    else toast('Erro '+r.status+' ao salvar. Criou a tabela config?','erro');
+  }catch(e){toast('Sem conexão ao salvar.','erro');}
 }
-var ESCALA_SYS=[];
+var ESCALA_SYS=[], ESC_EDIT=-1;
 async function escalaLoad(){
   var s=document.getElementById('esc-status');if(s)s.textContent='';
   try{
@@ -1732,34 +1734,60 @@ async function escalaLoad(){
     if(r.ok){var a=await r.json();ESCALA_SYS=[];if(a&&a.length&&a[0].valor){try{ESCALA_SYS=JSON.parse(a[0].valor)||[];}catch(e){}}}
     else if(s){s.style.color='#b91c1c';s.textContent='Não consegui ler (a tabela config existe no Supabase?).';}
   }catch(e){if(s){s.style.color='#b91c1c';s.textContent='Sem conexão.';}}
-  escalaRender();
+  ESC_EDIT=-1;escalaModo();escalaRender();
+}
+function escalaModo(){
+  var b=document.getElementById('esc-btn');if(!b)return;
+  b.innerHTML=(ESC_EDIT>=0?'<i class="ti ti-check"></i> Salvar alteração':'<i class="ti ti-plus"></i> Adicionar');
 }
 function escalaRender(){
   var box=document.getElementById('esc-lista');if(!box)return;
-  var arr=ESCALA_SYS.slice().sort(function(a,b){return (a.data||'').localeCompare(b.data||'');});
+  var arr=ESCALA_SYS.map(function(e,i){return {e:e,i:i};}).sort(function(a,b){return (a.e.data||'').localeCompare(b.e.data||'');});
   if(!arr.length){box.innerHTML='<div style="color:#888;font-size:14px;padding:10px 0">Nenhuma folga cadastrada ainda.</div>';return;}
-  var html='<table style="width:100%;border-collapse:collapse;font-size:14px">';
-  arr.forEach(function(e){
-    var p=e.data?e.data.split('-'):['','',''];var ds=p[2]+'/'+p[1];
+  var html='<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button onclick="escalaLimparTudo()" style="border:1px solid #f0c0c0;background:#fff;color:#b91c1c;border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:700;font-size:13px"><i class="ti ti-trash"></i> Apagar todas</button></div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:14px">';
+  arr.forEach(function(o){
+    var e=o.e,p=e.data?e.data.split('-'):['','',''],ds=p[2]+'/'+p[1];
     var dia='';try{dia=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][new Date(e.data+'T12:00:00').getDay()];}catch(x){}
     html+='<tr style="border-bottom:1px solid #eee">'
       +'<td style="padding:8px 6px;font-weight:600;white-space:nowrap">'+ds+'</td>'
       +'<td style="padding:8px 6px;color:#888;white-space:nowrap">'+dia+'</td>'
       +'<td style="padding:8px 6px">'+(e.nome||'').replace(/</g,'&lt;')+'</td>'
-      +'<td style="padding:8px 6px;text-align:right"><button onclick="escalaDel('+ESCALA_SYS.indexOf(e)+')" style="border:0;background:#fde8e8;color:#b91c1c;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600">remover</button></td></tr>';
+      +'<td style="padding:8px 6px;text-align:right;white-space:nowrap">'
+        +'<button onclick="escalaEdit('+o.i+')" style="border:0;background:#e7eefc;color:#1d4ed8;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600;margin-right:6px">alterar</button>'
+        +'<button onclick="escalaDel('+o.i+')" style="border:0;background:#fde8e8;color:#b91c1c;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600">remover</button>'
+      +'</td></tr>';
   });
   box.innerHTML=html+'</table>';
 }
 function escalaAdd(){
   var nome=(document.getElementById('esc-nome').value||'').trim();
   var data=document.getElementById('esc-data').value;
-  var s=document.getElementById('esc-status');
-  if(!nome||!data){if(s){s.style.color='#b91c1c';s.textContent='Preencha o nome e o dia da folga.';}return;}
-  ESCALA_SYS.push({nome:nome,data:data});
+  if(!nome||!data){toast('Preencha o nome e o dia da folga.','erro');return;}
+  if(ESC_EDIT>=0&&ESC_EDIT<ESCALA_SYS.length){ESCALA_SYS[ESC_EDIT]={nome:nome,data:data};ESC_EDIT=-1;toast('Folga alterada');}
+  else{ESCALA_SYS.push({nome:nome,data:data});toast('Folga lançada');}
   document.getElementById('esc-nome').value='';document.getElementById('esc-data').value='';
-  escalaRender();escalaSave();
+  document.getElementById('esc-nome').focus();
+  escalaModo();escalaRender();escalaSave();
 }
-function escalaDel(i){if(i>=0&&i<ESCALA_SYS.length){ESCALA_SYS.splice(i,1);escalaRender();escalaSave();}}
+function escalaEdit(i){
+  if(i<0||i>=ESCALA_SYS.length)return;
+  document.getElementById('esc-nome').value=ESCALA_SYS[i].nome||'';
+  document.getElementById('esc-data').value=ESCALA_SYS[i].data||'';
+  ESC_EDIT=i;escalaModo();
+  try{document.getElementById('esc-nome').scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
+  document.getElementById('esc-nome').focus();
+}
+function escalaDel(i){
+  if(i<0||i>=ESCALA_SYS.length)return;
+  if(!confirm('Remover esta folga?'))return;
+  ESCALA_SYS.splice(i,1);if(ESC_EDIT===i){ESC_EDIT=-1;escalaModo();}escalaRender();escalaSave();toast('Folga removida');
+}
+function escalaLimparTudo(){
+  if(!ESCALA_SYS.length)return;
+  if(!confirm('Apagar TODAS as folgas cadastradas? Não tem como desfazer.'))return;
+  ESCALA_SYS=[];ESC_EDIT=-1;escalaModo();escalaRender();escalaSave();toast('Todas as folgas foram apagadas');
+}
 async function escalaSave(){
   var s=document.getElementById('esc-status');
   try{

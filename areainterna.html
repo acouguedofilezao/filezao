@@ -60,6 +60,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .fill.ok{background:linear-gradient(90deg,#b8860b,var(--gold));box-shadow:0 0 2.6vh rgba(231,178,75,.6)}
 .falta{text-align:center;margin-top:.9vh;font-size:2.1vh;color:var(--muted)}
 .falta b{font-family:'Anton';font-weight:400}
+.bonus{margin-top:1.6vh;display:flex;align-items:center;gap:1vw;background:linear-gradient(90deg,#b8860b,var(--gold));color:#1a1206;
+  font-family:'Anton';font-size:3.4vh;letter-spacing:.5px;padding:1.1vh 2.4vw;border-radius:1.4vh;text-transform:uppercase;
+  box-shadow:0 0 3vh rgba(231,178,75,.55);animation:bonuspulse 1.8s ease-in-out infinite}
+.bonus .ic{font-size:3.8vh}
+@keyframes bonuspulse{0%,100%{transform:scale(1);box-shadow:0 0 2.4vh rgba(231,178,75,.45)}50%{transform:scale(1.04);box-shadow:0 0 4.4vh rgba(231,178,75,.8)}}
 .col-notes{flex:1 1 0;display:flex;flex-direction:column;min-width:0;
   background:rgba(255,255,255,.03);border:.2vh solid var(--line);border-radius:1.6vh;padding:1.4vh 1.4vw}
 .col-notes .t{font-family:'Anton';font-size:2.7vh;color:var(--gold);letter-spacing:.5px;text-transform:uppercase;margin-bottom:1vh}
@@ -91,6 +96,23 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .esc-card .ew{font-size:1.6vh;color:var(--muted);text-transform:uppercase;letter-spacing:.04vw}
 .esc-card .en{font-size:2.5vh;color:var(--cream);font-weight:500;line-height:1.25}
 .esc-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2.4vh;font-style:italic}
+.esc-cals{flex:1 1 auto;display:flex;gap:1.4vw;min-height:0;overflow:auto;align-items:stretch}
+.esc-cal{flex:1 1 0;display:flex;flex-direction:column;min-width:0}
+.esc-cal .cal-tt{font-family:'Anton';font-size:2.3vh;color:var(--gold);text-align:center;letter-spacing:.5px;margin-bottom:.7vh}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:.5vh .4vw;margin-bottom:.5vh}
+.cal-head div{text-align:center;font-family:'Anton';font-size:1.45vh;color:var(--muted);text-transform:uppercase}
+.cal-grid{flex:1 1 auto;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:.5vh .4vw}
+.cal-cell{background:rgba(255,255,255,.025);border:.14vh solid var(--line);border-radius:.8vh;padding:.5vh .35vw;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.cal-cell.vazio{background:transparent;border-color:transparent}
+.cal-cell .dnum{font-family:'Anton';font-size:1.7vh;color:var(--cream);opacity:.55;line-height:1}
+.cal-cell .nomes{margin-top:.25vh;display:flex;flex-direction:column;gap:.1vh;overflow:hidden}
+.cal-cell .nm{font-size:1.45vh;line-height:1.14;color:var(--gold);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-cell.tem{background:rgba(231,178,75,.06)}
+.cal-cell.hoje{border-color:var(--blue);box-shadow:0 0 1.6vh rgba(58,134,255,.5);background:rgba(58,134,255,.12)}
+.cal-cell.hoje .dnum{color:var(--blue);opacity:1} .cal-cell.hoje .nm{color:#cfe2ff}
+.cal-cell.prox{border-color:var(--green);box-shadow:0 0 1.6vh rgba(47,208,107,.45);background:rgba(47,208,107,.1)}
+.cal-cell.prox .dnum{color:var(--green);opacity:1} .cal-cell.prox .nm{color:#c7eed2}
+.cal-cell.passado{opacity:.5} .cal-cell.passado .nm{text-decoration:line-through;color:var(--muted)}
 
 footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:2vw;margin-top:1.1vh;
   border-top:.18vh solid var(--line);padding-top:.9vh}
@@ -104,7 +126,7 @@ footer .st i{color:var(--green);font-style:normal}
   .brandlogo{height:8vh}.brand .bt .n{font-size:2.5vh}
   .vendas{font-size:11vh}.col-notes{min-height:20vh}
   #nota-view{font-size:2vh}.dias{grid-template-columns:repeat(4,1fr)}
-  .esc-grid{grid-template-columns:repeat(2,1fr)}
+  .esc-cals{flex-direction:column}
   footer{flex-direction:column;align-items:flex-start;gap:.5vh}footer .st{text-align:left}
 }
 </style>
@@ -143,6 +165,7 @@ footer .st i{color:var(--green);font-style:normal}
             <div class="track"><div class="fill" id="fill"></div></div>
             <div class="falta" id="falta">—</div>
           </div>
+          <div class="bonus" id="bonus" style="display:none"></div>
         </div>
         <div class="col-notes">
           <div class="t">Anotações</div>
@@ -153,7 +176,7 @@ footer .st i{color:var(--green);font-style:normal}
 
     <!-- TELA 2: ESCALA DE FOLGA -->
     <section class="view" id="view-escala">
-      <div class="esc-grid" id="esc-grid"></div>
+      <div class="esc-cals" id="esc-cals"></div>
     </section>
   </div>
 
@@ -212,11 +235,12 @@ async function fetchEntradas(ws,weLt){
 /* ===== config: meta, anotações, escala ===== */
 async function lerConfig(){
   try{
-    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,anotacoes,escala)&select=chave,valor',{headers:HDR});
+    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,anotacoes,escala,bonus)&select=chave,valor',{headers:HDR});
     if(r.ok){var a=await r.json(),map={};a.forEach(function(x){map[x.chave]=x.valor;});
       var esc=[];try{if(map.escala)esc=JSON.parse(map.escala)||[];}catch(e){}
       return {meta:(map.meta_semanal!=null?parseFloat(String(map.meta_semanal).replace(',','.'))||0:null),
-              nota:(map.anotacoes!=null?map.anotacoes:null), escala:esc};}
+              nota:(map.anotacoes!=null?map.anotacoes:null), escala:esc,
+              bonus:(map.bonus!=null?parseFloat(String(map.bonus).replace(',','.'))||0:0)};}
   }catch(e){}
   return null;
 }
@@ -249,38 +273,47 @@ async function carregarMeta(){
 }
 
 /* ===== render ESCALA (mês atual) ===== */
-function escalaDoMes(){
-  var hoje=agoraBR();
-  var cur=hoje.getFullYear()+'-'+z(hoje.getMonth()+1);
-  var nd=new Date(hoje.getFullYear(),hoje.getMonth()+1,1);
-  var prox=nd.getFullYear()+'-'+z(nd.getMonth()+1);
-  var porData={};
-  (ESCALA||[]).forEach(function(e){
-    if(!e||!e.data||!e.nome)return;
-    var ym=String(e.data).slice(0,7);
-    if(ym!==cur&&ym!==prox)return;
-    (porData[e.data]=porData[e.data]||[]).push(e.nome);
-  });
-  var datas=Object.keys(porData).sort();
-  return datas.map(function(d){return {data:d,nomes:porData[d]};});
+function escalaPeriodo(){
+  var hoje=agoraBR();var curY=hoje.getFullYear(),curM=hoje.getMonth();
+  var nd=new Date(curY,curM+1,1);var nxY=nd.getFullYear(),nxM=nd.getMonth();
+  function mapMes(y,m){var pref=y+'-'+z(m+1);var mp={};(ESCALA||[]).forEach(function(e){if(!e||!e.data||!e.nome)return;if(String(e.data).slice(0,7)!==pref)return;(mp[e.data]=mp[e.data]||[]).push(e.nome);});return mp;}
+  return {curY:curY,curM:curM,nxY:nxY,nxM:nxM,mapCur:mapMes(curY,curM),mapNx:mapMes(nxY,nxM)};
+}
+function temFolgas(){var p=escalaPeriodo();return (Object.keys(p.mapCur).length+Object.keys(p.mapNx).length)>0;}
+function diasNoMes(y,m){return new Date(y,m+1,0).getDate();}
+function buildCal(y,m,fmap,hojeS,proxS){
+  var wrap=document.createElement('div');wrap.className='esc-cal';
+  var tt=document.createElement('div');tt.className='cal-tt';tt.textContent=(MESES[m]+' '+y).toUpperCase();wrap.appendChild(tt);
+  var head=document.createElement('div');head.className='cal-head';
+  ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'].forEach(function(n){var c=document.createElement('div');c.textContent=n;head.appendChild(c);});
+  wrap.appendChild(head);
+  var grid=document.createElement('div');grid.className='cal-grid';
+  var off=(new Date(y,m,1).getDay()+6)%7;
+  for(var k=0;k<off;k++){var ev=document.createElement('div');ev.className='cal-cell vazio';grid.appendChild(ev);}
+  var N=diasNoMes(y,m);
+  for(var d=1;d<=N;d++){
+    var ds=y+'-'+z(m+1)+'-'+z(d);var nomes=fmap[ds]||null;
+    var st='';
+    if(ds===hojeS)st=' hoje';
+    else if(nomes&&ds===proxS)st=' prox';
+    else if(nomes&&ds<hojeS)st=' passado';
+    var cell=document.createElement('div');cell.className='cal-cell'+st+(nomes?' tem':'');
+    var html='<div class="dnum">'+d+'</div>';
+    if(nomes)html+='<div class="nomes">'+nomes.map(function(n){return '<div class="nm">'+n.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
+    cell.innerHTML=html;grid.appendChild(cell);
+  }
+  wrap.appendChild(grid);return wrap;
 }
 function renderEscala(){
-  var grid=document.getElementById('esc-grid');var lista=escalaDoMes();var hojeS=ymd(agoraBR());
-  if(!lista.length){grid.innerHTML='<div class="esc-empty">Sem escala cadastrada.</div>';return;}
-  var proxima='';for(var i=0;i<lista.length;i++){if(lista[i].data>hojeS){proxima=lista[i].data;break;}}
-  grid.innerHTML='';
-  lista.forEach(function(it){
-    var d=dataDeStr(it.data);
-    var ehHoje=(it.data===hojeS),ehProx=(it.data===proxima),ehPassado=(it.data<hojeS);
-    var cls='esc-card'+(ehHoje?' hoje':(ehProx?' prox':(ehPassado?' passado':'')));
-    var badge=ehHoje?'<span class="badge">De folga hoje</span>':(ehProx?'<span class="badge">Próxima folga</span>':'');
-    var c=document.createElement('div');c.className=cls;
-    c.innerHTML='<div class="top"><div class="ed">'+ddmm(d)+'</div><div class="ew">'+DIAS_SEM[d.getDay()]+'</div>'+badge+'</div>'
-      +'<div class="en">'+it.nomes.map(function(n){return n.replace(/</g,'&lt;');}).join(' · ')+'</div>';
-    grid.appendChild(c);
-  });
+  var cont=document.getElementById('esc-cals');if(!cont)return;
+  var hojeS=ymd(agoraBR());var p=escalaPeriodo();
+  var todas=Object.keys(p.mapCur).concat(Object.keys(p.mapNx)).sort();
+  var proxS='';for(var i=0;i<todas.length;i++){if(todas[i]>hojeS){proxS=todas[i];break;}}
+  cont.innerHTML='';
+  if(!todas.length){cont.innerHTML='<div class="esc-empty">Sem escala cadastrada.</div>';return;}
+  if(Object.keys(p.mapCur).length)cont.appendChild(buildCal(p.curY,p.curM,p.mapCur,hojeS,proxS));
+  if(Object.keys(p.mapNx).length)cont.appendChild(buildCal(p.nxY,p.nxM,p.mapNx,hojeS,proxS));
 }
-
 /* ===== troca de telas ===== */
 var tela='meta';
 function setScreen(nome){
@@ -293,15 +326,14 @@ function setScreen(nome){
     var s=semana();document.getElementById('sub').textContent='SEMANA '+ddmm(s.dias[0])+' A '+ddmm(s.dias[6]);
   }else{
     document.getElementById('titulo').textContent='ESCALA DE FOLGA';
-    var lst=escalaDoMes();var temProx=lst.some(function(it){return Number(it.data.slice(5,7))!==(hoje.getMonth()+1);});
-    var txt=MESES[hoje.getMonth()];if(temProx)txt+=' / '+MESES[(hoje.getMonth()+1)%12];
+    var pp=escalaPeriodo();var txt=MESES[hoje.getMonth()];if(Object.keys(pp.mapNx).length)txt+=' / '+MESES[pp.nxM];
     document.getElementById('sub').textContent=txt.toUpperCase();
     renderEscala();
   }
 }
 function rotaciona(){
-  var temEscala=escalaDoMes().length>0;
-  if(tela==='meta'){ if(temEscala)setScreen('escala'); }
+  var tem=temFolgas();
+  if(tela==='meta'){ if(tem)setScreen('escala'); }
   else { setScreen('meta'); }
 }
 
@@ -312,6 +344,9 @@ async function carregar(){
     if(cfg.meta!=null)META=cfg.meta;
     if(cfg.escala)ESCALA=cfg.escala;
     document.getElementById('nota-view').textContent=(cfg.nota!=null?cfg.nota:'');
+    var bEl=document.getElementById('bonus');
+    if(cfg.bonus>0){bEl.style.display='flex';bEl.innerHTML='<span class="ic">🏆</span> Bônus da equipe: '+money(cfg.bonus);}
+    else bEl.style.display='none';
   }
   await carregarMeta();
   if(tela==='escala')renderEscala();
