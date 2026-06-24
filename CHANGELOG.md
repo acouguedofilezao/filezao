@@ -1,5 +1,12 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Permissões por usuário (acesso restrito) + aba Permissões
+- Novo **controle de acesso por usuário**: aba **"Permissões"** (Administração) onde o Diogo escolhe **quais abas cada usuário vê**. Quem não está na lista = acesso total; quem está = só as abas marcadas (o resto some do menu, junto com o seletor de módulo e o robô da IA). Bloqueio reforçado no `showSec`. Guardado na chave `permissoes` do `config`.
+- **Trava de segurança:** usuário `diogo` sempre tem acesso total (não se tranca fora). Sem "flash": permissões carregadas antes de abrir a tela.
+- **Rosemir:** preparada pra ter acesso **só à "Escala mensal"**. A conta dela (login Rosemir / senha) é criada no painel do Supabase (a senha **não** vai pro código, repo é público). Permissão via aba Permissões ou `PERMISSOES_ROSEMIR.sql`.
+- Não mexeu em nenhuma tabela/coluna existente nem em layout.
+
+
 ## 2026-06-24 — Calendário: dias passados marcados como concluído (✓ verde)
 - Todo dia que já passou aparece com um **✓ verde no canto** e o número mais apagado (cara de "concluído"). Nas **folgas que já passaram**, o nome fica **verde** (folga cumprida).
 - Aplicado nas **duas versões** (EM BREVE e completa/`areainterna_bkp.html`), pra já vir igual quando você liberar a meta.

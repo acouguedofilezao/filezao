@@ -375,6 +375,8 @@ body,.main-content{background:#F3F0EC}
     <button class="nav-btn" onclick="showSec('tv',this)"><i class="ti ti-device-tv"></i><span>Seleção TV</span></button>
     <button class="nav-btn" onclick="showSec('metaedit',this)"><i class="ti ti-target"></i><span>Meta / Anotações</span></button>
     <button class="nav-btn" onclick="showSec('escala',this)"><i class="ti ti-calendar-event"></i><span>Escala mensal</span></button>
+    <div class="nav-section">Administração</div>
+    <button class="nav-btn" onclick="showSec('permissoes',this)"><i class="ti ti-lock"></i><span>Permissões</span></button>
     </div>
     <div id="nav-roncador" style="display:none">
       <div class="nav-section">Fazenda Roncador</div>
@@ -553,6 +555,13 @@ body,.main-content{background:#F3F0EC}
   </div>
   <div id="esc-lista" style="max-width:680px"></div>
   <span id="esc-status" style="font-size:13px;font-weight:600"></span>
+</div>
+<div id="sec-permissoes" class="section">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-lock"></i> Permissões de usuários</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Escolha o que cada usuário enxerga ao entrar no sistema. Quem <strong>não estiver</strong> nesta lista (como você) tem <strong>acesso total</strong>. Quem estiver, vê <strong>só as abas marcadas</strong> &mdash; o resto fica oculto e a pessoa nem sabe que existe. Vale no <strong>próximo login</strong> da pessoa.<br><strong>Não adicione você mesmo aqui</strong>, pra não se limitar sem querer.</p>
+    <div id="perm-lista"></div>
+  </div>
 </div>
 <div id="sec-log" class="section">
   <div class="card">
@@ -1679,7 +1688,128 @@ function setModulo(m){
     showSec('dashboard',db);
   }
 }
+/* ===== Permissoes por usuario (admin escolhe o que cada um ve) ===== */
+var _permAllowed=null;            /* null = acesso total; array de ids = so essas abas */
+var PERM_CACHE_LS='fz_perm';
+var PERM_EDIT={};
+var TABS_PERM=[
+ ['dashboard','Painel'],['entradas','Entradas'],['saidas','Saidas'],['gado','Gado'],['cheques','Cheques'],
+ ['fechamento','Fechamento'],['pagamento','Pagamento funcionarios'],['relatorio','Relatorios'],['saldo','Saldo bancario'],
+ ['cotacoes','Cotacoes'],['estoque','Estoque'],['importar','Importar dados financeiros'],['importar-prod','Importar produtos'],
+ ['backup','Backup'],['log','Registro de alteracoes'],['tv','Selecao TV'],['metaedit','Meta / Anotacoes'],['escala','Escala mensal'],['energia','Energia']
+];
+function permUserAtual(){return ((((authLoad()||{}).user)||'')+'').trim().toLowerCase();}
+function permCacheGet(){try{return JSON.parse(localStorage.getItem(PERM_CACHE_LS)||'null')||{};}catch(e){return {};}}
+function permCacheSet(m){try{localStorage.setItem(PERM_CACHE_LS,JSON.stringify(m||{}));}catch(e){}}
+async function permFetch(){
+  var r=await fetch(SB_URL+'/rest/v1/config?chave=eq.permissoes&select=valor',{headers:SB_HDR});
+  if(!r.ok)throw new Error('http '+r.status);
+  var a=await r.json();var m={};
+  if(a&&a.length&&a[0].valor){try{m=JSON.parse(a[0].valor)||{};}catch(e){m={};}}
+  return m;
+}
+function permNavId(btn){var oc=(btn.getAttribute&&btn.getAttribute('onclick'))||'';var mt=oc.match(/showSec\('([^']+)'/);return mt?mt[1]:'';}
+function permLimpaGrupos(){
+  var cont=document.getElementById('nav-filezao');if(!cont)return;
+  var kids=Array.prototype.slice.call(cont.children);
+  for(var i=0;i<kids.length;i++){
+    if(kids[i].className==='nav-section'){
+      var vis=false;
+      for(var j=i+1;j<kids.length;j++){
+        if(kids[j].className==='nav-section')break;
+        if(kids[j].classList&&kids[j].classList.contains('nav-btn')&&kids[j].style.display!=='none'){vis=true;break;}
+      }
+      kids[i].style.display=vis?'':'none';
+    }
+  }
+}
+function permAplicarMapa(map){
+  var u=permUserAtual();
+  var lista=(map&&Object.prototype.hasOwnProperty.call(map,u)&&Array.isArray(map[u]))?map[u]:null;
+  if(u==='diogo')lista=null;   /* trava de seguranca: o dono nunca se tranca fora */
+  _permAllowed=lista;
+  document.querySelectorAll('.nav-btn').forEach(function(b){
+    var id=permNavId(b);if(!id)return;
+    b.style.display=(!lista||lista.indexOf(id)>=0)?'':'none';
+  });
+  permLimpaGrupos();
+  var modsel=document.querySelector('.modsel');var fab=document.getElementById('ia-fab');
+  if(lista){ if(modsel)modsel.style.display='none'; if(fab)fab.style.display='none'; }
+  else { if(modsel)modsel.style.display=''; }
+  if(lista&&lista.length){
+    var ativa=((document.querySelector('.section.active')||{}).id||'').replace(/^sec-/,'');
+    if(lista.indexOf(ativa)<0){
+      var alvo=lista[0],bb=null;
+      document.querySelectorAll('.nav-btn').forEach(function(b){if(permNavId(b)===alvo)bb=b;});
+      showSec(alvo,bb);
+    }
+  }
+}
+async function aplicarPermissoes(){
+  try{permAplicarMapa(permCacheGet());}catch(e){}
+  try{var fresh=await permFetch();permCacheSet(fresh);permAplicarMapa(fresh);}catch(e){}
+}
+async function permLoad(){
+  var box=document.getElementById('perm-lista');if(box)box.innerHTML='<div style="color:#888;padding:10px 0">Carregando...</div>';
+  var m=permCacheGet();
+  try{m=await permFetch();permCacheSet(m);}catch(e){}
+  PERM_EDIT=JSON.parse(JSON.stringify(m||{}));
+  permRender();
+}
+function permRender(){
+  var box=document.getElementById('perm-lista');if(!box)return;
+  var inp='border:1px solid #ddd;border-radius:8px;padding:9px 11px;font-size:15px';
+  var users=Object.keys(PERM_EDIT);
+  var h='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">'
+    +'<div style="flex:1;min-width:180px"><label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Novo usuario (login)</label>'
+    +'<input id="perm-novo" placeholder="ex: rosemir" onkeydown="if(event.key===\'Enter\')permAddUser()" style="width:100%;'+inp+'"></div>'
+    +'<button class="btn btn-primary" onclick="permAddUser()"><i class="ti ti-plus"></i> Adicionar</button></div>';
+  if(!users.length)h+='<div style="color:#888;font-size:14px;padding:6px 0">Nenhum usuario restrito ainda. Todos que logam tem acesso total. Adicione um usuario acima pra limitar o que ele ve.</div>';
+  users.forEach(function(u){
+    var lista=PERM_EDIT[u]||[];
+    h+='<div class="card" style="margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+      +'<div style="font-weight:800;font-size:16px">@'+(u+'').replace(/</g,'&lt;')+'</div>'
+      +'<button onclick="permDelUser(\''+u+'\')" style="border:0;background:#fde8e8;color:#b91c1c;border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:600">remover</button></div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:6px">';
+    TABS_PERM.forEach(function(t){
+      var ck=lista.indexOf(t[0])>=0?' checked':'';
+      h+='<label style="display:flex;gap:7px;align-items:center;font-size:14px;cursor:pointer"><input type="checkbox" data-u="'+u+'" data-tab="'+t[0]+'"'+ck+'> '+t[1]+'</label>';
+    });
+    h+='</div></div>';
+  });
+  if(users.length)h+='<div style="margin-top:6px;display:flex;align-items:center;gap:10px"><button class="btn btn-primary" onclick="permSalvar()"><i class="ti ti-device-floppy"></i> Salvar permissoes</button><span id="perm-status" style="font-size:13px;font-weight:600"></span></div>';
+  box.innerHTML=h;
+}
+function permAddUser(){
+  var el=document.getElementById('perm-novo');if(!el)return;
+  var u=(el.value||'').trim().toLowerCase();
+  if(!u)return;
+  if(/[^a-z0-9._-]/.test(u)){alert('Use so letras minusculas, numeros, ponto, hifen ou _ (igual ao login).');return;}
+  if(!Object.prototype.hasOwnProperty.call(PERM_EDIT,u))PERM_EDIT[u]=[];
+  el.value='';permRender();
+}
+function permDelUser(u){
+  if(!confirm('Remover as restricoes de @'+u+'? Ele volta a ter acesso total.'))return;
+  delete PERM_EDIT[u];permRender();
+}
+async function permSalvar(){
+  var map={};Object.keys(PERM_EDIT).forEach(function(u){map[u]=[];});
+  document.querySelectorAll('#perm-lista input[type=checkbox]').forEach(function(c){
+    if(c.checked){var u=c.getAttribute('data-u'),t=c.getAttribute('data-tab');(map[u]=map[u]||[]).push(t);}
+  });
+  PERM_EDIT=map;
+  var st=document.getElementById('perm-status');if(st){st.style.color='#666';st.textContent='Salvando...';}
+  try{
+    var r=await fetch(SB_URL+'/rest/v1/config?on_conflict=chave',{method:'POST',headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{chave:'permissoes',valor:JSON.stringify(map)}])});
+    if(!r.ok)throw new Error('http '+r.status);
+    permCacheSet(map);
+    if(st){st.style.color='#0a7a32';st.textContent='\u2713 Salvo! Vale no proximo login de cada usuario.';}
+    try{toast('Permissoes salvas');}catch(e){}
+  }catch(e){if(st){st.style.color='#b91c1c';st.textContent='Erro ao salvar. A tabela config existe no Supabase?';}}
+}
 function showSec(id,el){
+  if(_permAllowed && _permAllowed.indexOf(id)<0) return;
   const btn=(el&&el.closest)?el.closest('.nav-btn')||el:el;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -1704,6 +1834,7 @@ function showSec(id,el){
   else if(id==='saldo')saldoRender();
   else if(id==='pagamento')folhaInit();
   else if(id==='energia')energiaInit();
+  else if(id==='permissoes')permLoad();
 }
 async function metaCfgLoad(){
   mkDInput(document.getElementById('meta-valor'),metaCfgSave);
@@ -4055,10 +4186,12 @@ async function authPost(grant,body){
 var _authBooted=false;
 function authBootApp(){
   if(_authBooted)return; _authBooted=true; authTouch(); authTabMark();
-  var g=document.getElementById('authgate'); if(g)g.style.display='none';
   var s=authLoad(), w=document.getElementById('au-who'); if(w&&s&&s.user)w.textContent='@'+s.user;
   var _fab=document.getElementById('ia-fab'); if(_fab)_fab.style.display='flex';
+  try{permAplicarMapa(permCacheGet());}catch(e){}
+  var g=document.getElementById('authgate'); if(g)g.style.display='none';
   init();
+  aplicarPermissoes();
 }
 function authTogglePass(){
   var p=document.getElementById('au-pass'), b=document.getElementById('au-eye');
@@ -4094,6 +4227,7 @@ async function authLogin(){
     if(!d||!d.access_token)throw new Error('sem token');
     authSetToken(d.access_token);
     authSave({access_token:d.access_token,refresh_token:d.refresh_token,user:u,ts:Date.now()});
+    try{permCacheSet(await permFetch());}catch(e){}
     authBootApp();  /* sucesso: abre o sistema (não reabilita o botão) */
   }catch(e){
     var em=((e&&e.message)||'').toLowerCase();
