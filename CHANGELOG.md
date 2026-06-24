@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Quadradinho: frase "Aniversariante do dia"
+- No dia do aniversário, a caixinha do calendário agora mostra "🎂 Aniversariante do dia" + o nome (em destaque rosa). Tudo dentro do próprio quadradinho, sem letreiro no topo.
+
+
 ## 2026-06-24 — Aniversário só no quadradinho (letreiro do topo removido)
 - A pedido, o letreiro de aniversariantes no topo do calendário foi **removido**. Fica só o destaque no **quadradinho do dia** (contorno rosa + 🎂 + nome).
 

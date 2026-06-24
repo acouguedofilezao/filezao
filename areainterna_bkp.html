@@ -112,7 +112,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .cal-cell .nomes{margin-top:.4vh;display:flex;flex-direction:column;gap:.2vh;overflow:hidden}
 .cal-cell .fer{font-size:1.5vh;color:#C20000;font-weight:700;line-height:1.08;margin-top:.25vh;white-space:normal;overflow:hidden}
 .cal-cell.aniver{outline:.32vh solid #d6336c;outline-offset:-.32vh;box-shadow:0 0 1.5vh rgba(214,51,108,.45)}
-.cal-cell .aniv{font-size:1.55vh;color:#c2185b;font-weight:800;line-height:1.12;margin-top:.2vh;white-space:normal;overflow:hidden;text-transform:uppercase}
+.cal-cell .aniv{margin-top:.2vh;line-height:1.08;overflow:hidden;white-space:normal}
+.cal-cell .aniv-lbl{display:block;font-size:1.2vh;color:#d6336c;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+.cal-cell .aniv-nm{display:block;font-size:1.75vh;color:#c2185b;font-weight:800;text-transform:uppercase;line-height:1.1;margin-top:.1vh}
 .cal-cell .nm{font-size:2.1vh;line-height:1.16;color:#1a1a1a;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
 .cal-cell.outro{background:#f7f8fa}
 .cal-cell.feriado{background:#fde9e9}
@@ -388,7 +390,7 @@ function renderEscala(){
     }else if(ds===proxS){cls+=' prox';}
     var cell=document.createElement('div');cell.className=cls;
     var html='<div class="dnum">'+cur.getDate()+'</div>';
-    if(anivs)html+='<div class="aniv">\uD83C\uDF82 '+anivs.map(function(n){return (n+'').replace(/</g,'&lt;');}).join(', ')+'</div>';
+    if(anivs)html+='<div class="aniv"><span class="aniv-lbl">\uD83C\uDF82 Aniversariante do dia</span><span class="aniv-nm">'+anivs.map(function(n){return (n+'').replace(/</g,'&lt;');}).join(', ')+'</span></div>';
     if(ferNome)html+='<div class="fer">'+ferNome.replace(/</g,'&lt;')+'</div>';
     if(nomes)html+='<div class="nomes">'+nomes.map(function(n){return '<div class="nm">'+n.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
     cell.innerHTML=html;grid.appendChild(cell);
