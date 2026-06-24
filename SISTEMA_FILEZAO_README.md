@@ -87,7 +87,7 @@ Painel de TV **interno** (pros funcionários), separado do `tv.html` de preços.
 
 **Tela 2 — ESCALA DE FOLGA (calendário do mês)**
 - Calendário branco do **mês atual** (troca sozinho ao virar o mês), segunda→domingo.
-- **Folga** = dia **amarelo** com o(s) nome(s) em MAIÚSCULO. **Hoje** = azul, **próxima folga** = verde, passadas = riscadas.
+- **Folga** = dia **amarelo** com o(s) nome(s) em MAIÚSCULO. **Hoje** = azul, **próxima folga** = verde, passadas marcadas com **✓ verde (concluído)** e número apagado (folga passada = nome verde).
 - **Feriados** com o nome, em vermelho clarinho: nacionais + estadual MG (Tiradentes/Data Magna) + **municipais de Perdigão** (15/08, 08/12 e 12/12 Aniversário). Os **móveis** (Carnaval, Quarta de Cinzas, Sexta-feira Santa, Corpus Christi) são **calculados pela Páscoa** (`pascoa()`+`feriadosDoAno()`) → funcionam em **qualquer ano** sozinhos.
 - **Sábado/domingo** com a coluna em cinza; dias do **mês seguinte/anterior** aparecem em **cinza bem claro** ("outro mês") — assim uma folga lançada no próximo mês já aparece no fim do mês atual.
 - **Legenda** no topo, ao lado do nome do mês (foi pra cima pra não cortar).

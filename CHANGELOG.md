@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Calendário: dias passados marcados como concluído (✓ verde)
+- Todo dia que já passou aparece com um **✓ verde no canto** e o número mais apagado (cara de "concluído"). Nas **folgas que já passaram**, o nome fica **verde** (folga cumprida).
+- Aplicado nas **duas versões** (EM BREVE e completa/`areainterna_bkp.html`), pra já vir igual quando você liberar a meta.
+
+
 ## 2026-06-24 — EM BREVE tampa só a Meta (Anotações ficam visíveis)
 - Na versão `areainterna.html` (EM BREVE), o "EM BREVE" agora cobre **só a coluna da Meta** (vendas/progresso/bônus). As **Anotações** voltam a aparecer normalmente ao lado, e o calendário segue funcionando.
 
