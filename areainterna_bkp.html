@@ -98,10 +98,6 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .esc-card .en{font-size:2.5vh;color:var(--cream);font-weight:500;line-height:1.25}
 .esc-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2.4vh;font-style:italic}
 .esc-cals{flex:1 1 auto;display:flex;min-height:0;overflow:hidden}
-.aniv-banner{margin-bottom:1.4vh;padding:1.1vh 2vw;border-radius:1.2vh;text-align:center;font-size:2.6vh;color:#fff;background:linear-gradient(90deg,#d6336c,#f06595,#e8590c);box-shadow:0 .4vh 1.6vh rgba(214,51,108,.35);letter-spacing:.3px}
-.aniv-banner b{font-weight:800}
-.aniv-banner.hoje{font-size:3.1vh;background:linear-gradient(90deg,#e8590c,#f06595,#d6336c,#f59f00);animation:anivpulse 2s ease-in-out infinite}
-@keyframes anivpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
 .cal-card{flex:1 1 auto;display:flex;flex-direction:column;min-width:0;background:#fff;border-radius:1.8vh;padding:1.6vh 1.3vw;box-shadow:0 1.2vh 4vh rgba(0,0,0,.45)}
 .cal-top{display:flex;align-items:center;justify-content:space-between;gap:1vw;margin-bottom:1vh;flex-wrap:wrap}
 .cal-card .cal-tt{font-family:'Anton';font-size:2.7vh;color:#1a1a1a;text-align:left;letter-spacing:.5px;text-transform:uppercase;margin-bottom:0;white-space:nowrap}
@@ -206,7 +202,6 @@ footer .st i{color:var(--green);font-style:normal}
 
     <!-- TELA 2: ESCALA DE FOLGA -->
     <section class="view" id="view-escala">
-      <div id="aniv-banner" class="aniv-banner" style="display:none"></div>
       <div class="esc-cals" id="esc-cals"></div>
     </section>
   </div>
@@ -400,25 +395,6 @@ function renderEscala(){
   }
   card.appendChild(grid);
   cont.appendChild(card);
-  var bann=document.getElementById('aniv-banner');
-  if(bann){
-    var mmAtual=z(m+1);var anivMes=[];
-    (FUNCS||[]).forEach(function(f){if(f&&f.nasc&&f.nome){if(String(f.nasc).slice(5,7)===mmAtual)anivMes.push({nome:f.nome,dia:String(f.nasc).slice(8,10)});}});
-    anivMes.sort(function(a,b){return (a.dia||'')<(b.dia||'')?-1:1;});
-    if(!anivMes.length){bann.style.display='none';bann.innerHTML='';}
-    else{
-      var hojeDD=z(hoje.getDate());
-      var hojeList=anivMes.filter(function(a){return a.dia===hojeDD;});
-      if(hojeList.length){
-        bann.className='aniv-banner hoje';
-        bann.innerHTML='\uD83C\uDF89 <b>HOJE \u00e9 anivers\u00e1rio de '+hojeList.map(function(a){return (a.nome+'').toUpperCase().replace(/</g,'&lt;');}).join(' e ')+'!</b> \uD83C\uDF82';
-      }else{
-        bann.className='aniv-banner';
-        bann.innerHTML='\uD83C\uDF82 <b>Aniversariantes do m\u00eas:</b> '+anivMes.map(function(a){return (a.nome+'').toUpperCase().replace(/</g,'&lt;')+' ('+a.dia+'/'+mmAtual+')';}).join(' &nbsp;\u2022&nbsp; ');
-      }
-      bann.style.display='';
-    }
-  }
 }
 /* ===== troca de telas ===== */
 var tela='meta';

@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Aniversário só no quadradinho (letreiro do topo removido)
+- A pedido, o letreiro de aniversariantes no topo do calendário foi **removido**. Fica só o destaque no **quadradinho do dia** (contorno rosa + 🎂 + nome).
+
+
 ## 2026-06-24 — Painel: letreiro de aniversariantes do mês 🎂
 - Na tela do calendário (Escala), agora aparece um **letreiro** em cima: "🎂 Aniversariantes do mês: NOME (dia)". No dia do aniversário ele muda pra "🎉 HOJE é aniversário de NOME!" com destaque pulsante. (Além do quadradinho rosa + 🎂 que já tinha.)
 - Aplicado nas duas versões (EM BREVE e completa).
