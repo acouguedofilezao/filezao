@@ -1,5 +1,12 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Calendário de Escala com feriados de Perdigão/MG + sáb/dom
+- O calendário da Área Interna agora mostra os **feriados** com o nome dentro do quadradinho: nacionais, o estadual de MG (Tiradentes/Data Magna) e os **municipais de Perdigão** (15/08, 08/12 e 12/12 Aniversário da cidade).
+- Os feriados **móveis** (Carnaval, Quarta de Cinzas, Sexta-feira Santa, Corpus Christi) são **calculados automaticamente pela Páscoa** — funcionam em qualquer ano, sem precisar cadastrar. Quando virar o mês/ano, o calendário troca sozinho.
+- **Sábado e domingo** agora aparecem com a **coluna em cor diferente** (cinza claro) pra diferenciar. Cabeçalho SÁB/DOM também destacado.
+- Quando você preencher as **folgas** no sistema, o nome de quem está de folga aparece no dia (junto com o feriado, se houver). Legenda: De folga hoje / Próxima folga / Feriado / Sáb-Dom.
+
+
 ## 2026-06-22 — Meta: número grande agora é o ALVO (meta estipulada)
 - O valor grande em cima agora é a **META que você estipulou** (o alvo a atingir), não o valor atual. Rótulo "Meta da Semana".
 - A **barra de progresso** continua mostrando o **valor atual evoluindo** em direção à meta (% concluída/faltante e a cor que fica mais verde quanto mais perto). O bônus segue embaixo.

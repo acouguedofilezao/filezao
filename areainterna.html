@@ -102,13 +102,17 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .cal-card .cal-tt{font-family:'Anton';font-size:3vh;color:#1a1a1a;text-align:center;letter-spacing:.5px;text-transform:uppercase;margin-bottom:1.1vh}
 .cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:.6vh .5vw;margin-bottom:.6vh}
 .cal-head div{text-align:center;font-family:'Anton';font-size:1.95vh;color:#fff;background:var(--redDeep);border-radius:.7vh;padding:.6vh 0;text-transform:uppercase}
+.cal-head div.wd{background:#7c8794}
 .cal-grid{flex:1 1 auto;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:.6vh .5vw}
 .cal-cell{background:#f6f6f8;border:.15vh solid #e4e4e8;border-radius:1vh;padding:.7vh .55vw;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .cal-cell.vazio{background:transparent;border-color:transparent}
+.cal-cell.fds{background:#e8ecf2}
 .cal-cell .dnum{font-family:'Anton';font-size:2.5vh;color:#555;line-height:1}
-.cal-cell .nomes{margin-top:.45vh;display:flex;flex-direction:column;gap:.2vh;overflow:hidden}
+.cal-cell .nomes{margin-top:.4vh;display:flex;flex-direction:column;gap:.2vh;overflow:hidden}
+.cal-cell .fer{font-size:1.5vh;color:#C20000;font-weight:700;line-height:1.08;margin-top:.25vh;white-space:normal;overflow:hidden}
 .cal-cell .nm{font-size:2.1vh;line-height:1.16;color:#1a1a1a;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-cell.tem{background:#fff5db}
+.cal-cell.feriado{background:#fde9e9}
 .cal-cell.hoje{background:#e7f0ff;border-color:#3a86ff;box-shadow:inset 0 0 0 .28vh #3a86ff}
 .cal-cell.hoje .dnum{color:#1d4ed8} .cal-cell.hoje .nm{color:#1d4ed8}
 .cal-cell.prox{background:#e6f8ee;border-color:#1f9d57;box-shadow:inset 0 0 0 .28vh #1f9d57}
@@ -118,6 +122,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .cal-legend .lg{font-size:1.6vh;color:#555;font-weight:600;display:flex;align-items:center;gap:.5vw}
 .cal-legend .lg::before{content:'';width:1.5vh;height:1.5vh;border-radius:.3vh;display:inline-block}
 .cal-legend .lg.blue::before{background:#3a86ff} .cal-legend .lg.green::before{background:#1f9d57}
+.cal-legend .lg.red::before{background:#C20000} .cal-legend .lg.gray::before{background:#7c8794}
 
 footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:2vw;margin-top:1.1vh;
   border-top:.18vh solid var(--line);padding-top:.9vh}
@@ -288,36 +293,73 @@ function mapMesAtual(){
   (ESCALA||[]).forEach(function(e){if(!e||!e.data||!e.nome)return;if(String(e.data).slice(0,7)!==pref)return;(mp[e.data]=mp[e.data]||[]).push(e.nome);});
   return mp;
 }
-function temFolgas(){return Object.keys(mapMesAtual()).length>0;}
 function diasNoMes(y,m){return new Date(y,m+1,0).getDate();}
+
+/* ===== Feriados (nacionais + MG + Perdigão), com móveis calculados pela Páscoa ===== */
+function pascoa(y){
+  var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
+      f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),hh=(19*a+b-d-g+15)%30,
+      ii=Math.floor(c/4),k=c%4,l=(32+2*e+2*ii-hh-k)%7,mm=Math.floor((a+11*hh+22*l)/451),
+      mes=Math.floor((hh+l-7*mm+114)/31),dia=((hh+l-7*mm+114)%31)+1;
+  return new Date(y,mes-1,dia);
+}
+function addDias(dt,n){var x=new Date(dt);x.setDate(x.getDate()+n);return x;}
+function feriadosDoAno(y){
+  var f={};function set(dt,nome){f[ymd(dt)]=nome;}
+  set(new Date(y,0,1),'Ano Novo');
+  set(new Date(y,3,21),'Tiradentes');
+  set(new Date(y,4,1),'Dia do Trabalho');
+  set(new Date(y,7,15),'Feriado Municipal');
+  set(new Date(y,8,7),'Independência');
+  set(new Date(y,9,12),'N. Sra. Aparecida');
+  set(new Date(y,10,2),'Finados');
+  set(new Date(y,10,15),'Proclamação Rep.');
+  if(y>=2024)set(new Date(y,10,20),'Consciência Negra');
+  set(new Date(y,11,8),'Feriado Municipal');
+  set(new Date(y,11,12),'Aniv. de Perdigão');
+  set(new Date(y,11,25),'Natal');
+  var pa=pascoa(y);
+  set(addDias(pa,-48),'Carnaval');
+  set(addDias(pa,-47),'Carnaval');
+  set(addDias(pa,-46),'Quarta de Cinzas');
+  set(addDias(pa,-2),'Sexta-feira Santa');
+  set(addDias(pa,60),'Corpus Christi');
+  return f;
+}
+
 function renderEscala(){
   var cont=document.getElementById('esc-cals');if(!cont)return;
   var hoje=agoraBR();var y=hoje.getFullYear(),m=hoje.getMonth();var hojeS=ymd(hoje);
-  var fmap=mapMesAtual();var datas=Object.keys(fmap).sort();
+  var fmap=mapMesAtual();var fer=feriadosDoAno(y);
+  var datas=Object.keys(fmap).sort();
   var proxS='';for(var i=0;i<datas.length;i++){if(datas[i]>hojeS){proxS=datas[i];break;}}
   cont.innerHTML='';
-  if(!datas.length){cont.innerHTML='<div class="esc-empty">Sem escala cadastrada para este mês.</div>';return;}
   var card=document.createElement('div');card.className='cal-card';
   var tt=document.createElement('div');tt.className='cal-tt';tt.textContent=(MESES[m]+' '+y).toUpperCase();card.appendChild(tt);
   var head=document.createElement('div');head.className='cal-head';
-  ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'].forEach(function(n){var c=document.createElement('div');c.textContent=n;head.appendChild(c);});
+  ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'].forEach(function(n,ix){var c=document.createElement('div');c.textContent=n;if(ix>=5)c.className='wd';head.appendChild(c);});
   card.appendChild(head);
   var grid=document.createElement('div');grid.className='cal-grid';
-  var off=(new Date(y,m,1).getDay()+6)%7;
-  for(var k=0;k<off;k++){var ev=document.createElement('div');ev.className='cal-cell vazio';grid.appendChild(ev);}
+  var off=(new Date(y,m,1).getDay()+6)%7;var col=0;
+  function fds(){return (col%7)>=5;}
+  for(var k=0;k<off;k++){var ev=document.createElement('div');ev.className='cal-cell vazio'+(fds()?' fds':'');grid.appendChild(ev);col++;}
   var N=diasNoMes(y,m);
   for(var d=1;d<=N;d++){
-    var ds=y+'-'+z(m+1)+'-'+z(d);var nomes=fmap[ds]||null;
-    var st='';
-    if(ds===hojeS)st=' hoje';else if(nomes&&ds===proxS)st=' prox';else if(nomes&&ds<hojeS)st=' passado';
-    var cell=document.createElement('div');cell.className='cal-cell'+st+(nomes?' tem':'');
+    var ds=y+'-'+z(m+1)+'-'+z(d);var nomes=fmap[ds]||null;var ferNome=fer[ds]||null;
+    var cls='cal-cell';
+    if(fds())cls+=' fds';
+    if(nomes)cls+=' tem';
+    if(ferNome)cls+=' feriado';
+    if(ds===hojeS)cls+=' hoje';else if(nomes&&ds===proxS)cls+=' prox';else if(nomes&&ds<hojeS)cls+=' passado';
+    var cell=document.createElement('div');cell.className=cls;
     var html='<div class="dnum">'+d+'</div>';
+    if(ferNome)html+='<div class="fer">'+ferNome.replace(/</g,'&lt;')+'</div>';
     if(nomes)html+='<div class="nomes">'+nomes.map(function(n){return '<div class="nm">'+n.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
-    cell.innerHTML=html;grid.appendChild(cell);
+    cell.innerHTML=html;grid.appendChild(cell);col++;
   }
   card.appendChild(grid);
   var lg=document.createElement('div');lg.className='cal-legend';
-  lg.innerHTML='<span class="lg blue">De folga hoje</span><span class="lg green">Próxima folga</span>';
+  lg.innerHTML='<span class="lg blue">De folga hoje</span><span class="lg green">Próxima folga</span><span class="lg red">Feriado</span><span class="lg gray">Sáb / Dom</span>';
   card.appendChild(lg);
   cont.appendChild(card);
 }
@@ -337,11 +379,7 @@ function setScreen(nome){
     renderEscala();
   }
 }
-function rotaciona(){
-  var tem=temFolgas();
-  if(tela==='meta'){ if(tem)setScreen('escala'); }
-  else { setScreen('meta'); }
-}
+function rotaciona(){ setScreen(tela==='meta'?'escala':'meta'); }
 
 /* ===== loop principal ===== */
 async function carregar(){
