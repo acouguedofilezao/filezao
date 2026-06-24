@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Painel: letreiro de aniversariantes do mês 🎂
+- Na tela do calendário (Escala), agora aparece um **letreiro** em cima: "🎂 Aniversariantes do mês: NOME (dia)". No dia do aniversário ele muda pra "🎉 HOJE é aniversário de NOME!" com destaque pulsante. (Além do quadradinho rosa + 🎂 que já tinha.)
+- Aplicado nas duas versões (EM BREVE e completa).
+
+
 ## 2026-06-24 — Cadastro de funcionários + aniversariante do dia no painel 🎂
 - Nova aba **"Funcionários"** (grupo Equipe) no sistema: cadastra **nome + data de nascimento**, salvo central no `config` (chave `funcionarios`). Na 1ª vez sugere os nomes da folha pra só preencher as datas. (A parte financeira NÃO foi mexida.)
 - No **painel Área Interna**, no dia do aniversário a célula do calendário ganha **destaque rosa** e mostra **🎂 NOME** (aniversariante do dia). Casa por dia/mês, em qualquer ano. Aplicado nas duas versões (EM BREVE e completa).
