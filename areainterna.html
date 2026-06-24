@@ -46,7 +46,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .board{flex:1 1 auto;display:flex;gap:2vw;min-height:0}
 .col-meta{flex:1.45 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6vh;min-width:0}
 .col-meta .lbl{font-size:2.2vh;letter-spacing:.45vw;color:var(--muted);text-transform:uppercase;font-weight:500}
-.vendas{font-family:'Anton';font-size:14vh;line-height:.9;letter-spacing:1px;color:var(--green);transition:color .3s;text-align:center}
+.vendas{font-family:'Anton';font-size:14vh;line-height:.9;letter-spacing:1px;color:var(--cream);transition:color .3s;text-align:center}
 .vendas.flash{animation:pop .45s ease}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
 .prog{width:100%;max-width:900px}
@@ -162,7 +162,7 @@ footer .st i{color:var(--green);font-style:normal}
     <section class="view active" id="view-meta">
       <div class="board">
         <div class="col-meta">
-          <div class="lbl">Vendas da Semana</div>
+          <div class="lbl">Meta da Semana</div>
           <div class="vendas" id="vendas">R$ 0,00</div>
           <div class="prog">
             <div class="top">
@@ -253,16 +253,17 @@ async function lerConfig(){
 }
 
 /* ===== render META ===== */
-function setVendas(v){
+function setBig(v){
   var el=document.getElementById('vendas');var txt=money(v);
   if(el.textContent!==txt){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');}
   el.textContent=txt;
 }
 function renderProgresso(vendas){
-  var done=document.getElementById('pctdone'),left=document.getElementById('pctleft'),
+  var big=document.getElementById('vendas'),done=document.getElementById('pctdone'),left=document.getElementById('pctleft'),
       fill=document.getElementById('fill'),falta=document.getElementById('falta');
-  if(!(META>0)){done.textContent='0%';left.textContent='100%';done.style.color='var(--muted)';
+  if(!(META>0)){big.textContent='R$ 0,00';done.textContent='0%';left.textContent='100%';done.style.color='var(--muted)';
     fill.style.width='0%';falta.textContent='Defina a meta no sistema';falta.style.color='var(--muted)';return;}
+  setBig(META);
   var pct=vendas/META*100;var p=Math.max(0,Math.min(100,pct));
   var hue=Math.round(p/100*120);var cor='hsl('+hue+',82%,46%)';
   done.textContent=Math.round(pct)+'%';done.style.color=cor;
@@ -277,7 +278,7 @@ async function carregarMeta(){
   if(ent===null){document.getElementById('status').textContent='sem conexão — tentando de novo…';return;}
   var tot=0,porDia={};
   ent.forEach(function(r){var v=valEnt(r);tot+=v;var k=dt(r);porDia[k]=(porDia[k]||0)+v;});
-  setVendas(tot);renderProgresso(tot);
+  renderProgresso(tot);
   document.getElementById('status').innerHTML='<i>●</i> atualizado às '+horaBR();
 }
 

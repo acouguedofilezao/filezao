@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Meta: número grande agora é o ALVO (meta estipulada)
+- O valor grande em cima agora é a **META que você estipulou** (o alvo a atingir), não o valor atual. Rótulo "Meta da Semana".
+- A **barra de progresso** continua mostrando o **valor atual evoluindo** em direção à meta (% concluída/faltante e a cor que fica mais verde quanto mais perto). O bônus segue embaixo.
+
+
 ## 2026-06-22 — Escala: calendário único do mês, branco e maior
 - O painel mostra **só o calendário do mês atual** (mesmo com folgas de vários meses cadastradas). Quando virar o mês, troca sozinho pro novo e some o antigo.
 - Como é um só, o calendário ficou **bem maior** e em **quadro branco** (fundo branco, datas em destaque) pra enxergar de longe. Folga de hoje em azul, próxima em verde, passadas riscadas, com legenda embaixo.
