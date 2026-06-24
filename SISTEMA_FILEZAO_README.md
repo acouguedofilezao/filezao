@@ -23,7 +23,7 @@ Tudo é pensado para um usuário **não técnico**, em **português**, com cara 
 - **Pasta local (PC do Diogo):** `C:\Users\Diogo\OneDrive\Documentos\GitHub\filezao`
 - **Banco de dados (Supabase):** projeto `vfrgqtuvbflkexapdzho` → URL `https://vfrgqtuvbflkexapdzho.supabase.co`
   - A chave usada no site é a **publishable** (pública por design, protegida por RLS) — já está dentro do `index.html`/`tv.html`. Nada de chave secreta no repositório.
-  - **Tabelas:** `entradas`, `saidas`, `gado`, `cheques`, `produtos`, `energia`, `saldos`, `saldos_dia`, `cotacoes`, `logs`, `folha`, **`config`** (chave/valor do painel Área Interna: `meta_semanal`, `bonus`, `anotacoes`, `escala`). (Os funcionários ficam só no aparelho, na chave `fz_func`.)
+  - **Tabelas:** `entradas`, `saidas`, `gado`, `cheques`, `produtos`, `energia`, `saldos`, `saldos_dia`, `cotacoes`, `logs`, `folha`, **`config`** (chave/valor: `meta_semanal`, `bonus`, `anotacoes`, `escala`, `funcionarios` do painel; e `permissoes` do controle de acesso). (Os funcionários ficam só no aparelho, na chave `fz_func`.)
   - **Edge Function:** `filezao-ia` (é a "ponte" da IA com o Groq — ver seção 7).
 
 ---
@@ -92,6 +92,8 @@ Painel de TV **interno** (pros funcionários), separado do `tv.html` de preços.
 - **Sábado/domingo** com a coluna em cinza; dias do **mês seguinte/anterior** aparecem em **cinza bem claro** ("outro mês") — assim uma folga lançada no próximo mês já aparece no fim do mês atual.
 - **Legenda** no topo, ao lado do nome do mês (foi pra cima pra não cortar).
 
+- **Aniversariante do dia 🎂:** no calendário, quando é aniversário de alguém, a célula ganha um contorno rosa e mostra "🎂 NOME". Os aniversários vêm do cadastro de funcionários (chave `funcionarios` do `config`), casando por dia/mês (qualquer ano).
+
 **Onde os dados vêm:** tabela **`config`** no Supabase (chave text PK, valor text, atualizado timestamptz): `meta_semanal`, `bonus`, `anotacoes`, `escala` (JSON `[{nome,data}]`).
 
 **Quem preenche (no `index.html`):**
@@ -105,6 +107,21 @@ Painel de TV **interno** (pros funcionários), separado do `tv.html` de preços.
 - **`areainterna_bkp.html`** = versão **COMPLETA** da meta (com os valores reais). Guardada de backup. **Quando o Diogo for liberar a meta pros funcionários, é só renomear `areainterna_bkp.html` → `areainterna.html` e subir pelo `.bat`.**
 
 ---
+
+## 6.2 Permissões de usuários (quem vê o quê)
+
+O sistema tem **login por usuário** (Supabase Auth; o usuário "fulano" vira `fulano@filezao.app` pelo `AUTH_DOMAIN`). Agora dá pra **limitar o que cada usuário enxerga**:
+
+- Aba **"Permissões"** (grupo Administração, no menu) — só aparece pra quem tem acesso total. Ali o Diogo adiciona um usuário (pelo login) e marca **quais abas** ele pode ver. Salva na chave `permissoes` do `config` (JSON `{ "usuario": ["aba1","aba2"] }`).
+- **Regra:** quem **não está** na lista tem **acesso total** (o Diogo). Quem está, vê **só as abas marcadas** — as outras somem do menu (e o seletor de módulo e o robô da IA também ficam ocultos pra ele). O bloqueio é reforçado no `showSec` (mesmo que tente, não navega).
+- **Trava de segurança:** o usuário **`diogo` sempre tem acesso total** no código (`permAplicarMapa`), pra nunca se trancar fora. (Se o login do dono não for "diogo", não restrinja a si mesmo.)
+- **Sem flash:** ao logar, o sistema busca as permissões **antes** de abrir a tela (cache em `fz_perm`), então o usuário restrito já entra direto sem ver o resto.
+- **Conta nova (ex.: Rosemir):** a conta (login+senha) é criada **no painel do Supabase** (Authentication → Users → Add user), com e-mail `usuario@filezao.app`. **A senha nunca vai pro código** (repo é público). A permissão (qual aba) vai no `config` — via aba Permissões ou pelo `PERMISSOES_ROSEMIR.sql`.
+- **Recuperação** (se alguém se trancar): apague/edite a linha `permissoes` da tabela `config` no Supabase.
+
+## 6.3 Cadastro de funcionários (nome + nascimento)
+
+Aba **"Funcionários"** (grupo Equipe, no menu) — cadastro central de **nome + data de nascimento**, salvo na chave `funcionarios` do `config` (JSON `[{nome,nasc}]`, `nasc`=`AAAA-MM-DD`). Na primeira vez, se vazio, sugere os nomes vindos da folha (`funcGet()`) pra só preencher as datas. O **painel Área Interna** lê isso e mostra o **aniversariante do dia** no calendário. **A parte financeira (pagamento/comissão) NÃO foi alterada** — continua usando sua própria lista (`fz_func`); a unificação pode ser feita depois, se o Diogo quiser.
 
 ## 7. A IA "Filezão IA"
 
