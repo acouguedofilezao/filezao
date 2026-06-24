@@ -1,5 +1,73 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Painel vira "Área Interna" (alterna Meta e Escala) + aba Escala mensal
+- **`meta.html` renomeado para `areainterna.html`.** Agora o painel **alterna sozinho a cada 30s**: 30s mostrando **Meta + Anotações**, 30s mostrando **Escala de folga do mês**, e repete. (Deixei um `meta.html` que só redireciona pro novo, pra não quebrar link antigo.)
+- **Anotações vazia** aparece em branco (só o título "ANOTAÇÕES", sem texto).
+- **Nova aba "Escala mensal"** no sistema: cadastre **nome + dia da folga** (com lista dos funcionários), remova quando quiser; salva na hora. O painel mostra as folgas do **mês atual** numa grade (data · dia da semana · quem folga), com o dia de hoje destacado.
+- Se não houver escala cadastrada no mês, o painel **não troca de tela** — fica só na meta.
+- Tudo guardado na tabela `config` do Supabase (chaves `meta_semanal`, `anotacoes`, `escala`). Se ainda não rodou o SQL de `CONFIG_ANOTACOES.md`, rode uma vez.
+
+
+## 2026-06-22 — Meta: semana SEG→DOM, métrica = VENDAS, e meta/anotações vindas do sistema
+- **Domingo agora conta:** a semana do painel é de **segunda a domingo** (7 dias), e a régua mostra SEG→DOM.
+- **Métrica = VENDAS da semana** (só as entradas, sem as saídas), comparada com a meta. (Antes era saldo.)
+- **Meta e anotações deixam de ser fixas:** nova aba **"Meta / Anotações"** no sistema — você digita a meta de vendas e os avisos da semana, clica Salvar, e **aparece no painel automaticamente** (~15s). O painel agora só exibe; a edição é no sistema.
+- A meta e as anotações ficam na tabela `config` do Supabase (rode o SQL de `CONFIG_ANOTACOES.md` uma vez).
+
+
+## 2026-06-22 — Meta: layout pro monitor (Samsung 20" 1600x900) + campo ANOTAÇÕES editável
+- **Otimizada pro monitor 16:9** (Samsung SyncMaster 2033, 20", 1600x900): agora em 2 colunas — à esquerda o **saldo da semana + quanto já atingiu** (barra de progresso até a meta), à direita o painel de **ANOTAÇÕES**; embaixo a régua dos dias.
+- **ANOTAÇÕES editável:** dá pra escrever os avisos do dia direto na aba da Meta (botão "✎ editar" → Salvar), no lugar de escrever no quadro. A anotação **aparece no monitor** e atualiza sozinha (~15s).
+- Para a anotação sincronizar entre o seu celular e o monitor, rode uma vez o SQL em `CONFIG_ANOTACOES.md` (cria a tabela `config` no Supabase). Sem isso, a anotação salva só no aparelho onde foi digitada.
+
+
+## 2026-06-22 — Nova página: META DA SEMANA (saldo ao vivo)
+- Criada a **`meta.html`** — painel em tela cheia (estilo da TV) que mostra o **SALDO DA SEMANA** (entradas − saídas, de segunda a sábado) **atualizando sozinho a cada 15s** conforme você lança no sistema. Tem barra de progresso até a meta, "quanto falta", entradas/saídas da semana e uma régua dia a dia (SEG→SÁB) com o dia de hoje destacado.
+- **Botão "Meta da Semana"** adicionado no menu do sistema (abre a página numa aba nova).
+- **Meta:** padrão R$ 50.000 (edite em `META_PADRAO` no topo do arquivo) ou pela URL `meta.html?meta=60000` (fica salvo naquele aparelho).
+- Usa horário de Brasília. Hospeda em `acouguedofilezao.github.io/filezao/meta.html` depois de subir.
+
+
+## 2026-06-22 — TV: QR com folga (não encosta em cima nem corta o texto)
+- Dei folga no topo do QR (não encosta mais na caixa de cima) e ajustei o tamanho (62%) pra o texto embaixo caber inteiro, sem cortar. Continua sem caixa de fundo e bem maior que o original.
+
+
+## 2026-06-22 — TV: QR maior e sem caixa de fundo
+- Tirei a caixa (fundo, borda e sombra) atrás do QR. Agora é **só o QR com o texto embaixo**, sem moldura, e o QR ficou **bem maior** (de 58% pra 78% da altura). O quadradinho branco em volta do QR foi mantido — é o que faz o celular conseguir ler.
+
+
+## 2026-06-22 — Celular: botão do menu não fica mais embaixo da barra do iPhone
+- O `viewport-fit=cover` (que ativei pra usar a tela toda) jogava o topo do cabeçalho **por baixo da barra de status do iPhone** — e o botão ☰ de abrir o menu lateral ficava escondido, sem dá pra clicar. Agora o cabeçalho **desce pra baixo da barra** (safe-area), e o corpo e a sidebar foram acertados junto pra não desalinhar.
+
+
+## 2026-06-22 — TV: grade automática (acaba o corte na 2ª fileira de vez)
+- **Causa real do corte:** os cards tinham altura fixa em vh (% da tela cheia), mas o cabeçalho e o rodapé comem altura — aí a 2ª fileira passava do limite e a borda de baixo do palco cortava o nome/preço. Troquei pra **grade automática**: o painel mede o espaço que sobra e encaixa as 2 fileiras certinho, sempre. Não importa o tamanho do cabeçalho/rodapé — cabe.
+- Mantido o nome grande (4.6vh), preço (5.4vh) e a legenda que não encolhe.
+
+
+## 2026-06-22 — TV: nome maior e sem cortar embaixo
+- **Nome não corta mais embaixo:** a entrelinha estava apertada (cortava o pé das letras com acento, tipo Ç/Ã, e a 2ª linha). Dei respiro na entrelinha (1.06) e **travei a legenda pra nunca encolher** — quem cede espaço agora é a foto, não o texto.
+- **Letra maior:** nome subiu de 3.9 → 4.6vh e o preço de 5.0 → 5.4vh. Bem mais legível de longe.
+
+
+## 2026-06-22 — TV: ajuste de altura (não invade o rodapé) + anúncio de áudio menos frequente
+- **Corrigido o estouro:** os cards estavam altos demais (46vh) e a 2ª fileira invadia o QR e o letreiro de baixo. Baixei pra 37vh — agora cabe certinho na faixa entre o cabeçalho e o rodapé, com a letra ainda grande.
+- **Anúncio em áudio menos frequente:** a locução da loja (`anuncio.mp3`) tocava a cada 5 minutos e enjoava — agora toca a cada **15 minutos**. Fácil de mudar na linha `FALA_INTERVALO` no script (ex.: `20*60*1000` = 20 min). (Os slides visuais de promoção ficaram como estavam.)
+
+
+## 2026-06-22 — TV: letra maior pra ver de longe
+- **Cards do painel maiores** (preenchem a tela toda; antes sobrava um terço vazio embaixo) e **nome e preço bem maiores** — nome ~56% maior, preço ~67% maior. Categoria, cifrão, unidade e "de/por" também subiram junto.
+- **Nome em até 2 linhas:** produto de nome comprido não fica mais cortado.
+- Continua 5 produtos por tela; só ficou tudo maior e mais legível à distância.
+
+
+## 2026-06-22 — IA: apagar/editar/lançar via ferramenta (fim do "fingir que apagou")
+- **A IA agora APAGA de verdade.** Antes ela "conversava" sobre apagar e às vezes dizia "excluída" sem ter excluído (ou dizia que não tinha função). Agora adicionar, editar e apagar são **ferramentas que o modelo chama** — o sistema intercepta e mostra o **card de confirmação** (Apagar/Alterar/Confirmar). Sem clique, nada acontece; e a IA não consegue mais alegar que fez algo sem ter chamado a ferramenta.
+- **"Apaga o último que lancei"** funciona direto: o sistema lembra o último registro que a IA lançou na conversa (ultimo=true).
+- **Ler foto também usa as ferramentas** (comprovante → propõe a saída/entrada pra confirmar).
+- **Zoom no celular:** destravei o zoom manual (dá pra abrir tabela larga com os dedos de novo); o auto-zoom ao tocar nos campos continua barrado pelos 16px. Chat da IA ancorado embaixo, perto do botão.
+
+
 ## 2026-06-22 — Celular: fim dos conflitos de zoom
 - **Acabou o auto-zoom do iPhone:** os campos passaram a usar fonte de 16px no celular (abaixo disso o iOS aproxima a tela sozinho ao tocar num campo) e o zoom manual ficou travado. Fim do "fica dando zoom toda hora", da barra bugando e do conteúdo saindo pela esquerda.
 - **Chat da IA no celular:** agora abre quase em tela cheia, ancorado certinho — não sobe mais por cima das outras coisas.
