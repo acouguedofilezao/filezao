@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Painel Área Interna: versão EM BREVE no ar + backup da completa + manual atualizado
+- Criada a versão **EM BREVE** do painel: a tela de **Meta** fica **tapada** com um "EM BREVE" (funcionários veem que vem novidade, mas nenhum valor). O **calendário/escala continua funcionando** normal. **Essa é a `areainterna.html` (a que sobe agora).**
+- A versão **COMPLETA** da meta (com os valores) foi guardada como **`areainterna_bkp.html`**. Quando for liberar a meta pros funcionários: renomear `areainterna_bkp.html` → `areainterna.html` e subir pelo `.bat`.
+- **Manual (`SISTEMA_FILEZAO_README.md`) atualizado** com tudo do painel Área Interna (meta, escala, feriados, tabela `config`, as duas versões), pra começar conversa nova sem reexplicar.
+
+
 ## 2026-06-22 — Calendário: legenda no topo (não corta mais)
 - A **legenda** saiu de baixo (estava cortando) e subiu pro **topo do calendário, ao lado do mês** ("JUNHO 2026"), em tamanho menor pra encaixar. Sobra mais espaço pros dias.
 

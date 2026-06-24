@@ -17,12 +17,13 @@ Tudo é pensado para um usuário **não técnico**, em **português**, com cara 
 ## 2. Onde fica tudo (infra)
 
 - **Site (sistema):** https://acouguedofilezao.github.io/filezao/  → `index.html`
-- **Painel TV:** https://acouguedofilezao.github.io/filezao/tv.html  → `tv.html`
+- **Painel TV (preços):** https://acouguedofilezao.github.io/filezao/tv.html  → `tv.html`
+- **Painel Área Interna (meta + escala, pros funcionários):** https://acouguedofilezao.github.io/filezao/areainterna.html  → `areainterna.html`
 - **Repositório (público):** https://github.com/acouguedofilezao/filezao
 - **Pasta local (PC do Diogo):** `C:\Users\Diogo\OneDrive\Documentos\GitHub\filezao`
 - **Banco de dados (Supabase):** projeto `vfrgqtuvbflkexapdzho` → URL `https://vfrgqtuvbflkexapdzho.supabase.co`
   - A chave usada no site é a **publishable** (pública por design, protegida por RLS) — já está dentro do `index.html`/`tv.html`. Nada de chave secreta no repositório.
-  - **Tabelas:** `entradas`, `saidas`, `gado`, `cheques`, `produtos`, `energia`, `saldos`, `saldos_dia`, `cotacoes`, `logs`, `folha`. (Os funcionários ficam só no aparelho, na chave `fz_func`.)
+  - **Tabelas:** `entradas`, `saidas`, `gado`, `cheques`, `produtos`, `energia`, `saldos`, `saldos_dia`, `cotacoes`, `logs`, `folha`, **`config`** (chave/valor do painel Área Interna: `meta_semanal`, `bonus`, `anotacoes`, `escala`). (Os funcionários ficam só no aparelho, na chave `fz_func`.)
   - **Edge Function:** `filezao-ia` (é a "ponte" da IA com o Groq — ver seção 7).
 
 ---
@@ -37,6 +38,7 @@ Tudo é pensado para um usuário **não técnico**, em **português**, com cara 
 - Sempre **`index.html` + `CHANGELOG.md`** juntos.
 - **`tv.html`** só quando a TV mudou.
 - **Não** mandar `tv_preview.html` por padrão (só se eu pedir).
+- Mexeu no painel interno → **`areainterna.html` + `CHANGELOG.md`** (e o backup `areainterna_bkp.html` quando a meta mudar).
 - A função da IA (`filezao-ia.index.ts`) só quando ela mudou — e exige redeploy no Supabase (ver seção 7).
 
 ---
@@ -70,6 +72,37 @@ Tudo é pensado para um usuário **não técnico**, em **português**, com cara 
 Mostra os preços dos produtos numa TV (Fire Stick), com:
 - Fotos dos produtos, telas de "Novidade Filezão" / "Oferta Filezão", transição em dissolve, relógio de Brasília, clima (com modo "Dia de caldo" no frio), rádio e anúncios em áudio.
 - **Busca os produtos no Supabase a cada 1 minuto** (`REFRESH_MS=60000`). Isso, na prática, **mantém o Supabase acordado** sozinho enquanto a TV está ligada (ver seção 9).
+
+---
+
+## 6.1 O painel "Área Interna" (`areainterna.html`)
+
+Painel de TV **interno** (pros funcionários), separado do `tv.html` de preços. Mesmo visual escuro (preto/vermelho/dourado, fontes Anton/Oswald, logo). Tela cheia, **alterna a cada 30s** entre duas telas, com **bolinhas no rodapé** pra trocar manualmente (igual à TV). Usa fuso de Brasília (`agoraBR()`), `HDR` (só apikey+Authorization), atualiza dados a cada 15s.
+
+**Tela 1 — META DA SEMANA**
+- Número grande em cima = **o VALOR DA META estipulada** (o alvo), não o atual. Rótulo "Meta da Semana".
+- **Barra de progresso** mostra o **atual evoluindo** rumo à meta: % concluída e % faltante, cor **vermelho → verde** conforme chega perto. Não mostra o valor atual em número. "✓ META BATIDA!" quando alcança.
+- **Bônus** (banner dourado pulsante) aparece só se houver bônus definido.
+- **Anotações** (recados da equipe) na coluna da direita. Semana = segunda a domingo; vendas = só entradas (sem saídas).
+
+**Tela 2 — ESCALA DE FOLGA (calendário do mês)**
+- Calendário branco do **mês atual** (troca sozinho ao virar o mês), segunda→domingo.
+- **Folga** = dia **amarelo** com o(s) nome(s) em MAIÚSCULO. **Hoje** = azul, **próxima folga** = verde, passadas = riscadas.
+- **Feriados** com o nome, em vermelho clarinho: nacionais + estadual MG (Tiradentes/Data Magna) + **municipais de Perdigão** (15/08, 08/12 e 12/12 Aniversário). Os **móveis** (Carnaval, Quarta de Cinzas, Sexta-feira Santa, Corpus Christi) são **calculados pela Páscoa** (`pascoa()`+`feriadosDoAno()`) → funcionam em **qualquer ano** sozinhos.
+- **Sábado/domingo** com a coluna em cinza; dias do **mês seguinte/anterior** aparecem em **cinza bem claro** ("outro mês") — assim uma folga lançada no próximo mês já aparece no fim do mês atual.
+- **Legenda** no topo, ao lado do nome do mês (foi pra cima pra não cortar).
+
+**Onde os dados vêm:** tabela **`config`** no Supabase (chave text PK, valor text, atualizado timestamptz): `meta_semanal`, `bonus`, `anotacoes`, `escala` (JSON `[{nome,data}]`).
+
+**Quem preenche (no `index.html`):**
+- Aba **"Meta / Anotações"** (`sec-metaedit`, função `metaCfgSave`) → grava `meta_semanal`, `bonus`, `anotacoes`.
+- Aba **"Escala mensal"** (`sec-escala`, `escalaSave`) → grava `escala`. Os **nomes sugeridos vêm da aba de Pagamento de funcionários** (`funcGet()`: Alberto, André, Wilson, Magela, Gustavo, Alex) + Diogo e Rosemir; e o sistema **corrige a grafia sozinho** (`nomeCanonico()`: digitar "andre" vira "André"). No painel os nomes saem em MAIÚSCULO.
+
+**SQL necessário (rodar 1x no Supabase):** criar a tabela `config` → está no **`CONFIG_ANOTACOES.md`**. Pra lançar a escala de junho/2026 da foto, há o **`ESCALA_JUNHO_2026.sql`** (opcional). Sem a tabela `config`, salvar a meta/escala avisa erro.
+
+**Duas versões do arquivo (IMPORTANTE):**
+- **`areainterna.html`** = versão **EM BREVE**: a tela de Meta fica **tapada** com um "EM BREVE" (os funcionários veem que vem novidade, mas **nenhum valor**); o **calendário/escala continua funcionando** normal. **É a que está no ar agora.**
+- **`areainterna_bkp.html`** = versão **COMPLETA** da meta (com os valores reais). Guardada de backup. **Quando o Diogo for liberar a meta pros funcionários, é só renomear `areainterna_bkp.html` → `areainterna.html` e subir pelo `.bat`.**
 
 ---
 
@@ -115,6 +148,9 @@ Mostra os preços dos produtos numa TV (Fire Stick), com:
 - ✅ Filezão IA: pergunta, busca, adiciona, edita, apaga (com confirmação) e lê foto.
 - ✅ Backup completo + restauração.
 - ✅ Robozinho keep-alive instalado.
+- ✅ Painel **Área Interna** (meta + escala/calendário com feriados) pronto. No ar a versão **EM BREVE** (meta tapada); a **completa** está em `areainterna_bkp.html`.
+- ⚠️ **Rodar 1x no Supabase:** o SQL da tabela `config` (`CONFIG_ANOTACOES.md`) — sem ela, a Meta/Escala não salva. (Escala de junho: `ESCALA_JUNHO_2026.sql`, opcional.)
+- 💡 Pra **liberar a meta**: renomear `areainterna_bkp.html` → `areainterna.html` e subir.
 - ⚠️ **Vigiar:** o Groq pode aposentar modelos — se a IA reclamar de "modelo não encontrado", trocar `IA_MODEL_TEXTO`/`IA_MODEL_VISAO`.
 - ⚠️ **Limite grátis do Groq** (8.000 tokens/min): em rajada de muitas perguntas no mesmo minuto, a IA pausa uns segundos e se recupera. Pra tirar o teto, existe o **Dev Tier** do Groq (pague-o-que-usar, centavos/mês pro volume do açougue).
 - 💡 Ajuste opcional "na gaveta": rodar o texto com **`reasoning_effort: low`** + função **v3** (já documentado) caso volte a aparecer "não consegui responder".
@@ -124,10 +160,10 @@ Mostra os preços dos produtos numa TV (Fire Stick), com:
 ## 11. Como retomar numa conversa nova (passo a passo)
 
 1. Abra um chat novo.
-2. Anexe: **este `SISTEMA_FILEZAO_README.md`**, o **`CHANGELOG.md`** e o **`index.html`** atual. (Se for mexer na TV, anexe o `tv.html`; se for mexer na IA por dentro, anexe o `filezao-ia.index.ts`.)
+2. Anexe: **este `SISTEMA_FILEZAO_README.md`**, o **`CHANGELOG.md`** e o **`index.html`** atual. (Se for mexer na TV, anexe o `tv.html`; no painel interno, o `areainterna.html`; na IA por dentro, o `filezao-ia.index.ts`.)
 3. Diga algo como: *"Esse é o meu sistema Filezão, leia o README e o CHANGELOG pra entender tudo. Quero que você faça X."*
 4. Pronto — o contexto inteiro estará ali, e dá pra continuar sem reexplicar nada.
 
 ---
 
-*Última atualização deste guia: junho/2026. Mantenha-o junto do CHANGELOG.md — os dois contam, juntos, toda a história do sistema.*
+*Última atualização deste guia: 24/jun/2026 (inclui o painel Área Interna: meta + escala/calendário com feriados, versão EM BREVE no ar). Mantenha-o junto do CHANGELOG.md — os dois contam, juntos, toda a história do sistema.*
