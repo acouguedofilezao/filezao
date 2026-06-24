@@ -51,9 +51,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
 .prog{width:100%;max-width:900px}
 .prog .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.6vh;font-size:1.9vh}
-.prog .top .ml{color:var(--muted);text-transform:uppercase}
-.prog .top .ml b{color:var(--cream);font-weight:600}
-.prog .top .pc{font-family:'Anton';font-size:3vh;color:var(--gold)}
+.prog .top .pdone{color:var(--muted);text-transform:uppercase;letter-spacing:.04vw}
+.prog .top .pdone b{font-family:'Anton';font-size:4vh;margin-right:.5vw}
+.prog .top .pleft{color:var(--muted);text-transform:uppercase}
+.prog .top .pleft b{font-family:'Anton';font-size:2.6vh;color:var(--muted)}
 .track{height:3.2vh;background:rgba(255,255,255,.06);border:.18vh solid var(--line);border-radius:2vh;overflow:hidden}
 .fill{height:100%;width:0%;border-radius:2vh;background:linear-gradient(90deg,var(--greenDeep),var(--green));
   box-shadow:0 0 2.2vh rgba(47,208,107,.45);transition:width .8s cubic-bezier(.22,1,.36,1)}
@@ -118,6 +119,8 @@ footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-betwe
   border-top:.18vh solid var(--line);padding-top:.9vh}
 footer .rule{font-size:1.6vh;color:var(--muted)}
 footer .rule b{color:var(--gold);font-weight:600}
+footer .verse{font-size:1.95vh;color:var(--gold);font-style:italic;font-weight:500}
+footer .verse span{color:var(--muted);font-style:normal;font-size:1.5vh}
 footer .st{font-size:1.5vh;color:var(--muted);text-align:right;white-space:nowrap}
 footer .st i{color:var(--green);font-style:normal}
 
@@ -159,11 +162,11 @@ footer .st i{color:var(--green);font-style:normal}
           <div class="vendas" id="vendas">R$ 0,00</div>
           <div class="prog">
             <div class="top">
-              <div class="ml">Meta da semana: <b id="metaval">—</b></div>
-              <div class="pc" id="pct">0%</div>
+              <div class="pdone"><b id="pctdone">0%</b> concluído</div>
+              <div class="pleft"><b id="pctleft">100%</b> faltando</div>
             </div>
             <div class="track"><div class="fill" id="fill"></div></div>
-            <div class="falta" id="falta">—</div>
+            <div class="falta" id="falta"></div>
           </div>
           <div class="bonus" id="bonus" style="display:none"></div>
         </div>
@@ -181,7 +184,7 @@ footer .st i{color:var(--green);font-style:normal}
   </div>
 
   <footer>
-    <div class="rule">Checklist cumprido todos os dias <b>+</b> meta batida <b>=</b> bônus da equipe</div>
+    <div class="verse">"Deus recompensa quem n'Ele crê e confia." <span>— Hebreus 11:6</span></div>
     <div class="st" id="status">conectando…</div>
   </footer>
 </div>
@@ -252,15 +255,17 @@ function setVendas(v){
   el.textContent=txt;
 }
 function renderProgresso(vendas){
-  var mv=document.getElementById('metaval'),pc=document.getElementById('pct'),
+  var done=document.getElementById('pctdone'),left=document.getElementById('pctleft'),
       fill=document.getElementById('fill'),falta=document.getElementById('falta');
-  if(!(META>0)){mv.textContent='— (defina no sistema)';pc.textContent='—';fill.style.width='0%';fill.classList.remove('ok');
-    falta.textContent='Defina a meta da semana no sistema';falta.style.color='var(--muted)';return;}
-  var pct=vendas/META*100;
-  mv.textContent=money(META);pc.textContent=Math.round(pct)+'%';
-  fill.style.width=Math.max(0,Math.min(100,pct))+'%';
-  if(vendas>=META){fill.classList.add('ok');falta.innerHTML='✓ <b>META BATIDA!</b>';falta.style.color='var(--gold)';}
-  else{fill.classList.remove('ok');falta.innerHTML='Faltam <b>'+money(META-vendas)+'</b> para a meta';falta.style.color='var(--muted)';}
+  if(!(META>0)){done.textContent='0%';left.textContent='100%';done.style.color='var(--muted)';
+    fill.style.width='0%';falta.textContent='Defina a meta no sistema';falta.style.color='var(--muted)';return;}
+  var pct=vendas/META*100;var p=Math.max(0,Math.min(100,pct));
+  var hue=Math.round(p/100*120);var cor='hsl('+hue+',82%,46%)';
+  done.textContent=Math.round(pct)+'%';done.style.color=cor;
+  left.textContent=Math.max(0,Math.round(100-pct))+'%';
+  fill.style.width=p+'%';fill.style.background=cor;fill.style.boxShadow='0 0 18px '+cor;
+  if(vendas>=META){falta.innerHTML='✓ <b>META BATIDA!</b>';falta.style.color='var(--gold)';}
+  else falta.textContent='';
 }
 async function carregarMeta(){
   var s=semana();

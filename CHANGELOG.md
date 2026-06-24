@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-22 — Meta: barra por porcentagem com cor de esperança + frase fixa no painel
+- Tela da meta agora mostra **o valor + a barra**, sem exibir o valor da meta e sem "faltam R$".
+- Abaixo: **% concluída** e **% faltante**. A barra muda de cor conforme a proximidade — **quanto mais perto da meta, mais verde** (sinal de esperança); longe, mais vermelha.
+- **Frase fixa** no rodapé do painel: "Deus recompensa quem n'Ele crê e confia." (Hebreus 11:6).
+
+
 ## 2026-06-22 — Correções nas abas Meta/Escala + bônus na TV + calendário de folga
 - **Nome corrigido:** Rosmari → **Rosemir**.
 - **`meta.html` removido** (não é mais usado; tudo é `areainterna.html`).
