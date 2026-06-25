@@ -49,6 +49,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .vendas{font-family:'Anton';font-size:14vh;line-height:.9;letter-spacing:1px;color:var(--cream);transition:color .3s;text-align:center}
 .vendas.flash{animation:pop .45s ease}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+#view-meta .col-meta{position:relative}
+.embreve{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2vh;text-align:center;border-radius:1.6vh;background:radial-gradient(120% 120% at 50% 30%, #1c1c22 0%, var(--bg2) 55%, var(--bg) 100%)}
+.embreve .eb-ic{font-size:8vh;line-height:1;filter:drop-shadow(0 0 2vh var(--glow));animation:ebpulse 2.6s ease-in-out infinite}
+.embreve .eb-big{font-family:'Anton';font-size:9.5vh;line-height:.9;color:var(--cream);letter-spacing:1.5px;text-transform:uppercase;text-shadow:0 0 3vh var(--glow)}
+.embreve .eb-sub{font-size:2.4vh;color:var(--gold);text-transform:uppercase;letter-spacing:.3vw;font-weight:600}
+@keyframes ebpulse{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
 .prog{width:100%;max-width:900px}
 .prog .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.6vh;font-size:1.9vh}
 .prog .top .pdone{color:var(--muted);text-transform:uppercase;letter-spacing:.04vw}
@@ -181,6 +187,7 @@ footer .st i{color:var(--green);font-style:normal}
     <section class="view active" id="view-meta">
       <div class="board">
         <div class="col-meta">
+          <div class="embreve"><div class="eb-ic">⏳</div><div class="eb-big">EM BREVE</div><div class="eb-sub">Novidade chegando pra equipe</div></div>
           <div class="lbl">Meta da Semana</div>
           <div class="vendas" id="vendas">R$ 0,00</div>
           <div class="prog">
