@@ -1,5 +1,14 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Aniversário: fonte maior + sem nome repetido
+- A escrita "🎂 Aniversariante do dia" + nome ficou **maior** dentro do quadradinho.
+- O painel **não repete** mais o mesmo nome no dia (dedupe). E a aba Funcionários agora **remove duplicados** sozinha ao carregar e ao salvar — então o "Magela" repetido some quando você abrir e salvar.
+
+
+## 2026-06-24 — Quadradinho: frase "Aniversariante do dia"
+- No dia do aniversário, a caixinha do calendário agora mostra "🎂 Aniversariante do dia" + o nome (em destaque rosa). Tudo dentro do próprio quadradinho, sem letreiro no topo.
+
+
 ## 2026-06-24 — Aniversário só no quadradinho (letreiro do topo removido)
 - A pedido, o letreiro de aniversariantes no topo do calendário foi **removido**. Fica só o destaque no **quadradinho do dia** (contorno rosa + 🎂 + nome).
 
