@@ -872,6 +872,26 @@ body,.main-content{background:#F3F0EC}
   </div>
 </div>
 
+<!-- MODAL EDITAR CHEQUE -->
+<div class="modal-bg" id="modal-edit-chq">
+  <div class="modal">
+    <div class="modal-title loc"><i class="ti ti-edit"></i> Editar cheque</div>
+    <input type="hidden" id="ce-id">
+    <div class="form-row">
+      <div class="form-group"><label>Data emissão</label><input type="date" id="ce-dt"></div>
+      <div class="form-group"><label>Nº Cheque</label><input type="text" id="ce-nm" placeholder="700xxx"></div>
+      <div class="form-group"><label>Valor R$</label><input id="ce-vl" placeholder="0,00"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Vencimento</label><input type="date" id="ce-vc"></div>
+      <div class="form-group" style="flex:2"><label>Credor</label><input type="text" id="ce-cr" placeholder="Fornecedor..."></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-chq')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEditChq()"><i class="ti ti-check"></i> Salvar</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL EDITAR SAÍDA -->
 <div class="modal-bg" id="modal-edit-sai">
   <div class="modal">
@@ -3180,6 +3200,33 @@ function addChq(){
   logReg('Cheques','Adicionou','Nº '+n+' · '+cr.toUpperCase()+' · vence '+fd(vc),'',fmt(r2(v)));
   save('fz_cheques',C);document.getElementById('c-nm').value='';clrV('c-vl');document.getElementById('c-cr').value='';renderChq();
 }
+function editChq(id){
+  const c=C.find(x=>x.id===id);if(!c)return;
+  document.getElementById('ce-id').value=id;
+  document.getElementById('ce-dt').value=c.data||'';
+  document.getElementById('ce-nm').value=c.numero||'';
+  setV('ce-vl',c.valor);
+  document.getElementById('ce-vc').value=c.vencimento||'';
+  document.getElementById('ce-cr').value=c.credor||'';
+  document.getElementById('modal-edit-chq').classList.add('open');
+}
+function salvarEditChq(){
+  const id=document.getElementById('ce-id').value;
+  const idx=C.findIndex(x=>x.id===id);if(idx===-1)return;
+  const d=document.getElementById('ce-dt').value,n=document.getElementById('ce-nm').value.trim();
+  const v=getDV('ce-vl'),vc=document.getElementById('ce-vc').value,cr=document.getElementById('ce-cr').value.trim();
+  if(!d||!n||v<=0||!vc||!cr)return alert('Preencha todos os campos.');
+  var _a='Nº '+C[idx].numero+' · '+(C[idx].credor||'')+' · '+fmt(C[idx].valor)+' · vence '+fd(C[idx].vencimento);
+  C[idx].data=d;
+  C[idx].numero=n;
+  C[idx].valor=r2(v);
+  C[idx].vencimento=vc;
+  C[idx].credor=cr.toUpperCase();
+  /* PRESERVA: compensado, dataCompensacao, gadoReg (nao mexe no vinculo com o gado) */
+  var _b='Nº '+C[idx].numero+' · '+(C[idx].credor||'')+' · '+fmt(C[idx].valor)+' · vence '+fd(C[idx].vencimento);
+  if(_a!==_b)logReg('Cheques','Editou','Cheque',_a,_b);
+  save('fz_cheques',C);closeModal('modal-edit-chq');renderChq();
+}
 function renderChq(){
   const q=(document.getElementById('c-sr').value||'').toLowerCase();const now=td();
   let fl=[...C].sort((a,b)=>{
@@ -3209,7 +3256,7 @@ function renderChq(){
       <td style="font-size:11px;color:#888">${c.gadoReg?c.gadoReg.split(',').map(r=>'<span class=\"reg\" style=\"margin:1px\">#'+r.trim()+'</span>').join(' '):'—'}</td>
       <td><span class="badge ${c.compensado?'b-pago':'b-cheque'}">${c.compensado?'Compensado':'Pendente'}</span></td>
       <td>${dtComp}</td>
-      <td>${compAcao}<button class="btn-del" onclick="delRec('chq','${c.id}')" title="Excluir"><i class="ti ti-trash"></i></button></td></tr>`;
+      <td>${compAcao}<button class="btn-edit" onclick="editChq('${c.id}')" title="Editar"><i class="ti ti-edit"></i></button><button class="btn-del" onclick="delRec('chq','${c.id}')" title="Excluir"><i class="ti ti-trash"></i></button></td></tr>`;
   });
   h+=`</tbody></table></div>`;
   el.innerHTML=h;document.getElementById('pg-chq').innerHTML=pgCtrl(tot,PG.c,'PG.c','renderChq');
@@ -3704,6 +3751,7 @@ function setupInputs(){
   [['e-vl',addEnt],['s-vl',addSai],['g-kg',addGad],['g-pr',addGad],['c-vl',addChq]].forEach(([id,fn])=>{const el=document.getElementById(id);if(el)mkDInput(el,fn);});
   const eeVl=document.getElementById('ee-vl');if(eeVl)mkDInput(eeVl,salvarEditEnt);
   const esVl=document.getElementById('es-vl');if(esVl)mkDInput(esVl,salvarEditSai);
+  const ceVl=document.getElementById('ce-vl');if(ceVl)mkDInput(ceVl,salvarEditChq);
 }
 
 /* ── INIT ── */

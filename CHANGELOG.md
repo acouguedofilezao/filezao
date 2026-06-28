@@ -1,5 +1,16 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-24 — Cheques: botão de Editar (igual Entradas/Saídas)
+- Cada cheque agora tem o **lápis de editar** na linha, abrindo um modal pra alterar **emissão, nº, valor, vencimento e credor**.
+- **Preserva** situação (Pendente/Compensado), data de compensação e a **Ref. Gado** (não quebra o vínculo com o gado). Tudo fica registrado no log de alterações.
+
+
+## 2026-06-24 — TV: modo ARRAIÁ (só forró) por hoje 🎉
+- Só por hoje, a rádio da TV toca **forró/arraiá** (tags forró/xote/baião + estações de forró). Trava pra não cair nas rádios normais.
+- A versão normal foi guardada em **`tv_radios_normais.html`**. Pra voltar amanhã: renomear `tv_radios_normais.html` → `tv.html` e subir pelo `.bat` (ou me pedir que eu devolvo).
+- O modo arraiá **não sobrescreve** a rádio normal salva no aparelho, então amanhã volta limpo.
+
+
 ## 2026-06-24 — Aniversário: fonte maior + sem nome repetido
 - A escrita "🎂 Aniversariante do dia" + nome ficou **maior** dentro do quadradinho.
 - O painel **não repete** mais o mesmo nome no dia (dedupe). E a aba Funcionários agora **remove duplicados** sozinha ao carregar e ao salvar — então o "Magela" repetido some quando você abrir e salvar.
