@@ -1,5 +1,15 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-28 — Aniversário: cor roxa + sem nome repetido
+- Cor do aniversariante mudou de rosa para **ROXO** (não confunde mais com o vermelho do feriado na TV). Adicionado "Aniversário" na legenda.
+- Quando a pessoa tem **folga E aniversário no mesmo dia**, o nome não repete: aparece só como aniversariante (o fundo amarelo continua indicando a folga).
+
+
+## 2026-06-24 — Painel backup: versão que ESCONDE o valor da meta
+- Atualizado o `areainterna_bkp.html` para a versão que **não mostra o valor da meta em R$** — o número grande vira a **porcentagem** (colorida do vermelho ao verde) e o **prêmio/bônus** continua aparecendo. Pra equipe ver o progresso sem ver o alvo em reais.
+- Já vem com tudo novo: aniversariante do dia 🎂, anti-sono, calendário com feriados, etc.
+
+
 ## 2026-06-24 — Cheques: botão de Editar (igual Entradas/Saídas)
 - Cada cheque agora tem o **lápis de editar** na linha, abrindo um modal pra alterar **emissão, nº, valor, vencimento e credor**.
 - **Preserva** situação (Pendente/Compensado), data de compensação e a **Ref. Gado** (não quebra o vínculo com o gado). Tudo fica registrado no log de alterações.

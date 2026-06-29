@@ -111,10 +111,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .cal-cell .dnum{font-family:'Anton';font-size:2.5vh;color:#555;line-height:1}
 .cal-cell .nomes{margin-top:.4vh;display:flex;flex-direction:column;gap:.2vh;overflow:hidden}
 .cal-cell .fer{font-size:1.5vh;color:#C20000;font-weight:700;line-height:1.08;margin-top:.25vh;white-space:normal;overflow:hidden}
-.cal-cell.aniver{outline:.32vh solid #d6336c;outline-offset:-.32vh;box-shadow:0 0 1.5vh rgba(214,51,108,.45)}
+.cal-cell.aniver{outline:.34vh solid #8e24aa;outline-offset:-.34vh;box-shadow:0 0 1.6vh rgba(142,36,170,.55)}
 .cal-cell .aniv{margin-top:.2vh;line-height:1.08;overflow:hidden;white-space:normal}
-.cal-cell .aniv-lbl{display:block;font-size:1.7vh;color:#d6336c;font-weight:800;text-transform:uppercase;letter-spacing:.01em;line-height:1.05}
-.cal-cell .aniv-nm{display:block;font-size:2vh;color:#c2185b;font-weight:800;text-transform:uppercase;line-height:1.05;margin-top:.15vh}
+.cal-cell .aniv-lbl{display:block;font-size:1.7vh;color:#8e24aa;font-weight:800;text-transform:uppercase;letter-spacing:.01em;line-height:1.05}
+.cal-cell .aniv-nm{display:block;font-size:2vh;color:#6a1b9a;font-weight:800;text-transform:uppercase;line-height:1.05;margin-top:.15vh}
 .cal-cell .nm{font-size:2.1vh;line-height:1.16;color:#1a1a1a;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
 .cal-cell.outro{background:#f7f8fa}
 .cal-cell.feriado{background:#fde9e9}
@@ -133,7 +133,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .cal-legend .lg{font-size:1.65vh;color:#444;font-weight:600;display:flex;align-items:center;gap:.4vw}
 .cal-legend .lg::before{content:'';width:1.5vh;height:1.5vh;border-radius:.3vh;display:inline-block}
 .cal-legend .lg.blue::before{background:#3a86ff} .cal-legend .lg.green::before{background:#1f9d57}
-.cal-legend .lg.red::before{background:#C20000} .cal-legend .lg.gray::before{background:#7c8794} .cal-legend .lg.lgray::before{background:#dfe3e9;border:.13vh solid #cfd4db}
+.cal-legend .lg.red::before{background:#C20000} .cal-legend .lg.gray::before{background:#7c8794} .cal-legend .lg.lgray::before{background:#dfe3e9;border:.13vh solid #cfd4db} .cal-legend .lg.aniv::before{background:#8e24aa}
 
 footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:2vw;margin-top:1.1vh;
   border-top:.18vh solid var(--line);padding-top:.9vh}
@@ -183,7 +183,7 @@ footer .st i{color:var(--green);font-style:normal}
     <section class="view active" id="view-meta">
       <div class="board">
         <div class="col-meta">
-          <div class="lbl">Meta da Semana</div>
+          <div class="lbl">Progresso da Meta</div>
           <div class="vendas" id="vendas">R$ 0,00</div>
           <div class="prog">
             <div class="top">
@@ -284,11 +284,13 @@ function setBig(v){
 function renderProgresso(vendas){
   var big=document.getElementById('vendas'),done=document.getElementById('pctdone'),left=document.getElementById('pctleft'),
       fill=document.getElementById('fill'),falta=document.getElementById('falta');
-  if(!(META>0)){big.textContent='R$ 0,00';done.textContent='0%';left.textContent='100%';done.style.color='var(--muted)';
+  if(!(META>0)){big.textContent='—';done.textContent='0%';left.textContent='100%';done.style.color='var(--muted)';
     fill.style.width='0%';falta.textContent='Defina a meta no sistema';falta.style.color='var(--muted)';return;}
-  setBig(META);
   var pct=vendas/META*100;var p=Math.max(0,Math.min(100,pct));
   var hue=Math.round(p/100*120);var cor='hsl('+hue+',82%,46%)';
+  var _bt=Math.round(pct)+'%';
+  if(big.textContent!==_bt){big.classList.remove('flash');void big.offsetWidth;big.classList.add('flash');}
+  big.textContent=_bt;big.style.color=cor;
   done.textContent=Math.round(pct)+'%';done.style.color=cor;
   left.textContent=Math.max(0,Math.round(100-pct))+'%';
   fill.style.width=p+'%';fill.style.background=cor;fill.style.boxShadow='0 0 18px '+cor;
@@ -363,7 +365,7 @@ function renderEscala(){
   var top=document.createElement('div');top.className='cal-top';
   var tt=document.createElement('div');tt.className='cal-tt';tt.textContent=(MESES[m]+' '+y).toUpperCase();top.appendChild(tt);
   var lg=document.createElement('div');lg.className='cal-legend';
-  lg.innerHTML='<span class="lg blue">Folga hoje</span><span class="lg green">Próxima folga</span><span class="lg red">Feriado</span><span class="lg gray">Sáb / Dom</span><span class="lg lgray">Outro mês</span>';
+  lg.innerHTML='<span class="lg blue">Folga hoje</span><span class="lg green">Próxima folga</span><span class="lg red">Feriado</span><span class="lg aniv">Aniversário</span><span class="lg gray">Sáb / Dom</span><span class="lg lgray">Outro mês</span>';
   top.appendChild(lg);
   card.appendChild(top);
   var head=document.createElement('div');head.className='cal-head';
@@ -392,7 +394,9 @@ function renderEscala(){
     var html='<div class="dnum">'+cur.getDate()+'</div>';
     if(anivs)html+='<div class="aniv"><span class="aniv-lbl">\uD83C\uDF82 Aniversariante do dia</span><span class="aniv-nm">'+anivs.map(function(n){return (n+'').replace(/</g,'&lt;');}).join(', ')+'</span></div>';
     if(ferNome)html+='<div class="fer">'+ferNome.replace(/</g,'&lt;')+'</div>';
-    if(nomes)html+='<div class="nomes">'+nomes.map(function(n){return '<div class="nm">'+n.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
+    var nomesShow=nomes;
+    if(nomes&&anivs){var _al=anivs.map(function(n){return (n+'').trim().toLowerCase();});nomesShow=nomes.filter(function(n){return _al.indexOf((n+'').trim().toLowerCase())<0;});}
+    if(nomesShow&&nomesShow.length)html+='<div class="nomes">'+nomesShow.map(function(n){return '<div class="nm">'+n.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
     cell.innerHTML=html;grid.appendChild(cell);
   }
   card.appendChild(grid);
