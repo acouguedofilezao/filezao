@@ -1,5 +1,15 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-28 — TV: watchdog respeita o anúncio
+- Ajuste: quando a rádio pausa pra tocar o **anúncio da loja**, o player **não troca de estação** (antes ele confundia a pausa do anúncio com travamento). Ao acabar o anúncio, a mesma rádio volta normal.
+
+
+## 2026-06-28 — TV: rádio mais estável (pula sozinha quando falha/trava)
+- O player agora **detecta rádio muda/travada** e **pula sozinho pra próxima** (~7s sem tocar). Se clicar em tocar e a estação não funcionar, ele já troca também.
+- **Filtro de qualidade** na busca: só estações HTTPS, testadas (sem quebradas), em MP3/AAC e com bitrate decente (≥64). Mais estações na lista (24).
+- Voltou pros gêneros **normais** (sertanejo/forró/pagode) — o modo arraiá foi desativado.
+
+
 ## 2026-06-28 — Aniversário: cor roxa + sem nome repetido
 - Cor do aniversariante mudou de rosa para **ROXO** (não confunde mais com o vermelho do feriado na TV). Adicionado "Aniversário" na legenda.
 - Quando a pessoa tem **folga E aniversário no mesmo dia**, o nome não repete: aparece só como aniversariante (o fundo amarelo continua indicando a folga).

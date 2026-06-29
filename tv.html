@@ -654,14 +654,14 @@ var RADIO_FALLBACK=[
 ];
 var RADIOS=[];
 var mplayer=new Audio(); mplayer.preload='none'; var MVOL=1; (function(){var v=parseFloat(lsGet('vol'));if(!isNaN(v)&&v>=0&&v<=1)MVOL=v;})(); mplayer.volume=MVOL;
-var mcur=0, mplaying=false, mWantPlay=false, mTries=0, mFail=null;
+var mcur=0, mplaying=false, mWantPlay=false, mTries=0, mFail=null, mLastCT=0, mStallChecks=0;
 function lsSet(k,v){try{localStorage.setItem('filezao_'+k,v);}catch(e){}}
 function lsGet(k){try{return localStorage.getItem('filezao_'+k);}catch(e){return null;}}
 function mShuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function mUpd(){var b=document.getElementById('mbtn');if(b){b.textContent=mplaying?'❚❚':'▶';b.className='mbtn '+(mplaying?'on':'off');}var s=document.getElementById('mstation');if(s)s.textContent=RADIOS.length?RADIOS[mcur].nome:'Carregando rádios...';}
 function mClearFail(){if(mFail){clearTimeout(mFail);mFail=null;}}
-function loadStation(i){if(!RADIOS.length)return;mClearFail();mcur=((i%RADIOS.length)+RADIOS.length)%RADIOS.length;mplayer.src=RADIOS[mcur].url;lsSet('radio',RADIOS[mcur].url);lsSet('radio_nome',RADIOS[mcur].nome||'');mUpd();}
-function mSkip(){mTries++;if(mTries>RADIOS.length){mplaying=false;mClearFail();var s=document.getElementById('mstation');if(s)s.textContent='Nenhuma rádio disponível';mUpd();return;}loadStation(mcur+1);if(mWantPlay)mPlay();}
+function loadStation(i){if(!RADIOS.length)return;mClearFail();mcur=((i%RADIOS.length)+RADIOS.length)%RADIOS.length;mLastCT=0;mStallChecks=0;mplayer.src=RADIOS[mcur].url;lsSet('radio',RADIOS[mcur].url);lsSet('radio_nome',RADIOS[mcur].nome||'');mUpd();}
+function mSkip(){var now=Date.now();if(now-(mSkip._last||0)<1200)return;mSkip._last=now;mTries++;if(mTries>RADIOS.length){mplaying=false;mClearFail();var s=document.getElementById('mstation');if(s)s.textContent='Nenhuma rádio disponível';mUpd();return;}loadStation(mcur+1);if(mWantPlay)mPlay();}
 function mPlay(){
   mClearFail();
   mplayer.volume=MVOL;
@@ -673,8 +673,12 @@ function toggleMusic(){if(!RADIOS.length)return;if(mplaying){mWantPlay=false;mpl
 function nextStation(){if(!RADIOS.length)return;mWantPlay=true;mTries=0;loadStation(mcur+1);mPlay();}
 function armFirstGesture(){function go(){document.removeEventListener('click',go);document.removeEventListener('keydown',go);if(!mplaying&&mWantPlay){mTries=0;mPlay();}}document.addEventListener('click',go);document.addEventListener('keydown',go);}
 function mAutoResume(){if(lsGet('playing')!=='1'){mUpd();return;}mWantPlay=true;var p=mplayer.play();if(p&&p.then){p.then(function(){mplaying=true;mTries=0;mUpd();}).catch(function(){mplaying=false;mUpd();armFirstGesture();});}else{armFirstGesture();}}
-mplayer.addEventListener('playing',function(){mplaying=true;mTries=0;mClearFail();lsSet('playing','1');mUpd();});
+mplayer.addEventListener('playing',function(){mplaying=true;mTries=0;mClearFail();mLastCT=mplayer.currentTime||0;mStallChecks=0;lsSet('playing','1');mUpd();});
 mplayer.addEventListener('error',function(){if(mWantPlay)mSkip();});
+mplayer.addEventListener('stalled',function(){if(mWantPlay)mStallChecks++;});
+mplayer.addEventListener('ended',function(){if(mWantPlay)mSkip();});
+function mWatch(){if(!mWantPlay||!RADIOS.length||!mplayer.src)return;if(window._falando)return;if(mplayer.paused){mStallChecks++;}else{var ct=mplayer.currentTime||0;if(ct>mLastCT+0.05){mLastCT=ct;mStallChecks=0;}else{mStallChecks++;}}if(mStallChecks>=3){mStallChecks=0;mSkip();}}
+setInterval(mWatch,2500);
 /* troca de estação só manual (botão Trocar / tecla do controle) — sem rodízio automático */
 var RADIO_REGIONAIS=['Nova Sertaneja','A Sertaneja','Espacial FM','Radio Santana Itauna','Montense FM'];
 var RADIO_PODE_MISSA=[];
@@ -687,12 +691,12 @@ function emMissa(){var d=agoraBR(),dow=d.getDay(),mn=d.getHours()*60+d.getMinute
 function ehSegura(st){if(!st)return true;if(st.safe===false)return false;var n=(st.nome||'').toLowerCase();for(var i=0;i<RADIO_PODE_MISSA.length;i++){if(RADIO_PODE_MISSA[i]&&n.indexOf(RADIO_PODE_MISSA[i])>=0)return false;}return true;}
 function checaMissa(){if(!mWantPlay||RADIOS.length<2)return;if(emMissa()&&!ehSegura(RADIOS[mcur])){for(var i=1;i<=RADIOS.length;i++){var k=(mcur+i)%RADIOS.length;if(ehSegura(RADIOS[k])){mTries=0;loadStation(k);mPlay();break;}}}}
 setInterval(checaMissa,30000);
-function rbFiltra(arr,seen,list){if(!arr||!arr.length)return;arr.forEach(function(s){var u=s.url_resolved||s.url;if(u&&s.lastcheckok===1&&u.indexOf('https://')===0&&!seen[u]&&(s.countrycode==='BR'||!s.countrycode)){seen[u]=1;list.push({nome:((s.name||'Rádio').replace(/\s+/g,' ').trim()).slice(0,38),url:u});}});}
+function rbFiltra(arr,seen,list){if(!arr||!arr.length)return;arr.forEach(function(s){var u=s.url_resolved||s.url;if(!u||u.indexOf('https://')!==0)return;if(s.lastcheckok!==1)return;if(seen[u])return;if(!(s.countrycode==='BR'||!s.countrycode))return;var br=+s.bitrate||0;if(br&&br<64)return;var cod=(s.codec||'').toUpperCase();if(cod&&cod!=='MP3'&&cod!=='AAC'&&cod!=='AAC+')return;seen[u]=1;list.push({nome:((s.name||'Rádio').replace(/\s+/g,' ').trim()).slice(0,38),url:u});});}
 function loadRadios(){
   var seen={},regs=[],gen=[],pend=RADIO_REGIONAIS.length+RADIO_TAGS.length;
-  function finish(){pend--;if(pend>0)return;var all=regs.concat(mShuffle(gen));RADIOS=all.length?all.slice(0,18):RADIO_FALLBACK.slice();var start=0;var saved=lsGet('radio');if(saved){var idx=-1;for(var i=0;i<RADIOS.length;i++){if(RADIOS[i].url===saved){idx=i;break;}}if(idx>=0){start=idx;}else{RADIOS.unshift({nome:(lsGet('radio_nome')||'Última estação'),url:saved});start=0;}}loadStation(start);checaMissa();mAutoResume();}
+  function finish(){pend--;if(pend>0)return;var all=regs.concat(mShuffle(gen));RADIOS=all.length?all.slice(0,24):RADIO_FALLBACK.slice();var start=0;var saved=lsGet('radio');if(saved){for(var i=0;i<RADIOS.length;i++){if(RADIOS[i].url===saved){start=i;break;}}}loadStation(start);checaMissa();mAutoResume();}
   RADIO_REGIONAIS.forEach(function(nm){fetch(RADIO_API+'/json/stations/byname/'+encodeURIComponent(nm)+'?hidebroken=true&order=votes&reverse=true&limit=3').then(function(r){return r.json();}).then(function(arr){rbFiltra(arr,seen,regs);finish();}).catch(function(){finish();});});
-  RADIO_TAGS.forEach(function(tag){fetch(RADIO_API+'/json/stations/search?tag='+tag+'&hidebroken=true&order=clickcount&reverse=true&limit=15').then(function(r){return r.json();}).then(function(arr){rbFiltra(arr,seen,gen);finish();}).catch(function(){finish();});});
+  RADIO_TAGS.forEach(function(tag){fetch(RADIO_API+'/json/stations/search?tag='+tag+'&hidebroken=true&order=clickcount&reverse=true&limit=25').then(function(r){return r.json();}).then(function(arr){rbFiltra(arr,seen,gen);finish();}).catch(function(){finish();});});
 }
 mUpd();
 loadRadios();
@@ -733,7 +737,7 @@ function falaAnuncio(){
   if(!tocando)return;   /* rádio pausada/desligada -> não anuncia */
   try{mplayer.pause();}catch(e){}
   _falando=true;
-  function volta(){if(!_falando)return;_falando=false;try{var p=mplayer.play();if(p&&p.catch)p.catch(function(){});}catch(e){}}
+  function volta(){if(!_falando)return;_falando=false;mLastCT=0;mStallChecks=0;try{var p=mplayer.play();if(p&&p.catch)p.catch(function(){});}catch(e){}}
   /* rede de segurança: se nada disparar, volta a rádio em 90s */
   setTimeout(volta,90000);
   try{
