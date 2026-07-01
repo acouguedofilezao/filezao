@@ -2193,13 +2193,15 @@ function impRender(){
     h+='</tbody></table></div>';
   }
   if(IMP.pix.length){
+    var _cutPix='';E.forEach(function(e){if(e.tipo==='PIX'&&e.data&&e.data>_cutPix)_cutPix=e.data;});
     var nConf=IMP.pix.filter(function(o){return o.kind==='transf';}).length;
     h+='<div style="font-weight:700;font-size:13px;margin:16px 0 6px"><span class="tipo-chip tc-pix">PIX</span> Recebimentos no extrato';
+    if(_cutPix)h+=' <span style="font-weight:500;color:#92400e;font-size:12px">- dias antes de '+fd(_cutPix)+' ficam fechados; o dia '+fd(_cutPix)+' reabre pra completar Pix que faltaram</span>';
     if(nConf)h+=' <span style="font-weight:500;color:#888;font-size:12px">\u2014 '+nConf+' transferência(s), já marcadas \u2014 desmarque as que não forem cliente: <a href="#" onclick="impAll(true);return false">marcar todas</a> \u00b7 <a href="#" onclick="impAll(false);return false">limpar</a></span>';
     h+='</div><div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Origem</th><th>Situação</th><th>Valor</th></tr></thead><tbody>';
     IMP.pix.forEach(function(o,i){
-      var done=E.some(function(e){return e.tipo==='PIX'&&e.data===o.data;});
-      var cell=done?'<span class="tipo-chip" style="background:#dcfce7;color:#166534">já lançado</span>':'<input type="checkbox" class="imp-ck-pix" data-i="'+i+'" '+(o.auto?'checked':'')+' onchange="impTotal()">';
+      var done=(_cutPix&&o.data<_cutPix);
+      var cell=done?'<span class="tipo-chip" style="background:#e5e7eb;color:#555">dia já fechado</span>':'<input type="checkbox" class="imp-ck-pix" data-i="'+i+'" '+(o.auto?'checked':'')+' onchange="impTotal()">';
       h+='<tr'+(done?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-size:12px;color:#666">'+(o.name||o.memo||'\u2014')+'</td><td>'+(o.kind==='pix'?'<span class="tipo-chip tc-pix">Pix</span>':'<span class="tipo-chip" style="background:#fef3c7;color:#92400e">Transf.</span>')+'</td><td style="font-weight:700">'+fmt(o.valor)+'</td></tr>';});
     h+='</tbody></table></div>';
   }
@@ -2272,6 +2274,8 @@ function impLaunch(){
   var rows=impSelected(),sai=impSelectedSai();
   var ckChq=document.querySelectorAll('.imp-ck-chq:checked');
   if(!rows.length&&!sai.length&&!ckChq.length){alert('Marque ao menos um lançamento.');return;}
+  var _pxBaixa=[];rows.forEach(function(r){if(r.tipo==='PIX'){var _ix=E.findIndex(function(x){return x.id===r.id;});if(_ix>=0&&E[_ix]&&r.valor<E[_ix].valor-0.01)_pxBaixa.push(fd(r.data)+': '+fmt(E[_ix].valor)+' -> '+fmt(r.valor));}});
+  if(_pxBaixa.length&&!confirm('Atencao: o total de Pix vai DIMINUIR nestes dias:\n'+_pxBaixa.join('\n')+'\n\nIsso ocorre se o extrato nao tiver todos os Pix do dia. Continuar assim?'))return;
   var _lg=[];
   rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});var ov=(idx>=0&&E[idx])?E[idx].valor:null;if(idx>=0){E[idx]=r;}else{E.push(r);}_lg.push({area:'Entradas',acao:'Importou',detalhe:fd(r.data)+' · '+(r.tipo||''),antes:(ov!=null?fmt(ov):''),depois:fmt(r.valor)});});
   sai.forEach(function(r){var idx=S.findIndex(function(x){return x.id===r.id;});var ov=(idx>=0&&S[idx])?S[idx].valor:null;if(idx>=0){S[idx]=r;}else{S.push(r);}_lg.push({area:'Saídas',acao:'Importou',detalhe:fd(r.data)+' · '+(r.descricao||'').toUpperCase(),antes:(ov!=null?fmt(ov):''),depois:fmt(r.valor)});});
@@ -3263,6 +3267,22 @@ function renderChq(){
 }
 
 /* ── FECHAMENTO ── */
+function comOvGet(){try{return JSON.parse(localStorage.getItem('fz_comov')||'{}')||{};}catch(e){return {};}}
+function comOvSet(o){try{localStorage.setItem('fz_comov',JSON.stringify(o));}catch(e){}}
+function comOvMes(px){var o=comOvGet();return o[px]||{};}
+function comEfet(m,who,calc){var v=m[who];return (v!=null&&v!=='')?r2(+v):calc;}
+function comEditar(px,who,nome,calc){
+  var m=comOvMes(px);var atual=(m[who]!=null&&m[who]!=='')?(+m[who]):calc;
+  var s=prompt('Comissão de '+nome+'  (mês '+px+')\nCalculado: '+fmt(calc)+'\n\nDigite o valor que quer usar (deixe vazio pra voltar ao calculado):', atual.toFixed(2).replace('.',','));
+  if(s===null)return;
+  s=s.trim();
+  var o=comOvGet();o[px]=o[px]||{};
+  if(s===''){delete o[px][who];logReg('Fechamento','Ajustou comissão',nome+' ('+px+')',fmt(calc),'(voltou ao calculado)');}
+  else{if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');s=s.replace(/[^0-9.]/g,'');var v=parseFloat(s);if(isNaN(v)||v<0){alert('Valor inválido.');return;}o[px][who]=r2(v);logReg('Fechamento','Ajustou comissão',nome+' ('+px+')',fmt(calc),fmt(r2(v)));}
+  if(Object.keys(o[px]).length===0)delete o[px];
+  comOvSet(o);renderFech();
+}
+function comReset(px,who,nome){var o=comOvGet();if(o[px]){delete o[px][who];if(Object.keys(o[px]).length===0)delete o[px];comOvSet(o);}logReg('Fechamento','Ajustou comissão',(nome||who)+' ('+px+')','','(voltou ao calculado)');renderFech();}
 function fechCalc(px){
   var eM=E.filter(function(e){return e.data.startsWith(px);}),
       sM=S.filter(function(s){return s.data.startsWith(px);}),
@@ -3275,7 +3295,9 @@ function fechCalc(px){
   var cD_=liq>0?r2(aE_*0.015):0,aD_=liq>0?r2(aE_-cD_):0;
   var cA_=liq>0?r2(aD_*0.01625):0,aA_=liq>0?r2(aD_-cA_):0;
   var cAn_=liq>0?r2(aA_*0.00875):0,aAn_=liq>0?r2(aA_-cAn_):0;
-  var sac=liq>0?aAn_:liq,sobra=r2(sac-tG);
+  var _cov=comOvMes(px);
+  var _totC=liq>0?r2(comEfet(_cov,'diogo',cD_)+comEfet(_cov,'alberto',cA_)+comEfet(_cov,'andre',cAn_)):0;
+  var sac=liq>0?r2(aE_-_totC):liq,sobra=r2(sac-tG);
   return {tE:tE,tS:tS,tG:tG,sobra:sobra,pct:tE>0?(sobra/tE*100):null,has:(eM.length+sM.length+gM.length)>0};
 }
 function renderFech(){
@@ -3294,9 +3316,13 @@ function renderFech(){
   const aA_=liq>0?r2(aD_-cA_):0;
   const cAn_=liq>0?r2(aA_*0.00875):0;
   const aAn_=liq>0?r2(aA_-cAn_):0;
-  const saldoAposComissoes=liq>0?aAn_:liq;
+  const _cov=comOvMes(px);
+  const cD=liq>0?comEfet(_cov,'diogo',cD_):0;
+  const cA=liq>0?comEfet(_cov,'alberto',cA_):0;
+  const cAn=liq>0?comEfet(_cov,'andre',cAn_):0;
+  const totC=r2(cD+cA+cAn);
+  const saldoAposComissoes=liq>0?r2(aE_-totC):liq;
   const sobra=r2(saldoAposComissoes-tG);
-  const totC=r2(cD_+cA_+cAn_);
   const nms=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const mn=nms[parseInt(ms)-1]+'/'+an;
   var pm=parseInt(ms)-1,py=parseInt(an);if(pm<1){pm=12;py--;}
@@ -3379,23 +3405,28 @@ function renderFech(){
 
   // Comissões (só quando liq > 0)
   if(liq>0){
-    function rowC(nm,pc,base,val){
+    function rowC(nm,pc,base,who,calc){
+      var ov=(_cov[who]!=null&&_cov[who]!=='');var val=ov?r2(+_cov[who]):calc;
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee">'+
-        '<div><div style="font-size:13px;font-weight:600">'+nm+' <span style="font-size:11px;color:#888;font-weight:400">— '+pc+'</span></div>'+
-        '<div style="font-size:11px;color:#aaa">Base: '+fmt(base)+'</div></div>'+
-        '<div style="font-size:16px;font-weight:700">'+fmt(val)+'</div></div>';
+        '<div><div style="font-size:13px;font-weight:600">'+nm+' <span style="font-size:11px;color:#888;font-weight:400">— '+pc+'</span>'+(ov?' <span style="font-size:10px;color:#8E1B2B;background:#fff0f2;border-radius:4px;padding:1px 6px;font-weight:600">ajustado</span>':'')+'</div>'+
+        '<div style="font-size:11px;color:#aaa">Base: '+fmt(base)+(ov?' · calculado '+fmt(calc):'')+'</div></div>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+        '<div style="font-size:16px;font-weight:700">'+fmt(val)+'</div>'+
+        '<button onclick="comEditar(\''+px+'\',\''+who+'\',\''+nm+'\','+calc+')" title="Ajustar comissão" style="border:0;background:#f3f4f6;border-radius:6px;padding:5px 8px;cursor:pointer;color:#444"><i class="ti ti-edit"></i></button>'+
+        (ov?'<button onclick="comReset(\''+px+'\',\''+who+'\',\''+nm+'\')" title="Voltar ao calculado" style="border:0;background:#fef3c7;color:#92400e;border-radius:6px;padding:5px 8px;cursor:pointer"><i class="ti ti-rotate-2"></i></button>':'')+
+        '</div></div>';
     }
     html+='<div class="card">';
     html+='<div style="font-weight:800;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#000;margin-bottom:4px;display:flex;align-items:center;gap:8px">';
     html+='<i class="ti ti-users" style="color:#8E1B2B"></i> Comissões</div>';
     html+='<div style="font-size:12px;color:#888;margin-bottom:14px">Base após energia (R$ 2.500,00): <strong style="color:#1a1a1a">'+fmt(aE_)+'</strong></div>';
-    html+=rowC('Diogo','1,5%',aE_,cD_);
-    html+=rowC('Alberto','1,625%',aD_,cA_);
-    html+=rowC('André','0,875%',aA_,cAn_);
+    html+=rowC('Diogo','1,5%',aE_,'diogo',cD_);
+    html+=rowC('Alberto','1,625%',aD_,'alberto',cA_);
+    html+=rowC('André','0,875%',aA_,'andre',cAn_);
     html+='<div style="display:flex;justify-content:space-between;padding:12px 0 6px"><span style="color:#555">Total comissões</span><span style="font-weight:700;color:#8E1B2B">− '+fmt(totC)+'</span></div>';
     html+='<div style="background:#000;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">';
     html+='<div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.4px">Saldo após comissões</div>';
-    html+='<div style="font-size:22px;font-weight:800;color:#fff">'+fmt(aAn_)+'</div></div>';
+    html+='<div style="font-size:22px;font-weight:800;color:#fff">'+fmt(saldoAposComissoes)+'</div></div>';
     html+='</div>'; // fecha card comissões
   }
 

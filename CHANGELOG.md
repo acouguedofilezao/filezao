@@ -1,5 +1,16 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-30 — Fechamento: ajustar comissão manualmente
+- Cada comissão (Diogo/Alberto/André) agora tem um **lápis pra ajustar**: o sistema calcula automático, mas você pode digitar o valor que quiser (ex.: descontar algo). O **Total comissões**, o **Saldo após comissões** e a **Sobra do mês** recalculam sozinhos.
+- Mostra a tag "ajustado" e o valor calculado ao lado, e tem botão pra **voltar ao calculado**. O ajuste fica salvo por mês (neste aparelho) e entra no registro de alterações.
+
+
+## 2026-06-30 — Importação: conferência de Pix por dia (corrige Pix que faltavam)
+- Antes, se um dia já tinha QUALQUER Pix lançado, o dia inteiro era escondido — então Pix que faltavam (ex.: os de segunda no dia 29, junto com os do fim de semana que caem no mesmo dia) não entravam.
+- Agora o corte é pelo **último dia de Pix lançado**: dias ANTES ficam fechados (não relança — respeita que nem todo Pix é lançado), e o **último dia reabre** pra você completar os Pix que faltaram. Ao lançar, o total daquele dia é atualizado.
+- **Trava de segurança:** se um lançamento fizer o total de Pix de um dia DIMINUIR (extrato incompleto), o sistema pede confirmação antes.
+
+
 ## 2026-06-28 — TV: watchdog respeita o anúncio
 - Ajuste: quando a rádio pausa pra tocar o **anúncio da loja**, o player **não troca de estação** (antes ele confundia a pausa do anúncio com travamento). Ao acabar o anúncio, a mesma rádio volta normal.
 
