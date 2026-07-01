@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-06-30 — Folha: não lança mais a saída automática
+- No Pagamento de funcionários, ao salvar a quinzena o sistema agora **só faz os cálculos e registra a quinzena** (histórico). A **saída não é mais lançada sozinha** — você lança manualmente na aba Saídas, do jeito que preferir.
+- Aviso da tela atualizado pra deixar claro.
+
+
 ## 2026-06-30 — Fechamento: ajustar comissão manualmente
 - Cada comissão (Diogo/Alberto/André) agora tem um **lápis pra ajustar**: o sistema calcula automático, mas você pode digitar o valor que quiser (ex.: descontar algo). O **Total comissões**, o **Saldo após comissões** e a **Sobra do mês** recalculam sozinhos.
 - Mostra a tag "ajustado" e o valor calculado ao lado, e tem botão pra **voltar ao calculado**. O ajuste fica salvo por mês (neste aparelho) e entra no registro de alterações.

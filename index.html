@@ -2885,7 +2885,7 @@ function folhaRender(){
   h+='<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
     +'<div style="font-size:15px;font-weight:800">Total a pagar: <span id="fl-total" style="color:#0f7a37">—</span></div>'
     +'<button class="btn btn-primary" onclick="folhaSalvar()"><i class="ti ti-device-floppy"></i> Salvar quinzena</button></div>';
-  h+='<div style="font-size:11px;color:#999;margin-top:8px">Ao salvar, cada funcionário com valor a pagar vira uma <b>saída</b> automática (nome, data e a forma de pagamento de cada um). Aperte <b>Enter</b> pra salvar.</div>';
+  h+='<div style="font-size:11px;color:#999;margin-top:8px">Ao salvar, a quinzena fica <b>registrada</b> (o cálculo é guardado). A <b>saída NÃO é lançada automaticamente</b> — você mesmo lança na aba Saídas. Aperte <b>Enter</b> pra salvar.</div>';
   h+='</div>';
   box.innerHTML=h;
   box.querySelectorAll('input[data-money]').forEach(function(el){
@@ -2942,22 +2942,8 @@ function folhaSalvar(){
   });
   folhaRecSet(recs.concat(novos));
   try{sbUpsert('folha',novos.map(folhaToDB)).catch(function(){});}catch(e){}
-  var nSai=0,bloqueados=[];
-  novos.forEach(function(r){
-    if(r.valor<=0)return;
-    var f=func.filter(function(x){return x.id===r.func;})[0]||{};
-    var nome=(f.nome||r.func).toUpperCase();
-    var sid='folha_'+r.func+'_'+mes+'_'+q;
-    var ix=S.findIndex(function(x){return x.id===sid;});
-    if(ix>=0)S.splice(ix,1);
-    var dup=S.find(function(x){return x.id!==sid&&x.data===dataPg&&(x.descricao||'').toUpperCase()===nome;});
-    if(dup){bloqueados.push(nome);return;}
-    S.push({id:sid,data:dataPg,descricao:nome,valor:r2(r.valor),formaPgto:(r.forma||'DINHEIRO')});nSai++;
-  });
-  save('fz_saidas',S);renderSai();renderDash();
-  logReg('Financeiro','Folha','Salvou '+nomeMes(mes)+' '+(q===1?'1ª':'2ª')+' quinzena · '+nSai+' saída(s)'+(bloqueados.length?' · '+bloqueados.length+' bloqueada(s)':''),'',novos.length+' funcionários');
-  toast('Quinzena salva — '+nSai+' saída(s) lançada(s)');
-  if(bloqueados.length){alert('⚠ '+bloqueados.length+' saída(s) NÃO foram lançadas para não duplicar.\n\nJá existe saída na data '+fd(dataPg)+' com o nome de:\n\n• '+bloqueados.join('\n• ')+'\n\nA quinzena foi salva normalmente. Se quiser relançar essas saídas, exclua a saída antiga na aba Saídas e salve a quinzena de novo.');}
+  logReg('Financeiro','Folha','Salvou '+nomeMes(mes)+' '+(q===1?'1ª':'2ª')+' quinzena (só cálculo, sem lançar saída)','',novos.length+' funcionários');
+  toast('Quinzena salva — a saída você lança manualmente na aba Saídas');
   folhaRender();
 }
 
