@@ -677,7 +677,7 @@ body,.main-content{background:#F3F0EC}
       <div class="form-group"><label>Qtd</label><input type="number" id="g-qt" min="1" value="1" onkeydown="if(event.key==='Enter')addGad()"></div>
       <div class="form-group"><label>Tipo</label><select id="g-tp"><option>BOI</option><option>VACA</option><option>PORCO</option><option>DIANTEIRO</option><option>TRASEIRO</option><option>NOVILHA</option></select></div>
       <div class="form-group"><label>Kg total</label><input id="g-kg" placeholder="0,00"></div>
-      <div class="form-group"><label>R$/kg</label><input id="g-pr" placeholder="0,00"></div>
+      <div class="form-group"><label>R$/kg</label><input id="g-pr" placeholder="0,0000"></div>
       <div class="form-group"><label>Fornecedor</label><input type="text" id="g-fn" placeholder="Nome..." onkeydown="if(event.key==='Enter')addGad()"></div>
     </div>
     <button class="btn btn-primary" onclick="addGad()"><i class="ti ti-plus"></i> Registrar</button>
@@ -935,6 +935,9 @@ const PER=50,PG={e:1,s:1,g:1,c:1};
 let E=[],S=[],G=[],C=[],PROD=[],LOG=[],pagId=null,pgLC=0,gadoFiltro='todos';
 
 const fmt=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const r4=n=>Math.round((Number(n)||0)*10000)/10000;
+function getPr4(){var el=document.getElementById('g-pr');if(!el)return 0;var s=(el.value||'').trim();if(!s)return 0;if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');s=s.replace(/[^0-9.]/g,'');var v=parseFloat(s);return (isNaN(v)||v<0)?0:v;}
+const fmtPr=v=>'R$ '+(Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:4});
 const fmtKg=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' kg';
 const fd=d=>{if(!d)return'';const[y,m,di]=d.split('-');return`${di}/${m}/${y}`};
 function nowBR(){try{return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));}catch(e){return new Date();}}
@@ -2101,6 +2104,22 @@ function mkDInput(el,onEnter){
   el.addEventListener('focus',()=>{if(!c)el.value='';});
   el.addEventListener('blur',r);
 }
+function mkD4Input(el,onEnter){
+  if(el._di)return;el._di=true;let c=0;
+  el.type='text';el.inputMode='numeric';el.autocomplete='off';el.value='';el.placeholder='0,0000';
+  const r=()=>{el.value=c===0?'':(Math.floor(c/10000)).toLocaleString('pt-BR')+','+String(c%10000).padStart(4,'0');};
+  el.getVal=()=>c/10000;el.setC=(v)=>{c=Math.round(v*100);r();};el.clr=()=>{c=0;el.value='';};
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();if(onEnter)onEnter();}
+    else if(e.key==='Backspace'){e.preventDefault();c=Math.floor(c/10);r();}
+    else if(e.key==='Delete'){e.preventDefault();c=0;r();}
+  });
+  el.addEventListener('keypress',e=>{
+    if(e.key>='0'&&e.key<='9'){e.preventDefault();c=c*10+parseInt(e.key);if(c>999999999999)c=Math.floor(c/10);r();el.dispatchEvent(new Event('input',{bubbles:true}));}
+  });
+  el.addEventListener('focus',()=>{if(!c)el.value='';});
+  el.addEventListener('blur',r);
+}
 function getDV(id){const el=document.getElementById(id);if(!el)return 0;return el._di?el.getVal():(parseFloat(el.value)||0);}
 function clrV(id){const el=document.getElementById(id);if(!el)return;if(el._di)el.clr();else el.value='';}
 function setV(id,v){const el=document.getElementById(id);if(!el)return;if(el._di)el.setC(Math.round(v*100));else el.value=v;}
@@ -3052,7 +3071,7 @@ function addGad(){
   if(!d||!kg||!pr||!fn)return alert('Preencha data, kg, preço e fornecedor.');
   addGad._busy=true;setTimeout(function(){addGad._busy=false;},400);
   const n=G.length?Math.max(...G.map(g=>parseInt(g.registro)||0))+1:1;
-  G.push({id:uid(),registro:String(n).padStart(4,'0'),data:d,qtd:qt,tipo:tp,kg:r2(kg),preco:r2(pr),total:r2(kg*pr),fornecedor:fn.toUpperCase(),status:'PENDENTE',formasPgto:[],cheques:[],cheque:null,pagamento:'PENDENTE',dataPagamento:null});
+  G.push({id:uid(),registro:String(n).padStart(4,'0'),data:d,qtd:qt,tipo:tp,kg:r2(kg),preco:r4(pr),total:r2(kg*pr),fornecedor:fn.toUpperCase(),status:'PENDENTE',formasPgto:[],cheques:[],cheque:null,pagamento:'PENDENTE',dataPagamento:null});
   logReg('Gado','Adicionou','Reg #'+String(n).padStart(4,'0')+' · '+fn.toUpperCase()+' · '+fmtKg(r2(kg)),'',fmt(r2(kg*pr)));
   save('fz_gado',G);clrV('g-kg');clrV('g-pr');document.getElementById('g-fn').value='';document.getElementById('g-qt').value='1';proxReg();renderGad();
 }
@@ -3155,7 +3174,7 @@ function renderGad(){
     }
     const logPag=g.dataPagamento?`<div class="log-pag">Pago em ${fd(g.dataPagamento)}</div>`:'';
     h+=`<tr><td><span class="reg">${g.registro}</span></td><td>${fd(g.data)}</td><td>${g.qtd}</td><td>${g.tipo}</td>
-      <td>${Number(g.kg).toFixed(2)} kg</td><td>R$ ${Number(g.preco).toFixed(2)}</td>
+      <td>${Number(g.kg).toFixed(2)} kg</td><td>${fmtPr(g.preco)}</td>
       <td style="font-weight:700">${fmt(g.total)}</td><td>${g.fornecedor}</td>
       <td>${fTxt}${logPag}</td><td><span class="badge ${bc}">${g.status}</span></td>
       <td>${pagBtn}<button class="btn-del" onclick="delRec('gad','${g.id}')" title="Excluir"><i class="ti ti-trash"></i></button></td></tr>`;
@@ -3567,7 +3586,7 @@ function renderRelGado(){
   gSort.forEach(function(g,i){
     if(i>0)txt+=L;
     txt+=fd(g.data)+'  #'+g.registro+L;
-    txt+=g.qtd+'x '+g.tipo+'  '+Number(g.kg).toFixed(2)+'kg  R$/kg: '+Number(g.preco).toFixed(2)+L;
+    txt+=g.qtd+'x '+g.tipo+'  '+Number(g.kg).toFixed(2)+'kg  R$/kg: '+Number(g.preco).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:4})+L;
     txt+='Fornecedor: '+g.fornecedor+L;
     txt+='Total: '+fmt(g.total);
     if(g.cheque)txt+='  Cheque #'+g.cheque;
@@ -3765,7 +3784,8 @@ var _DC=[{"id":"c10573","data":"2022-02-21","numero":"700008","valor":7599.35,"v
 
 /* ── SETUP INPUTS ── */
 function setupInputs(){
-  [['e-vl',addEnt],['s-vl',addSai],['g-kg',addGad],['g-pr',addGad],['c-vl',addChq]].forEach(([id,fn])=>{const el=document.getElementById(id);if(el)mkDInput(el,fn);});
+  [['e-vl',addEnt],['s-vl',addSai],['g-kg',addGad],['c-vl',addChq]].forEach(([id,fn])=>{const el=document.getElementById(id);if(el)mkDInput(el,fn);});
+  (function(){const g=document.getElementById('g-pr');if(g)mkD4Input(g,addGad);})();
   const eeVl=document.getElementById('ee-vl');if(eeVl)mkDInput(eeVl,salvarEditEnt);
   const esVl=document.getElementById('es-vl');if(esVl)mkDInput(esVl,salvarEditSai);
   const ceVl=document.getElementById('ce-vl');if(ceVl)mkDInput(ceVl,salvarEditChq);

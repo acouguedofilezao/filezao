@@ -1,5 +1,14 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-02 — Gado: R$/kg com preenchimento automático (4 casas)
+- O R$/kg voltou a **preencher a vírgula sozinho**, como os outros campos, mas com **4 casas**: digite os números e ele monta (ex.: `216650` vira `21,6650`). Apagar/limpar funcionam normal.
+
+
+## 2026-07-02 — Gado: R$/kg aceita até 4 casas decimais
+- O campo **R$/kg** do gado agora aceita **2 a 4 casas** (ex.: 21,6650). Pode digitar com vírgula ou ponto.
+- O valor é guardado com 4 casas, exibido no histórico e no relatório com 2–4 casas, e o **Total** (kg × R$/kg) continua fechando certinho em reais. Os outros campos de dinheiro não mudaram.
+
+
 ## 2026-06-30 — Folha: não lança mais a saída automática
 - No Pagamento de funcionários, ao salvar a quinzena o sistema agora **só faz os cálculos e registra a quinzena** (histórico). A **saída não é mais lançada sozinha** — você lança manualmente na aba Saídas, do jeito que preferir.
 - Aviso da tela atualizado pra deixar claro.
