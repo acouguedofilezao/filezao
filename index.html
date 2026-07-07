@@ -534,6 +534,9 @@ body,.main-content{background:#F3F0EC}
     <input id="meta-bonus" placeholder="0,00" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px;margin-bottom:16px">
     <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Anotações da semana</label>
     <textarea id="meta-anot" rows="6" placeholder="Avisos do dia, recados para a equipe, observações..." style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px 13px;font-size:16px;line-height:1.5;resize:vertical;margin-bottom:14px"></textarea>
+    <label style="display:block;font-size:12px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:4px 0 6px">Semanas do mês — marque as concluídas</label>
+    <div style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.5">Marque a caixinha da semana que <strong>bateu a meta</strong>. No painel, as semanas que já passaram aparecem com ✅ (concluída) ou ❌. Quando vira o mês, a lista recomeça sozinha.</div>
+    <div id="meta-semanas" style="margin-bottom:16px"></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="metaCfgSave()"><i class="ti ti-device-floppy"></i> Salvar e exibir no painel</button>
       <a class="btn" href="areainterna.html" target="_blank" style="text-decoration:none;border:1px solid #ddd"><i class="ti ti-external-link"></i> Abrir painel (Área Interna)</a>
@@ -2045,21 +2048,43 @@ function showSec(id,el){
   else if(id==='exportxls')expInit();
   else if(id==='permissoes')permLoad();
 }
+function semMonday(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
+function semKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function semanasDoMes(ref){ref=ref||new Date();var y=ref.getFullYear(),m=ref.getMonth();var mon=semMonday(new Date(y,m,1));var out=[];for(var i=0;i<6;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);if(fim.getMonth()===m&&fim.getFullYear()===y)out.push({ini:ini,fim:fim,key:semKey(ini)});if(ini>new Date(y,m+1,1))break;}return out;}
+function semColeta(){var mp={};document.querySelectorAll('#meta-semanas .sem-ck').forEach(function(ck){mp[ck.dataset.key]=ck.checked;});return mp;}
+function semRender(map){
+  var box=document.getElementById('meta-semanas');if(!box)return;
+  var ws=semanasDoMes(new Date());var hj=new Date();hj=new Date(hj.getFullYear(),hj.getMonth(),hj.getDate());
+  function br(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
+  var html='';
+  ws.forEach(function(w){
+    var passou=(w.fim<hj),atual=(hj>=w.ini&&hj<=w.fim),chk=!!(map&&map[w.key]);
+    var tag=atual?'<span style="font-size:11px;color:#2563eb;font-weight:700">ATUAL</span>':(passou?'<span style="font-size:11px;color:#888">passou</span>':'<span style="font-size:11px;color:#bbb">futura</span>');
+    html+='<label style="display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #eee;border-radius:8px;margin-bottom:6px;cursor:pointer">'
+      +'<input type="checkbox" class="sem-ck" data-key="'+w.key+'" '+(chk?'checked':'')+' style="width:18px;height:18px;cursor:pointer">'
+      +'<span style="font-weight:600">'+br(w.ini)+' a '+br(w.fim)+'</span> '+tag
+      +'<span class="sem-lbl" style="margin-left:auto;font-size:12px;font-weight:700;color:'+(chk?'#0a7a32':'#b91c1c')+'">'+(chk?'✓ concluída':'não concluída')+'</span></label>';
+  });
+  box.innerHTML=html||'<div style="color:#888;font-size:13px">Sem semanas neste mês ainda.</div>';
+  box.querySelectorAll('.sem-ck').forEach(function(ck){ck.addEventListener('change',function(){semRender(semColeta());});});
+}
 async function metaCfgLoad(){
   mkDInput(document.getElementById('meta-valor'),metaCfgSave);
   mkDInput(document.getElementById('meta-bonus'),metaCfgSave);
+  semRender({});
   try{
-    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,bonus,anotacoes)&select=chave,valor',{headers:SB_HDR});
+    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,bonus,anotacoes,semanas)&select=chave,valor',{headers:SB_HDR});
     if(r.ok){var a=await r.json(),map={};a.forEach(function(x){map[x.chave]=x.valor;});
       setV('meta-valor', map.meta_semanal!=null?(parseFloat(String(map.meta_semanal).replace(',','.'))||0):0);
       setV('meta-bonus', map.bonus!=null?(parseFloat(String(map.bonus).replace(',','.'))||0):0);
       document.getElementById('meta-anot').value=(map.anotacoes!=null?map.anotacoes:'');
+      var _sem={};try{if(map.semanas)_sem=JSON.parse(map.semanas)||{};}catch(e){}semRender(_sem);
     }else{toast('Não consegui ler a config (a tabela existe no Supabase?)','erro');}
   }catch(e){toast('Sem conexão.','erro');}
 }
 async function metaCfgSave(){
   var mv=getDV('meta-valor'),bn=getDV('meta-bonus'),an=document.getElementById('meta-anot').value;
-  var rows=[{chave:'meta_semanal',valor:String(mv)},{chave:'bonus',valor:String(bn)},{chave:'anotacoes',valor:an}];
+  var rows=[{chave:'meta_semanal',valor:String(mv)},{chave:'bonus',valor:String(bn)},{chave:'anotacoes',valor:an},{chave:'semanas',valor:JSON.stringify(semColeta())}];
   try{
     var r=await fetch(SB_URL+'/rest/v1/config?on_conflict=chave',{method:'POST',headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)});
     if(r.ok)toast('Salvo! Já aparece no painel');

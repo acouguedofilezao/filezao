@@ -1,5 +1,15 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-07 — Meta: semanas concluídas no painel (parte 2: painel)
+- Na tela da Meta do painel (Área Interna), novo quadro "Semanas do mês" mostrando as semanas que já passaram no mês, cada uma com ✅ Concluída ou ❌ Não — conforme você marca no sistema.
+- Só aparecem as semanas que já terminaram; a atual e as futuras não. Quando vira o mês, a lista recomeça.
+
+
+## 2026-07-07 — Meta: marcar semanas concluídas do mês (parte 1: sistema)
+- Na aba Meta/Anotações, novo quadro "Semanas do mês" com as semanas do mês corrente (segunda a domingo) e uma caixinha de concluída pra cada. Marque a que bateu a meta e salve — fica no Supabase pra o painel ler.
+- Vira o mês, a lista recomeça sozinha (mostra só as semanas do mês atual). (Parte 2 — exibição no painel da Área Interna — vem quando enviar o areainterna.html.)
+
+
 ## 2026-07-07 — Exportar Excel: colunas com auto-ajuste (nada cortado)
 - As colunas de cada aba agora se ajustam ao conteúdo (largura mínima e máxima) e o cabeçalho ganhou um pouco de altura — assim descrições longas de saída, nomes de fornecedor/credor e os títulos não ficam mais "comidos".
 
