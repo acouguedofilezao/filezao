@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-07 — Nova aba "Exportar Excel" (modelo da planilha antiga, com fórmulas)
+- Nova aba em Ferramentas: gera um `.xlsx` no mesmo modelo da planilha antiga — abas Entradas, Saídas, Compra de Gado-Porco, Cheques, Saldo diário + uma aba por mês (TOTAL ENTRADA/SAÍDA, calculadora de comissão e SOBRA), tudo com as **fórmulas reais** (SUMIFS, KG×R$, comissão base×%).
+- **Base da comissão automática** (mesmo cálculo do Fechamento: líquido − R$2.500 e a cascata Diogo/Alberto/André).
+- **Seletor de período** (De → Até, + botão Tudo). O arquivo é montado no navegador (usa ExcelJS, baixado da web na 1ª vez). Cores iguais (verde/vermelho nos totais).
+
+
 ## 2026-07-02 — Gado: R$/kg com preenchimento automático (4 casas)
 - O R$/kg voltou a **preencher a vírgula sozinho**, como os outros campos, mas com **4 casas**: digite os números e ele monta (ex.: `216650` vira `21,6650`). Apagar/limpar funcionam normal.
 

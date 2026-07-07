@@ -369,6 +369,7 @@ body,.main-content{background:#F3F0EC}
     <div class="nav-section">Ferramentas</div>
     <button class="nav-btn" onclick="showSec('importar',this)"><i class="ti ti-file-import"></i><span>Importar dados financeiros</span></button>
     <button class="nav-btn" onclick="showSec('importar-prod',this)"><i class="ti ti-package-import"></i><span>Importar produtos</span></button>
+    <button class="nav-btn" onclick="showSec('exportxls',this)"><i class="ti ti-file-spreadsheet"></i><span>Exportar Excel</span></button>
     <button class="nav-btn" onclick="showSec('backup',this)"><i class="ti ti-shield-check"></i><span>Backup</span></button>
     <button class="nav-btn" onclick="showSec('log',this)"><i class="ti ti-history"></i><span>Registro de alterações</span></button>
     <div class="nav-section">TV</div>
@@ -582,6 +583,19 @@ body,.main-content{background:#F3F0EC}
   </div>
 </div>
 
+<div id="sec-exportxls" class="section">
+  <div class="card">
+    <div class="card-title loc"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</div>
+    <p style="font-size:13px;color:#555;margin:-2px 0 14px;line-height:1.5">Gera um Excel no <strong>mesmo modelo da sua planilha antiga</strong> — abas separadas (Entradas, Saídas, Compra de Gado-Porco, Cheques, Saldo diário) e uma aba por mês com os totais e a calculadora de comissão, <strong>com as fórmulas funcionando</strong>. Escolha o período e clique em Exportar.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group"><label>De</label><select id="exp-de"></select></div>
+      <div class="form-group"><label>Até</label><select id="exp-ate"></select></div>
+      <button class="btn btn-ghost" onclick="expTudo()">Tudo</button>
+      <button class="btn btn-primary" id="exp-btn" onclick="expExcel()"><i class="ti ti-download"></i> Exportar Excel</button>
+    </div>
+    <div style="font-size:12px;color:#999;margin-top:10px">Montado no seu navegador. Na 1ª vez precisa de internet (baixa o gerador). Abra no Excel ou Google Sheets.</div>
+  </div>
+</div>
 <div id="sec-backup" class="section">
   <div class="card">
     <div class="card-title loc"><i class="ti ti-shield-check"></i> Backup e segurança</div>
@@ -1796,7 +1810,7 @@ var PERM_EDIT={};
 var TABS_PERM=[
  ['dashboard','Painel'],['entradas','Entradas'],['saidas','Saidas'],['gado','Gado'],['cheques','Cheques'],
  ['fechamento','Fechamento'],['pagamento','Pagamento funcionarios'],['relatorio','Relatorios'],['saldo','Saldo bancario'],
- ['cotacoes','Cotacoes'],['estoque','Estoque'],['importar','Importar dados financeiros'],['importar-prod','Importar produtos'],
+ ['cotacoes','Cotacoes'],['estoque','Estoque'],['importar','Importar dados financeiros'],['importar-prod','Importar produtos'],['exportxls','Exportar Excel'],
  ['backup','Backup'],['log','Registro de alteracoes'],['tv','Selecao TV'],['metaedit','Meta / Anotacoes'],['escala','Escala mensal'],['funcionarios','Funcionarios'],['energia','Energia']
 ];
 function permUserAtual(){return ((((authLoad()||{}).user)||'')+'').trim().toLowerCase();}
@@ -1909,6 +1923,75 @@ async function permSalvar(){
     try{toast('Permissoes salvas');}catch(e){}
   }catch(e){if(st){st.style.color='#b91c1c';st.textContent='Erro ao salvar. A tabela config existe no Supabase?';}}
 }
+/* ===== Exportar Excel (mesmo modelo da planilha, com fórmulas) ===== */
+function loadExcelJS(){return new Promise(function(res,rej){if(window.ExcelJS)return res();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';s.onload=function(){res();};s.onerror=function(){rej(new Error('nao carregou o gerador'));};document.head.appendChild(s);});}
+function expDate(s){if(!s)return null;var p=String(s).slice(0,10).split('-');if(p.length<3)return null;return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));}
+function expMeses(){var set={};[].concat(E,S,G).forEach(function(x){if(x&&x.data)set[String(x.data).slice(0,7)]=1;});return Object.keys(set).sort();}
+function expMonths(de,ate){var out=[],y=+de.slice(0,4),m=+de.slice(5,7),ey=+ate.slice(0,4),em=+ate.slice(5,7);while(y<ey||(y===ey&&m<=em)){out.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}return out;}
+var EXP_MN=['Jan','Fev','Mar','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dez'];
+function expLab(mm){return EXP_MN[(+mm.slice(5,7))-1]+'/'+mm.slice(2,4);}
+function expInit(){var ms=expMeses();var de=document.getElementById('exp-de'),ate=document.getElementById('exp-ate');if(!de||!ate)return;de.innerHTML='';ate.innerHTML='';ms.forEach(function(mm){de.add(new Option(expLab(mm),mm));ate.add(new Option(expLab(mm),mm));});if(ms.length){de.value=ms[0];ate.value=ms[ms.length-1];}}
+function expTudo(){var ms=expMeses();if(!ms.length)return;document.getElementById('exp-de').value=ms[0];document.getElementById('exp-ate').value=ms[ms.length-1];}
+function expBase(px){var eM=E.filter(function(e){return e.data&&e.data.startsWith(px);}),sM=S.filter(function(s){return s.data&&s.data.startsWith(px);});var tE=r2(eM.reduce(function(a,e){return a+(+e.valor||0);},0)),tS=r2(sM.reduce(function(a,e){return a+(+e.valor||0);},0));var liq=r2(tE-tS);var aE=liq>0?Math.floor(liq-2500):0;var cD=liq>0?r2(aE*0.015):0,aD=liq>0?r2(aE-cD):0;var cA=liq>0?r2(aD*0.01625):0,aA=liq>0?r2(aD-cA):0;return {aE:aE,aD:aD,aA:aA};}
+async function expExcel(){
+  var btn=document.getElementById('exp-btn');
+  var de=document.getElementById('exp-de').value,ate=document.getElementById('exp-ate').value;
+  if(!de||!ate){alert('Escolha o período.');return;}
+  if(de>ate){var t=de;de=ate;ate=t;}
+  if(btn){btn._t=btn.innerHTML;btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Gerando...';}
+  try{
+    await loadExcelJS();
+    var meses=expMonths(de,ate);
+    var d0=expDate(de+'-01');var ly=+ate.slice(0,4),lm=+ate.slice(5,7);var d1=new Date(Date.UTC(ly,lm,0));
+    function inR(ds){var d=expDate(ds);return d&&d>=d0&&d<=d1;}
+    function ord(a,b){return (a.data||'')<(b.data||'')?-1:1;}
+    var eF=E.filter(function(x){return inR(x.data);}).slice().sort(ord);
+    var sF=S.filter(function(x){return inR(x.data);}).slice().sort(ord);
+    var gF=G.filter(function(x){return inR(x.data);}).slice().sort(ord);
+    var cF=C.filter(function(x){return inR(x.data);}).slice().sort(ord);
+    var BRL='"R$" #,##0.00',DT='dd/mm/yyyy';
+    var GRAY={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9D9D9'}};
+    var GREEN={type:'pattern',pattern:'solid',fgColor:{argb:'FF92D050'}};
+    var RED={type:'pattern',pattern:'solid',fgColor:{argb:'FFFF0000'}};
+    var BRD={top:{style:'thin',color:{argb:'FFBFBFBF'}},bottom:{style:'thin',color:{argb:'FFBFBFBF'}},left:{style:'thin',color:{argb:'FFBFBFBF'}},right:{style:'thin',color:{argb:'FFBFBFBF'}}};
+    var wb=new ExcelJS.Workbook();
+    function head(ws,cols,widths,fills){var row=ws.getRow(1);cols.forEach(function(c,i){var cell=row.getCell(i+1);cell.value=c;cell.font={bold:true,size:12};cell.alignment={horizontal:'center'};cell.fill=(fills&&fills[i])||GRAY;cell.border=BRD;ws.getColumn(i+1).width=widths[i];});ws.views=[{state:'frozen',ySplit:1}];}
+    var wE=wb.addWorksheet('Entradas');head(wE,['DIA','TIPO','VALOR'],[12,14,15]);
+    eF.forEach(function(x){var r=wE.addRow([expDate(x.data),x.tipo||'',(+x.valor||0)]);r.getCell(1).numFmt=DT;r.getCell(3).numFmt=BRL;});
+    var wS=wb.addWorksheet('Saidas');head(wS,['DIA','SAIDA','VALOR'],[12,28,15]);
+    sF.forEach(function(x){var r=wS.addRow([expDate(x.data),(x.descricao||'').toUpperCase(),(+x.valor||0)]);r.getCell(1).numFmt=DT;r.getCell(3).numFmt=BRL;});
+    var wG=wb.addWorksheet('Compra de Gado-Porco');head(wG,['DIA','UNID.','ITEM','KG/UN','R$ UNIT.','TOTAL','DONO','Nº CHEQUE'],[12,8,12,11,13,15,16,13]);
+    gF.forEach(function(x){var rn=wG.rowCount+1;var r=wG.addRow([expDate(x.data),(+x.qtd||0),x.tipo||'',(+x.kg||0),(+x.preco||0),{formula:'E'+rn+'*D'+rn},(x.fornecedor||'').toUpperCase(),(x.chequeNum||'')]);r.getCell(1).numFmt=DT;r.getCell(5).numFmt=BRL;r.getCell(6).numFmt=BRL;});
+    var wC=wb.addWorksheet('Cheques');head(wC,['DATA','Nº DO CHEQUE','VALOR R$','VENCIMENTO','CREDOR'],[12,15,15,14,16]);
+    cF.forEach(function(x){var r=wC.addRow([expDate(x.data),x.numero||'',(+x.valor||0),expDate(x.vencimento),(x.credor||'').toUpperCase()]);r.getCell(1).numFmt=DT;r.getCell(3).numFmt=BRL;r.getCell(4).numFmt=DT;});
+    var wSD=wb.addWorksheet('Saldo diário');head(wSD,['DIA','VALOR'],[12,15]);
+    var dd=new Date(d0.getTime());
+    while(dd<=d1){var rn=wSD.rowCount+1;var r=wSD.addRow([new Date(dd.getTime()),{formula:"SUMIFS(Entradas!C:C,Entradas!A:A,A"+rn+")-SUMIFS(Saidas!C:C,Saidas!A:A,A"+rn+")"}]);r.getCell(1).numFmt=DT;r.getCell(2).numFmt=BRL;dd=new Date(dd.getTime()+86400000);}
+    meses.forEach(function(mm){
+      var y=+mm.slice(0,4),m=+mm.slice(5,7);var nome=EXP_MN[m-1]+'-'+mm.slice(2,4);
+      var ws=wb.addWorksheet(nome);var nd=new Date(Date.UTC(y,m,0)).getUTCDate();
+      var refs=[],grefs=[];
+      for(var i=1;i<=nd;i++){var c=ws.getCell(i,1);c.value=new Date(Date.UTC(y,m-1,i));c.numFmt=DT;refs.push("SUMIFS('Saldo diário'!B:B,'Saldo diário'!A:A,A"+i+")");grefs.push("SUMIFS('Compra de Gado-Porco'!F:F,'Compra de Gado-Porco'!A:A,A"+i+")");}
+      ws.getCell('B1').value='TOTAL ENTRADA';ws.getCell('B1').fill=GREEN;ws.getCell('B1').font={bold:true,size:12};ws.getCell('B1').alignment={horizontal:'center'};
+      ws.getCell('B2').value={formula:refs.join('+')};ws.getCell('B2').numFmt=BRL;ws.getCell('B2').font={size:12};
+      ws.getCell('C1').value='TOTAL SAIDA';ws.getCell('C1').fill=RED;ws.getCell('C1').font={bold:true,size:12,color:{argb:'FFFFFFFF'}};ws.getCell('C1').alignment={horizontal:'center'};
+      ws.getCell('C2').value={formula:grefs.join('+')};ws.getCell('C2').numFmt=BRL;ws.getCell('C2').font={size:12};
+      var b=expBase(mm);var lin=[['DIOGO',b.aE,0.015],['ALBERTO',b.aD,0.01625],['ANDRÉ',b.aA,0.00875]];
+      ws.getCell('F1').value='CALCULADORA DE COMISSÃO';ws.getCell('F1').font={bold:true,size:12};
+      ws.getCell('I1').value='TOTAL';ws.getCell('I1').font={bold:true,size:12};ws.getCell('I1').alignment={horizontal:'center'};
+      lin.forEach(function(t,k){var rr=2+k;ws.getCell(rr,6).value=t[0];ws.getCell(rr,6).font={size:12};ws.getCell(rr,7).value=t[1];ws.getCell(rr,7).numFmt=BRL;ws.getCell(rr,9).value={formula:'G'+rr+'*'+t[2]};ws.getCell(rr,9).numFmt=BRL;});
+      ws.getCell('F6').value='SOBRA DO MÊS:';ws.getCell('F6').font={bold:true,size:12};
+      ws.getCell('G6').value={formula:'B2-C2'};ws.getCell('G6').numFmt=BRL;
+      [12,14,14,4,4,22,14,4,14].forEach(function(w,i){ws.getColumn(i+1).width=w;});
+    });
+    var buf=await wb.xlsx.writeBuffer();
+    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Filezao_'+de+'_a_'+ate+'.xlsx';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+    logReg('Backup','Exportou Excel',de+' a '+ate,'',(eF.length+sF.length+gF.length+cF.length)+' lançamentos');
+    try{toast('Excel gerado!');}catch(e){}
+  }catch(err){alert('Não consegui gerar o Excel: '+((err&&err.message)||err)+'\n\nSe for a 1ª vez, confira a internet (o gerador é baixado da web).');}
+  finally{if(btn){btn.disabled=false;btn.innerHTML=btn._t||'<i class="ti ti-download"></i> Exportar Excel';}}
+}
 function showSec(id,el){
   if(_permAllowed && _permAllowed.indexOf(id)<0) return;
   const btn=(el&&el.closest)?el.closest('.nav-btn')||el:el;
@@ -1936,6 +2019,7 @@ function showSec(id,el){
   else if(id==='pagamento')folhaInit();
   else if(id==='energia')energiaInit();
   else if(id==='funcionarios')cadLoadCad();
+  else if(id==='exportxls')expInit();
   else if(id==='permissoes')permLoad();
 }
 async function metaCfgLoad(){
