@@ -45,6 +45,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 /* ----- tela META ----- */
 .board{flex:1 1 auto;display:flex;gap:2vw;min-height:0}
 .col-meta{flex:1.45 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6vh;min-width:0}
+.semanas-box{width:100%;max-width:62vh;margin-top:1.2vh;display:flex;flex-direction:column;gap:.7vh}
+.semanas-box .sh{font-size:1.9vh;letter-spacing:.3vw;color:var(--muted);text-transform:uppercase;font-weight:500;text-align:center;margin-bottom:.2vh}
+.semanas-box .sem-row{display:flex;align-items:center;justify-content:space-between;gap:1vh;padding:.8vh 1.6vh;border-radius:1vh;background:rgba(255,255,255,.05);border:.12vh solid rgba(255,255,255,.09)}
+.semanas-box .sd{font-size:2.2vh;color:var(--cream);font-weight:600}
+.semanas-box .st{font-size:2.1vh;font-weight:800}
+.semanas-box .st.ok{color:#22c55e}
+.semanas-box .st.no{color:#ef4444}
 .col-meta .lbl{font-size:2.2vh;letter-spacing:.45vw;color:var(--muted);text-transform:uppercase;font-weight:500}
 .vendas{font-family:'Anton';font-size:14vh;line-height:.9;letter-spacing:1px;color:var(--cream);transition:color .3s;text-align:center}
 .vendas.flash{animation:pop .45s ease}
@@ -194,6 +201,7 @@ footer .st i{color:var(--green);font-style:normal}
             <div class="falta" id="falta"></div>
           </div>
           <div class="bonus" id="bonus" style="display:none"></div>
+          <div class="semanas-box" id="sem-box" style="display:none"></div>
         </div>
         <div class="col-notes">
           <div class="t">Anotações</div>
@@ -264,13 +272,14 @@ async function fetchEntradas(ws,weLt){
 /* ===== config: meta, anotações, escala ===== */
 async function lerConfig(){
   try{
-    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,anotacoes,escala,bonus,funcionarios)&select=chave,valor',{headers:HDR});
+    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,anotacoes,escala,bonus,funcionarios,semanas)&select=chave,valor',{headers:HDR});
     if(r.ok){var a=await r.json(),map={};a.forEach(function(x){map[x.chave]=x.valor;});
       var esc=[];try{if(map.escala)esc=JSON.parse(map.escala)||[];}catch(e){}
       var fnc=[];try{if(map.funcionarios)fnc=JSON.parse(map.funcionarios)||[];}catch(e){}
+      var sem={};try{if(map.semanas)sem=JSON.parse(map.semanas)||{};}catch(e){}
       return {meta:(map.meta_semanal!=null?parseFloat(String(map.meta_semanal).replace(',','.'))||0:null),
               nota:(map.anotacoes!=null?map.anotacoes:null), escala:esc,
-              bonus:(map.bonus!=null?parseFloat(String(map.bonus).replace(',','.'))||0:0), func:fnc};}
+              bonus:(map.bonus!=null?parseFloat(String(map.bonus).replace(',','.'))||0:0), func:fnc, sem:sem};}
   }catch(e){}
   return null;
 }
@@ -280,6 +289,19 @@ function setBig(v){
   var el=document.getElementById('vendas');var txt=money(v);
   if(el.textContent!==txt){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');}
   el.textContent=txt;
+}
+function semMonday(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
+function semKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function semanasDoMes(ref){var y=ref.getFullYear(),m=ref.getMonth();var mon=semMonday(new Date(y,m,1));var out=[];for(var i=0;i<6;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);if(fim.getMonth()===m&&fim.getFullYear()===y)out.push({ini:ini,fim:fim,key:semKey(ini)});if(ini>new Date(y,m+1,1))break;}return out;}
+function renderSemanas(map){
+  var box=document.getElementById('sem-box');if(!box)return;map=map||{};
+  var hj=agoraBR();hj=new Date(hj.getFullYear(),hj.getMonth(),hj.getDate());
+  var ws=semanasDoMes(hj).filter(function(w){return w.fim<hj;});
+  if(!ws.length){box.style.display='none';box.innerHTML='';return;}
+  function br(d){return z(d.getDate())+'/'+z(d.getMonth()+1);}
+  var html='<div class="sh">Semanas do mes</div>';
+  ws.forEach(function(w){var ok=(map[w.key]===true);html+='<div class="sem-row"><span class="sd">'+br(w.ini)+' a '+br(w.fim)+'</span><span class="st '+(ok?'ok':'no')+'">'+(ok?'\u2705 Concluída':'\u274c Não')+'</span></div>';});
+  box.innerHTML=html;box.style.display='flex';
 }
 function renderProgresso(vendas){
   var big=document.getElementById('vendas'),done=document.getElementById('pctdone'),left=document.getElementById('pctleft'),
@@ -444,6 +466,7 @@ async function carregar(){
     var bEl=document.getElementById('bonus');
     if(cfg.bonus>0){bEl.style.display='flex';bEl.innerHTML='<span class="ic">🏆</span> Bônus da equipe: '+money(cfg.bonus);}
     else bEl.style.display='none';
+    renderSemanas(cfg.sem);
   }
   await carregarMeta();
   if(tela==='escala')renderEscala();
