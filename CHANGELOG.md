@@ -1,5 +1,13 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-07 — Exportar Excel: colunas com auto-ajuste (nada cortado)
+- As colunas de cada aba agora se ajustam ao conteúdo (largura mínima e máxima) e o cabeçalho ganhou um pouco de altura — assim descrições longas de saída, nomes de fornecedor/credor e os títulos não ficam mais "comidos".
+
+
+## 2026-07-07 — Exportar Excel: abas mensais antigas ficam ocultas
+- Na exportação, as abas de fechamento mensal antigas saem **ocultas** — fica visível só a do **mês mais recente** do período. Elas continuam no arquivo (clique direito numa aba → Reexibir pra ver as outras).
+
+
 ## 2026-07-07 — Nova aba "Exportar Excel" (modelo da planilha antiga, com fórmulas)
 - Nova aba em Ferramentas: gera um `.xlsx` no mesmo modelo da planilha antiga — abas Entradas, Saídas, Compra de Gado-Porco, Cheques, Saldo diário + uma aba por mês (TOTAL ENTRADA/SAÍDA, calculadora de comissão e SOBRA), tudo com as **fórmulas reais** (SUMIFS, KG×R$, comissão base×%).
 - **Base da comissão automática** (mesmo cálculo do Fechamento: líquido − R$2.500 e a cascata Diogo/Alberto/André).

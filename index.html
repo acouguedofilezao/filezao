@@ -1925,6 +1925,22 @@ async function permSalvar(){
 }
 /* ===== Exportar Excel (mesmo modelo da planilha, com fórmulas) ===== */
 function loadExcelJS(){return new Promise(function(res,rej){if(window.ExcelJS)return res();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';s.onload=function(){res();};s.onerror=function(){rej(new Error('nao carregou o gerador'));};document.head.appendChild(s);});}
+function expAutofit(ws,minW,maxW){
+  var W={};
+  ws.eachRow({includeEmpty:false},function(row){
+    row.eachCell({includeEmpty:false},function(cell,col){
+      var v=cell.value,s;
+      if(v==null)s='';
+      else if(v instanceof Date)s='00/00/0000';
+      else if(typeof v==='number')s='R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      else if(typeof v==='object'){if(v.formula!=null)s='R$ 999.999,99';else if(v.result!=null)s=String(v.result);else if(v.richText)s=v.richText.map(function(t){return t.text;}).join('');else s=String(v.text||'');}
+      else s=String(v);
+      var L=s.length;if(!W[col]||L>W[col])W[col]=L;
+    });
+  });
+  Object.keys(W).forEach(function(col){ws.getColumn(+col).width=Math.min(maxW,Math.max(minW,W[col]+2));});
+  try{ws.getRow(1).height=18;}catch(e){}
+}
 function expDate(s){if(!s)return null;var p=String(s).slice(0,10).split('-');if(p.length<3)return null;return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));}
 function expMeses(){var set={};[].concat(E,S,G).forEach(function(x){if(x&&x.data)set[String(x.data).slice(0,7)]=1;});return Object.keys(set).sort();}
 function expMonths(de,ate){var out=[],y=+de.slice(0,4),m=+de.slice(5,7),ey=+ate.slice(0,4),em=+ate.slice(5,7);while(y<ey||(y===ey&&m<=em)){out.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}return out;}
@@ -1958,16 +1974,21 @@ async function expExcel(){
     function head(ws,cols,widths,fills){var row=ws.getRow(1);cols.forEach(function(c,i){var cell=row.getCell(i+1);cell.value=c;cell.font={bold:true,size:12};cell.alignment={horizontal:'center'};cell.fill=(fills&&fills[i])||GRAY;cell.border=BRD;ws.getColumn(i+1).width=widths[i];});ws.views=[{state:'frozen',ySplit:1}];}
     var wE=wb.addWorksheet('Entradas');head(wE,['DIA','TIPO','VALOR'],[12,14,15]);
     eF.forEach(function(x){var r=wE.addRow([expDate(x.data),x.tipo||'',(+x.valor||0)]);r.getCell(1).numFmt=DT;r.getCell(3).numFmt=BRL;});
+    expAutofit(wE,10,22);
     var wS=wb.addWorksheet('Saidas');head(wS,['DIA','SAIDA','VALOR'],[12,28,15]);
     sF.forEach(function(x){var r=wS.addRow([expDate(x.data),(x.descricao||'').toUpperCase(),(+x.valor||0)]);r.getCell(1).numFmt=DT;r.getCell(3).numFmt=BRL;});
+    expAutofit(wS,10,45);
     var wG=wb.addWorksheet('Compra de Gado-Porco');head(wG,['DIA','UNID.','ITEM','KG/UN','R$ UNIT.','TOTAL','DONO','Nº CHEQUE'],[12,8,12,11,13,15,16,13]);
     gF.forEach(function(x){var rn=wG.rowCount+1;var r=wG.addRow([expDate(x.data),(+x.qtd||0),x.tipo||'',(+x.kg||0),(+x.preco||0),{formula:'E'+rn+'*D'+rn},(x.fornecedor||'').toUpperCase(),(x.chequeNum||'')]);r.getCell(1).numFmt=DT;r.getCell(5).numFmt=BRL;r.getCell(6).numFmt=BRL;});
+    expAutofit(wG,8,22);
     var wC=wb.addWorksheet('Cheques');head(wC,['DATA','Nº DO CHEQUE','VALOR R$','VENCIMENTO','CREDOR'],[12,15,15,14,16]);
     cF.forEach(function(x){var r=wC.addRow([expDate(x.data),x.numero||'',(+x.valor||0),expDate(x.vencimento),(x.credor||'').toUpperCase()]);r.getCell(1).numFmt=DT;r.getCell(3).numFmt=BRL;r.getCell(4).numFmt=DT;});
+    expAutofit(wC,10,22);
     var wSD=wb.addWorksheet('Saldo diário');head(wSD,['DIA','VALOR'],[12,15]);
     var dd=new Date(d0.getTime());
     while(dd<=d1){var rn=wSD.rowCount+1;var r=wSD.addRow([new Date(dd.getTime()),{formula:"SUMIFS(Entradas!C:C,Entradas!A:A,A"+rn+")-SUMIFS(Saidas!C:C,Saidas!A:A,A"+rn+")"}]);r.getCell(1).numFmt=DT;r.getCell(2).numFmt=BRL;dd=new Date(dd.getTime()+86400000);}
-    meses.forEach(function(mm){
+    expAutofit(wSD,10,16);
+    meses.forEach(function(mm,mi){
       var y=+mm.slice(0,4),m=+mm.slice(5,7);var nome=EXP_MN[m-1]+'-'+mm.slice(2,4);
       var ws=wb.addWorksheet(nome);var nd=new Date(Date.UTC(y,m,0)).getUTCDate();
       var refs=[],grefs=[];
@@ -1983,6 +2004,8 @@ async function expExcel(){
       ws.getCell('F6').value='SOBRA DO MÊS:';ws.getCell('F6').font={bold:true,size:12};
       ws.getCell('G6').value={formula:'B2-C2'};ws.getCell('G6').numFmt=BRL;
       [12,14,14,4,4,22,14,4,14].forEach(function(w,i){ws.getColumn(i+1).width=w;});
+      expAutofit(ws,6,30);
+      if(mi<meses.length-1)ws.state='hidden';
     });
     var buf=await wb.xlsx.writeBuffer();
     var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
