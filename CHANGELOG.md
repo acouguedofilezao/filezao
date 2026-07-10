@@ -1,5 +1,9 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-10 — Importação: dia reaberto vem desmarcado
+- O último dia já lançado continua reabrindo (pra completar Pix que faltaram), mas agora vem com as caixinhas **desmarcadas** — você marca só o que quiser. Os dias novos continuam vindo marcados normalmente.
+
+
 ## 2026-07-07 — Meta: semanas concluídas no painel (parte 2: painel)
 - Na tela da Meta do painel (Área Interna), novo quadro "Semanas do mês" mostrando as semanas que já passaram no mês, cada uma com ✅ Concluída ou ❌ Não — conforme você marca no sistema.
 - Só aparecem as semanas que já terminaram; a atual e as futuras não. Quando vira o mês, a lista recomeça.
