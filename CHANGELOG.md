@@ -1,5 +1,13 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-11 — Painel: % da semana busca cada semana separada (mais exato)
+- A % de cada semana passa a ser calculada buscando as vendas daquela semana separadamente, exatamente como o topo faz pra semana atual — mesma fonte, mesmo resultado.
+
+
+## 2026-07-11 — Painel: % de cada semana no quadro "Semanas do mês"
+- Cada semana passada agora mostra também a **porcentagem que fechou** (vendas da semana ÷ meta, mesmo cálculo do topo), na frente do ✅ Concluída / ❌ Não. Automático — não precisa digitar nada.
+
+
 ## 2026-07-10 — Importação: dia reaberto vem desmarcado
 - O último dia já lançado continua reabrindo (pra completar Pix que faltaram), mas agora vem com as caixinhas **desmarcadas** — você marca só o que quiser. Os dias novos continuam vindo marcados normalmente.
 

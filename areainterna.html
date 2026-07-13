@@ -52,6 +52,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:2vw;fle
 .semanas-box .st{font-size:2.1vh;font-weight:800}
 .semanas-box .st.ok{color:#22c55e}
 .semanas-box .st.no{color:#ef4444}
+.semanas-box .sr{display:flex;align-items:center;gap:1.6vh}
+.semanas-box .sp{font-size:2.1vh;font-weight:800;color:var(--gold)}
 .col-meta .lbl{font-size:2.2vh;letter-spacing:.45vw;color:var(--muted);text-transform:uppercase;font-weight:500}
 .vendas{font-family:'Anton';font-size:14vh;line-height:.9;letter-spacing:1px;color:var(--cream);transition:color .3s;text-align:center}
 .vendas.flash{animation:pop .45s ease}
@@ -293,14 +295,24 @@ function setBig(v){
 function semMonday(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
 function semKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function semanasDoMes(ref){var y=ref.getFullYear(),m=ref.getMonth();var mon=semMonday(new Date(y,m,1));var out=[];for(var i=0;i<6;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);if(fim.getMonth()===m&&fim.getFullYear()===y)out.push({ini:ini,fim:fim,key:semKey(ini)});if(ini>new Date(y,m+1,1))break;}return out;}
-function renderSemanas(map){
+async function renderSemanas(map){
   var box=document.getElementById('sem-box');if(!box)return;map=map||{};
   var hj=agoraBR();hj=new Date(hj.getFullYear(),hj.getMonth(),hj.getDate());
   var ws=semanasDoMes(hj).filter(function(w){return w.fim<hj;});
   if(!ws.length){box.style.display='none';box.innerHTML='';return;}
+  var tots=await Promise.all(ws.map(function(w){
+    var prox=new Date(w.fim.getTime());prox.setDate(prox.getDate()+1);
+    return fetchEntradas(ymd(w.ini),ymd(prox)).then(function(ent){if(ent===null)return null;var t=0;ent.forEach(function(r){t+=valEnt(r);});return t;}).catch(function(){return null;});
+  }));
   function br(d){return z(d.getDate())+'/'+z(d.getMonth()+1);}
   var html='<div class="sh">Semanas do mes</div>';
-  ws.forEach(function(w){var ok=(map[w.key]===true);html+='<div class="sem-row"><span class="sd">'+br(w.ini)+' a '+br(w.fim)+'</span><span class="st '+(ok?'ok':'no')+'">'+(ok?'\u2705 Concluída':'\u274c Não')+'</span></div>';});
+  ws.forEach(function(w,i){
+    var v=map[w.key];var ok=(typeof v==='boolean')?v:(v&&v.ok);
+    var tot=tots[i];
+    var pct=(tot!=null&&META>0)?Math.round(tot/META*100):null;
+    var pctHtml=(pct!=null)?'<span class="sp">'+pct+'%</span>':'';
+    html+='<div class="sem-row"><span class="sd">'+br(w.ini)+' a '+br(w.fim)+'</span><span class="sr">'+pctHtml+'<span class="st '+(ok?'ok':'no')+'">'+(ok?'\u2705 Concluída':'\u274c Não')+'</span></span></div>';
+  });
   box.innerHTML=html;box.style.display='flex';
 }
 function renderProgresso(vendas){
