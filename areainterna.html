@@ -274,14 +274,15 @@ async function fetchEntradas(ws,weLt){
 /* ===== config: meta, anotações, escala ===== */
 async function lerConfig(){
   try{
-    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,anotacoes,escala,bonus,funcionarios,semanas)&select=chave,valor',{headers:HDR});
+    var r=await fetch(SB_URL+'/rest/v1/config?chave=in.(meta_semanal,anotacoes,escala,bonus,funcionarios,semanas,metas_semana)&select=chave,valor',{headers:HDR});
     if(r.ok){var a=await r.json(),map={};a.forEach(function(x){map[x.chave]=x.valor;});
       var esc=[];try{if(map.escala)esc=JSON.parse(map.escala)||[];}catch(e){}
       var fnc=[];try{if(map.funcionarios)fnc=JSON.parse(map.funcionarios)||[];}catch(e){}
       var sem={};try{if(map.semanas)sem=JSON.parse(map.semanas)||{};}catch(e){}
+      var mts={};try{if(map.metas_semana)mts=JSON.parse(map.metas_semana)||{};}catch(e){}
       return {meta:(map.meta_semanal!=null?parseFloat(String(map.meta_semanal).replace(',','.'))||0:null),
               nota:(map.anotacoes!=null?map.anotacoes:null), escala:esc,
-              bonus:(map.bonus!=null?parseFloat(String(map.bonus).replace(',','.'))||0:0), func:fnc, sem:sem};}
+              bonus:(map.bonus!=null?parseFloat(String(map.bonus).replace(',','.'))||0:0), func:fnc, sem:sem, metas:mts};}
   }catch(e){}
   return null;
 }
@@ -295,8 +296,8 @@ function setBig(v){
 function semMonday(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
 function semKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function semanasDoMes(ref){var y=ref.getFullYear(),m=ref.getMonth();var mon=semMonday(new Date(y,m,1));var out=[];for(var i=0;i<6;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);if(fim.getMonth()===m&&fim.getFullYear()===y)out.push({ini:ini,fim:fim,key:semKey(ini)});if(ini>new Date(y,m+1,1))break;}return out;}
-async function renderSemanas(map){
-  var box=document.getElementById('sem-box');if(!box)return;map=map||{};
+async function renderSemanas(map,metas){
+  var box=document.getElementById('sem-box');if(!box)return;map=map||{};metas=metas||{};
   var hj=agoraBR();hj=new Date(hj.getFullYear(),hj.getMonth(),hj.getDate());
   var ws=semanasDoMes(hj).filter(function(w){return w.fim<hj;});
   if(!ws.length){box.style.display='none';box.innerHTML='';return;}
@@ -309,7 +310,8 @@ async function renderSemanas(map){
   ws.forEach(function(w,i){
     var v=map[w.key];var ok=(typeof v==='boolean')?v:(v&&v.ok);
     var tot=tots[i];
-    var pct=(tot!=null&&META>0)?Math.round(tot/META*100):null;
+    var wMeta=(metas&&metas[w.key]!=null&&metas[w.key]!=='')?((+metas[w.key])||0):META;
+    var pct=(tot!=null&&wMeta>0)?Math.round(tot/wMeta*100):null;
     var pctHtml=(pct!=null)?'<span class="sp">'+pct+'%</span>':'';
     html+='<div class="sem-row"><span class="sd">'+br(w.ini)+' a '+br(w.fim)+'</span><span class="sr">'+pctHtml+'<span class="st '+(ok?'ok':'no')+'">'+(ok?'\u2705 Concluída':'\u274c Não')+'</span></span></div>';
   });
@@ -478,7 +480,7 @@ async function carregar(){
     var bEl=document.getElementById('bonus');
     if(cfg.bonus>0){bEl.style.display='flex';bEl.innerHTML='<span class="ic">🏆</span> Bônus da equipe: '+money(cfg.bonus);}
     else bEl.style.display='none';
-    renderSemanas(cfg.sem);
+    renderSemanas(cfg.sem, cfg.metas);
   }
   await carregarMeta();
   if(tela==='escala')renderEscala();

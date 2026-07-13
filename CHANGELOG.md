@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-11 — Meta: salva a meta de cada semana (a % passada não muda mais)
+- No sistema (aba Meta), cada semana do mês agora tem um campo editável de Meta R$. O valor fica salvo por semana (chave metas_semana).
+- No painel, a % de cada semana passada usa a meta DAQUELA semana — então mudar a meta atual não altera mais a porcentagem das semanas anteriores. Semana sem meta salva usa a meta atual como padrão.
+
+
 ## 2026-07-11 — Painel: % da semana busca cada semana separada (mais exato)
 - A % de cada semana passa a ser calculada buscando as vendas daquela semana separadamente, exatamente como o topo faz pra semana atual — mesma fonte, mesmo resultado.
 
