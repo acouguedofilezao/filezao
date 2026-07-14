@@ -1,5 +1,19 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-13 — Folha (ajuste): falta faz só PERDER a cortesia, sem tirar 300 do salário
+- Corrigido: funcionário com falta perde a cortesia (deixa de ganhar o desconto de R$300 na carne dele), mas NÃO leva 300 de desconto no pagamento. Se não comprou carne, o pagamento não muda por causa disso; se comprou, paga o valor cheio (sem o desconto de até 300). A coluna Cortesia mostra "perdeu por falta".
+
+
+## 2026-07-13 — Folha: falta faz perder a cortesia da carne (e desconta R$300)
+- Funcionário COM cortesia que tiver 1 ou mais faltas na quinzena calculada perde a cortesia e leva R$300 de desconto no pagamento (em vez de ganhar). A coluna Cortesia mostra "-R$300,00 · perdeu (falta)".
+- Quem não tem cortesia (Alex) não é afetado. Sem faltas, tudo funciona como antes (resta R$300).
+
+
+## 2026-07-13 — Painel: topo usa a meta da semana atual
+- O número grande "Progresso da Meta" agora usa a meta da semana atual salva por semana (metas_semana) quando existe, caindo para a meta principal (meta_semanal) se não houver. Assim, editar a meta no campo de cima OU no campo da semana atual na lista reflete no painel.
+- (Observação: baixar pouco a meta com venda ainda baixa quase não muda a % por arredondamento; a diferença aparece conforme a semana vende mais. Não é erro de cálculo.)
+
+
 ## 2026-07-13 — Meta: marcação manual (3 estados) + carne R$300
 - Semanas: no lugar do "automático vira Não", agora tem um seletor por semana com 3 opções: — não marcado / Concluída / Não concluída. Se você NÃO marcar nada, no painel não aparece ✅ nem ❌ na frente (fica só a %). Assim, se a segunda de manhã você ainda não fechou, não aparece "Não" pra equipe.
 - Sistema x painel: o sistema já usa a mesma janela deslizante do painel (basta subir este index.html pra ficarem iguais).

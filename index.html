@@ -760,7 +760,7 @@ body,.main-content{background:#F3F0EC}
       <div class="form-group"><label>Quinzena</label><select id="fl-q"><option value="1">1ª (dia 1)</option><option value="2">2ª (dia 15)</option></select></div>
       <div class="form-group" style="justify-content:flex-end;padding-top:20px"><button class="btn btn-primary" onclick="folhaRender()"><i class="ti ti-calculator"></i> Carregar</button></div>
     </div>
-    <div style="font-size:11px;color:#999;margin-top:4px">Salário ÷ 2 · falta desconta salário ÷ 30 · vale desconta tudo · carne: cortesia de R$300 por mês (só desconta o que passar) · Alex sem cortesia.</div>
+    <div style="font-size:11px;color:#999;margin-top:4px">Salário ÷ 2 · falta desconta salário ÷ 30 · vale desconta tudo · carne: cortesia de R$300 por mês (só desconta o que passar) · 1+ falta no mês: perde a cortesia (paga a carne sem o desconto) · Alex sem cortesia.</div>
   </div>
   <div id="folha-r"></div>
 </div>
@@ -3043,7 +3043,7 @@ function folhaRender(){
     var fpv=rec.forma||f.forma||'DINHEIRO';
     function opt(v,l){return '<option value="'+v+'"'+(fpv===v?' selected':'')+'>'+l+'</option>';}
     function money(idf,val,w){return '<input type="text" data-money="1" data-init="'+val+'" id="fl-'+idf+'-'+f.id+'" style="width:'+(w||78)+'px;'+inp+'">';}
-    h+='<tr data-fid="'+f.id+'" data-benef="'+benefDisp+'" style="border-top:1px solid #f0f0f0">'
+    h+='<tr data-fid="'+f.id+'" data-benef="'+benefDisp+'" data-hasbenef="'+(f.beneficio?1:0)+'" style="border-top:1px solid #f0f0f0">'
       +'<td style="text-align:left;padding:7px 8px;font-weight:600">'+cotEsc(f.nome)
         +(f.diaExtra?'<div style="font-size:10px;color:#999;font-weight:400">dia extra: '+fmt(f.diaExtra)+'</div>':'')
         +(!f.beneficio?'<div style="font-size:10px;color:#c0392b;font-weight:400">sem cortesia carne</div>':'')
@@ -3084,12 +3084,15 @@ function folhaCalc(){
     var extras=getDV('fl-extra-'+id);
     var vale=getDV('fl-vale-'+id);
     var compra=getDV('fl-compra-'+id);
+    var hasBenef=tr.getAttribute('data-hasbenef')==='1';
+    var perdeuCort=(hasBenef&&faltas>=1);
+    if(perdeuCort)benefDisp=0;
     var benefAplic=Math.min(compra,benefDisp);
     var descCompra=compra-benefAplic;
     var pagar=r2(sal/2 - faltas*(sal/30) + extras - vale - descCompra);
     var pag=document.getElementById('fl-pagar-'+id);if(pag)pag.textContent=fmt(pagar);
     var cort=document.getElementById('fl-cort-'+id);
-    if(cort){cort.innerHTML=benefDisp>0?('<b>'+fmt(benefAplic)+'</b><br><span style="color:#bbb;font-size:10px">resta '+fmt(Math.max(0,benefDisp-benefAplic))+'/mês</span>'):'<span style="color:#ccc">—</span>';}
+    if(cort){cort.innerHTML=perdeuCort?('<b>'+fmt(benefAplic)+'</b><br><span style="color:#c0392b;font-size:10px">perdeu por falta</span>'):(benefDisp>0?('<b>'+fmt(benefAplic)+'</b><br><span style="color:#bbb;font-size:10px">resta '+fmt(Math.max(0,benefDisp-benefAplic))+'/mês</span>'):'<span style="color:#ccc">—</span>');}
     tr.setAttribute('data-pagar',pagar);tr.setAttribute('data-benefaplic',benefAplic);
     total+=pagar;
   });
