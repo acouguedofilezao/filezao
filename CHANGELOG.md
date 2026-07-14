@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-13 — Meta: marcação manual (3 estados) + carne R$300
+- Semanas: no lugar do "automático vira Não", agora tem um seletor por semana com 3 opções: — não marcado / Concluída / Não concluída. Se você NÃO marcar nada, no painel não aparece ✅ nem ❌ na frente (fica só a %). Assim, se a segunda de manhã você ainda não fechou, não aparece "Não" pra equipe.
+- Sistema x painel: o sistema já usa a mesma janela deslizante do painel (basta subir este index.html pra ficarem iguais).
+- Pagamento de funcionários: a cortesia de carne passou de R$200 para **R$300 por mês** (cálculo e texto de ajuda).
+
+
 ## 2026-07-13 — Importação: fim do conflito de Pix na segunda-feira
 - O importador agora reconhece cada Pix pelo FITID (individual). Os Pix já lançados aparecem como "já lançado" e só os que faltam vêm pra marcar.
 - Ao lançar, os novos Pix são SOMADOS ao total do dia (não substitui mais) — então lançar o fim de semana de manhã e os Pix reais de segunda à noite não dá mais o aviso de "vai diminuir" nem perde valor.

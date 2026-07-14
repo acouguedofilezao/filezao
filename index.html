@@ -760,7 +760,7 @@ body,.main-content{background:#F3F0EC}
       <div class="form-group"><label>Quinzena</label><select id="fl-q"><option value="1">1ª (dia 1)</option><option value="2">2ª (dia 15)</option></select></div>
       <div class="form-group" style="justify-content:flex-end;padding-top:20px"><button class="btn btn-primary" onclick="folhaRender()"><i class="ti ti-calculator"></i> Carregar</button></div>
     </div>
-    <div style="font-size:11px;color:#999;margin-top:4px">Salário ÷ 2 · falta desconta salário ÷ 30 · vale desconta tudo · carne: cortesia de R$200 por mês (só desconta o que passar) · Alex sem cortesia.</div>
+    <div style="font-size:11px;color:#999;margin-top:4px">Salário ÷ 2 · falta desconta salário ÷ 30 · vale desconta tudo · carne: cortesia de R$300 por mês (só desconta o que passar) · Alex sem cortesia.</div>
   </div>
   <div id="folha-r"></div>
 </div>
@@ -2052,7 +2052,7 @@ function semMonday(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());v
 function semKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function semanasJanela(ref,nPast,nFut){ref=ref||new Date();var mon=semMonday(ref);var out=[];for(var i=-nPast;i<=nFut;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);out.push({ini:ini,fim:fim,key:semKey(ini)});}return out;}
 function semanasDoMes(ref){ref=ref||new Date();var y=ref.getFullYear(),m=ref.getMonth();var mon=semMonday(new Date(y,m,1));var out=[];for(var i=0;i<6;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);if(fim.getMonth()===m&&fim.getFullYear()===y)out.push({ini:ini,fim:fim,key:semKey(ini)});if(ini>new Date(y,m+1,1))break;}return out;}
-function semColeta(){var mp={};document.querySelectorAll('#meta-semanas .sem-ck').forEach(function(ck){mp[ck.dataset.key]=ck.checked;});return mp;}
+function semColeta(){var mp={};document.querySelectorAll('#meta-semanas .sem-sel').forEach(function(s){if(s.value==='sim'||s.value==='nao')mp[s.dataset.key]=s.value;});return mp;}
 function semColetaMetas(){var mp={};document.querySelectorAll('#meta-semanas .sem-meta').forEach(function(inp){var s=(inp.value||'').trim();if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');s=s.replace(/[^0-9.]/g,'');var v=parseFloat(s);mp[inp.dataset.key]=isNaN(v)?0:v;});return mp;}
 function semMetaVal(metas,key){var v=metas&&metas[key];return (v!=null&&v!=='')?((+v)||0):null;}
 function semRender(map,metas){
@@ -2061,19 +2061,25 @@ function semRender(map,metas){
   var metaAtual=0;try{metaAtual=getDV('meta-valor')||0;}catch(e){}
   function br(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
   function fm(v){return (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function stOf(v){return (v===true||v==='sim')?'sim':(v==='nao'?'nao':'');}
+  function stCol(s){return s==='sim'?'#0a7a32':s==='nao'?'#b91c1c':'#888';}
   var html='';
   ws.forEach(function(w){
-    var passou=(w.fim<hj),atual=(hj>=w.ini&&hj<=w.fim),chk=!!(map&&map[w.key]);
+    var passou=(w.fim<hj),atual=(hj>=w.ini&&hj<=w.fim);
+    var st=stOf(map&&map[w.key]);
     var mv=semMetaVal(metas,w.key);if(mv==null)mv=metaAtual;
     var tag=atual?'<span style="font-size:11px;color:#2563eb;font-weight:700">ATUAL</span>':(passou?'<span style="font-size:11px;color:#888">passou</span>':'<span style="font-size:11px;color:#bbb">futura</span>');
     html+='<div class="sem-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 11px;border:1px solid #eee;border-radius:8px;margin-bottom:6px">'
-      +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0"><input type="checkbox" class="sem-ck" data-key="'+w.key+'" '+(chk?'checked':'')+' style="width:18px;height:18px;cursor:pointer"><span style="font-weight:600">'+br(w.ini)+' a '+br(w.fim)+'</span></label> '+tag
+      +'<span style="font-weight:600">'+br(w.ini)+' a '+br(w.fim)+'</span> '+tag
       +'<span style="display:flex;align-items:center;gap:6px;margin-left:auto"><span style="font-size:11px;color:#888">Meta R$</span>'
       +'<input type="text" class="sem-meta" data-key="'+w.key+'" value="'+fm(mv)+'" style="width:104px;border:1px solid #ddd;border-radius:6px;padding:6px 8px;font-size:13px;text-align:right"></span>'
-      +'<span class="sem-lbl" style="font-size:12px;font-weight:700;min-width:96px;text-align:right;color:'+(chk?'#0a7a32':'#b91c1c')+'">'+(chk?'\u2713 concluída':'não concluída')+'</span></div>';
+      +'<select class="sem-sel" data-key="'+w.key+'" onchange="this.style.color=this.value===\'sim\'?\'#0a7a32\':this.value===\'nao\'?\'#b91c1c\':\'#888\'" style="border:1px solid #ddd;border-radius:6px;padding:6px 8px;font-size:13px;font-weight:700;color:'+stCol(st)+'">'
+      +'<option value="">— não marcado</option>'
+      +'<option value="sim"'+(st==='sim'?' selected':'')+'>\u2713 Concluída</option>'
+      +'<option value="nao"'+(st==='nao'?' selected':'')+'>\u2717 Não concluída</option>'
+      +'</select></div>';
   });
   box.innerHTML=html||'<div style="color:#888;font-size:13px">Sem semanas neste mês ainda.</div>';
-  box.querySelectorAll('.sem-ck').forEach(function(ck){ck.addEventListener('change',function(){semRender(semColeta(),semColetaMetas());});});
 }
 async function metaCfgLoad(){
   mkDInput(document.getElementById('meta-valor'),metaCfgSave);
@@ -2984,7 +2990,7 @@ function saldoRender(){
 function saldoSetLabel(k,v){var m=saldoGet();if(m[k]){m[k].label=v;saldoSet(m);saldoCloudSave(m[k]);}}
 
 /* ===== FOLHA DE PAGAMENTO ===== */
-var FOLHA_BENEF=200;
+var FOLHA_BENEF=300;
 var FUNC_DEFAULT=[
  {id:'alberto',nome:'Alberto',salario:1770,diaExtra:0,beneficio:true,forma:'DINHEIRO'},
  {id:'andre',nome:'André',salario:2800,diaExtra:0,beneficio:true,forma:'DINHEIRO'},

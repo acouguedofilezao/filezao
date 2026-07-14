@@ -309,12 +309,13 @@ async function renderSemanas(map,metas){
   function br(d){return z(d.getDate())+'/'+z(d.getMonth()+1);}
   var html='<div class="sh">Semanas do mes</div>';
   ws.forEach(function(w,i){
-    var v=map[w.key];var ok=(typeof v==='boolean')?v:(v&&v.ok);
+    var v=map[w.key];var st=(v===true||v==='sim')?'sim':(v==='nao'?'nao':'');
     var tot=tots[i];
     var wMeta=(metas&&metas[w.key]!=null&&metas[w.key]!=='')?((+metas[w.key])||0):META;
     var pct=(tot!=null&&wMeta>0)?Math.round(tot/wMeta*100):null;
     var pctHtml=(pct!=null)?'<span class="sp">'+pct+'%</span>':'';
-    html+='<div class="sem-row"><span class="sd">'+br(w.ini)+' a '+br(w.fim)+'</span><span class="sr">'+pctHtml+'<span class="st '+(ok?'ok':'no')+'">'+(ok?'\u2705 Concluída':'\u274c Não')+'</span></span></div>';
+    var stHtml=st==='sim'?'<span class="st ok">\u2705 Concluída</span>':st==='nao'?'<span class="st no">\u274c Não</span>':'';
+    html+='<div class="sem-row"><span class="sd">'+br(w.ini)+' a '+br(w.fim)+'</span><span class="sr">'+pctHtml+stHtml+'</span></div>';
   });
   box.innerHTML=html;box.style.display='flex';
 }
