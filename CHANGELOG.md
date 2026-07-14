@@ -1,5 +1,11 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-13 — Importação: fim do conflito de Pix na segunda-feira
+- O importador agora reconhece cada Pix pelo FITID (individual). Os Pix já lançados aparecem como "já lançado" e só os que faltam vêm pra marcar.
+- Ao lançar, os novos Pix são SOMADOS ao total do dia (não substitui mais) — então lançar o fim de semana de manhã e os Pix reais de segunda à noite não dá mais o aviso de "vai diminuir" nem perde valor.
+- Os IDs dos Pix já lançados ficam salvos no aparelho (localStorage). Removido o aviso de "total vai diminuir".
+
+
 ## 2026-07-13 — Semanas: janela deslizante (não zera no vira-mês)
 - O quadro de semanas deixou de ser preso ao mês do calendário. Agora é uma janela deslizante: 4 semanas passadas + a atual + 1 futura. Vira a semana, entra uma nova e sai a mais antiga; virar o mês NÃO faz mais as semanas sumirem.
 - Aplicado no sistema (edição das metas/concluída) e no painel (a % das semanas passadas continua aparecendo mesmo no mês seguinte).

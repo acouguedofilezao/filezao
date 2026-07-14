@@ -2352,16 +2352,17 @@ function impRender(){
   }
   if(IMP.pix.length){
     var _cutPix='';E.forEach(function(e){if(e.tipo==='PIX'&&e.data&&e.data>_cutPix)_cutPix=e.data;});
+    var _pf=pixFitsGet();
     var nConf=IMP.pix.filter(function(o){return o.kind==='transf';}).length;
     h+='<div style="font-weight:700;font-size:13px;margin:16px 0 6px"><span class="tipo-chip tc-pix">PIX</span> Recebimentos no extrato';
-    if(_cutPix)h+=' <span style="font-weight:500;color:#92400e;font-size:12px">- dias antes de '+fd(_cutPix)+' ficam fechados; o dia '+fd(_cutPix)+' reabre <b>desmarcado</b> (marque só os Pix que faltaram)</span>';
+    if(_cutPix)h+=' <span style="font-weight:500;color:#92400e;font-size:12px">- os Pix já lançados aparecem como <b>já lançado</b>; só os que faltam vêm pra marcar (some o conflito de segunda)</span>';
     if(nConf)h+=' <span style="font-weight:500;color:#888;font-size:12px">\u2014 '+nConf+' transferência(s), já marcadas \u2014 desmarque as que não forem cliente: <a href="#" onclick="impAll(true);return false">marcar todas</a> \u00b7 <a href="#" onclick="impAll(false);return false">limpar</a></span>';
     h+='</div><div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Origem</th><th>Situação</th><th>Valor</th></tr></thead><tbody>';
     IMP.pix.forEach(function(o,i){
-      var done=(_cutPix&&o.data<_cutPix);
-      var _reab=(_cutPix&&o.data===_cutPix);
-      var _mark=(o.auto&&!_reab);
-      var cell=done?'<span class="tipo-chip" style="background:#e5e7eb;color:#555">dia já fechado</span>':'<input type="checkbox" class="imp-ck-pix" data-i="'+i+'" '+(_mark?'checked':'')+' onchange="impTotal()"'+(_reab?' title="Dia já lançado - marque só o que faltou"':'')+'>';
+      var _sig=o.fit||('x'+o.data+'|'+o.valor);
+      var _ja=!!_pf[_sig];
+      var done=_ja||(_cutPix&&o.data<_cutPix);
+      var cell=done?'<span class="tipo-chip" style="background:#e5e7eb;color:#555">'+(_ja?'já lançado':'dia fechado')+'</span>':'<input type="checkbox" class="imp-ck-pix" data-i="'+i+'" '+(o.auto?'checked':'')+' onchange="impTotal()">';
       h+='<tr'+(done?' style="opacity:.5"':'')+'><td>'+cell+'</td><td>'+fd(o.data)+'</td><td style="font-size:12px;color:#666">'+(o.name||o.memo||'\u2014')+'</td><td>'+(o.kind==='pix'?'<span class="tipo-chip tc-pix">Pix</span>':'<span class="tipo-chip" style="background:#fef3c7;color:#92400e">Transf.</span>')+'</td><td style="font-weight:700">'+fmt(o.valor)+'</td></tr>';});
     h+='</tbody></table></div>';
   }
@@ -2412,12 +2413,15 @@ function impSelectedSai(){
   return rows;
 }
 
+function pixFitsGet(){try{return JSON.parse(localStorage.getItem('fz_pixfits')||'{}')||{};}catch(e){return {};}}
+function pixFitsSet(m){try{localStorage.setItem('fz_pixfits',JSON.stringify(m));}catch(e){}}
+function pixFitsPrune(m){var c=new Date();c.setDate(c.getDate()-90);var cs=c.getFullYear()+'-'+String(c.getMonth()+1).padStart(2,'0')+'-'+String(c.getDate()).padStart(2,'0');Object.keys(m).forEach(function(f){if((m[f]||'')<cs)delete m[f];});return m;}
 function impSelected(){
   var rows=[];
   document.querySelectorAll('.imp-ck-card:checked').forEach(function(ck){var o=IMP.card[+ck.dataset.i];rows.push({id:'impcard_'+o.data,data:o.data,tipo:'CARTÃO',valor:r2(impCardVal(o))});});
-  var pixDia={};
-  document.querySelectorAll('.imp-ck-pix:checked').forEach(function(ck){var o=IMP.pix[+ck.dataset.i];pixDia[o.data]=(pixDia[o.data]||0)+o.valor;});
-  Object.keys(pixDia).forEach(function(d){rows.push({id:'imppix_'+d,data:d,tipo:'PIX',valor:r2(pixDia[d])});});
+  var pixDia={},pixFits={};
+  document.querySelectorAll('.imp-ck-pix:checked').forEach(function(ck){var o=IMP.pix[+ck.dataset.i];pixDia[o.data]=(pixDia[o.data]||0)+o.valor;(pixFits[o.data]=pixFits[o.data]||[]).push(o.fit||('x'+o.data+'|'+o.valor));});
+  Object.keys(pixDia).forEach(function(d){rows.push({id:'imppix_'+d,data:d,tipo:'PIX',valor:r2(pixDia[d]),_fits:pixFits[d]});});
   return rows;
 }
 function impTotal(){
@@ -2434,10 +2438,16 @@ function impLaunch(){
   var rows=impSelected(),sai=impSelectedSai();
   var ckChq=document.querySelectorAll('.imp-ck-chq:checked');
   if(!rows.length&&!sai.length&&!ckChq.length){alert('Marque ao menos um lançamento.');return;}
-  var _pxBaixa=[];rows.forEach(function(r){if(r.tipo==='PIX'){var _ix=E.findIndex(function(x){return x.id===r.id;});if(_ix>=0&&E[_ix]&&r.valor<E[_ix].valor-0.01)_pxBaixa.push(fd(r.data)+': '+fmt(E[_ix].valor)+' -> '+fmt(r.valor));}});
-  if(_pxBaixa.length&&!confirm('Atencao: o total de Pix vai DIMINUIR nestes dias:\n'+_pxBaixa.join('\n')+'\n\nIsso ocorre se o extrato nao tiver todos os Pix do dia. Continuar assim?'))return;
-  var _lg=[];
-  rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});var ov=(idx>=0&&E[idx])?E[idx].valor:null;if(idx>=0){E[idx]=r;}else{E.push(r);}_lg.push({area:'Entradas',acao:'Importou',detalhe:fd(r.data)+' · '+(r.tipo||''),antes:(ov!=null?fmt(ov):''),depois:fmt(r.valor)});});
+  var _lg=[];var _pf=pixFitsGet();
+  rows.forEach(function(r){var idx=E.findIndex(function(x){return x.id===r.id;});var ov=(idx>=0&&E[idx])?E[idx].valor:null;var fin;
+    if(r.tipo==='PIX'){
+      var dayMg=Object.keys(_pf).some(function(f){return _pf[f]===r.data;});
+      if(idx>=0&&dayMg){E[idx].valor=r2(E[idx].valor+r.valor);fin=E[idx].valor;}
+      else{var ne={id:r.id,data:r.data,tipo:'PIX',valor:r.valor};if(idx>=0)E[idx]=ne;else E.push(ne);fin=r.valor;}
+      (r._fits||[]).forEach(function(f){_pf[f]=r.data;});
+    }else{if(idx>=0){E[idx]=r;}else{E.push(r);}fin=r.valor;}
+    _lg.push({area:'Entradas',acao:'Importou',detalhe:fd(r.data)+' · '+(r.tipo||''),antes:(ov!=null?fmt(ov):''),depois:fmt(fin)});});
+  pixFitsSet(pixFitsPrune(_pf));
   sai.forEach(function(r){var idx=S.findIndex(function(x){return x.id===r.id;});var ov=(idx>=0&&S[idx])?S[idx].valor:null;if(idx>=0){S[idx]=r;}else{S.push(r);}_lg.push({area:'Saídas',acao:'Importou',detalhe:fd(r.data)+' · '+(r.descricao||'').toUpperCase(),antes:(ov!=null?fmt(ov):''),depois:fmt(r.valor)});});
   if(_lg.length)logRegBulk(_lg);
   if(rows.length){save('fz_entradas',E);renderEnt();}
