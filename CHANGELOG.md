@@ -1,5 +1,10 @@
 # CHANGELOG — Sistema Filezão
 
+## 2026-07-13 — Semanas: janela deslizante (não zera no vira-mês)
+- O quadro de semanas deixou de ser preso ao mês do calendário. Agora é uma janela deslizante: 4 semanas passadas + a atual + 1 futura. Vira a semana, entra uma nova e sai a mais antiga; virar o mês NÃO faz mais as semanas sumirem.
+- Aplicado no sistema (edição das metas/concluída) e no painel (a % das semanas passadas continua aparecendo mesmo no mês seguinte).
+
+
 ## 2026-07-11 — Meta: salva a meta de cada semana (a % passada não muda mais)
 - No sistema (aba Meta), cada semana do mês agora tem um campo editável de Meta R$. O valor fica salvo por semana (chave metas_semana).
 - No painel, a % de cada semana passada usa a meta DAQUELA semana — então mudar a meta atual não altera mais a porcentagem das semanas anteriores. Semana sem meta salva usa a meta atual como padrão.

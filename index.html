@@ -2050,13 +2050,14 @@ function showSec(id,el){
 }
 function semMonday(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
 function semKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function semanasJanela(ref,nPast,nFut){ref=ref||new Date();var mon=semMonday(ref);var out=[];for(var i=-nPast;i<=nFut;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);out.push({ini:ini,fim:fim,key:semKey(ini)});}return out;}
 function semanasDoMes(ref){ref=ref||new Date();var y=ref.getFullYear(),m=ref.getMonth();var mon=semMonday(new Date(y,m,1));var out=[];for(var i=0;i<6;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);if(fim.getMonth()===m&&fim.getFullYear()===y)out.push({ini:ini,fim:fim,key:semKey(ini)});if(ini>new Date(y,m+1,1))break;}return out;}
 function semColeta(){var mp={};document.querySelectorAll('#meta-semanas .sem-ck').forEach(function(ck){mp[ck.dataset.key]=ck.checked;});return mp;}
 function semColetaMetas(){var mp={};document.querySelectorAll('#meta-semanas .sem-meta').forEach(function(inp){var s=(inp.value||'').trim();if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');s=s.replace(/[^0-9.]/g,'');var v=parseFloat(s);mp[inp.dataset.key]=isNaN(v)?0:v;});return mp;}
 function semMetaVal(metas,key){var v=metas&&metas[key];return (v!=null&&v!=='')?((+v)||0):null;}
 function semRender(map,metas){
   var box=document.getElementById('meta-semanas');if(!box)return;map=map||{};metas=metas||{};
-  var ws=semanasDoMes(new Date());var hj=new Date();hj=new Date(hj.getFullYear(),hj.getMonth(),hj.getDate());
+  var ws=semanasJanela(new Date(),4,1);var hj=new Date();hj=new Date(hj.getFullYear(),hj.getMonth(),hj.getDate());
   var metaAtual=0;try{metaAtual=getDV('meta-valor')||0;}catch(e){}
   function br(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
   function fm(v){return (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}

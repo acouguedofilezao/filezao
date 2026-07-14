@@ -295,11 +295,12 @@ function setBig(v){
 }
 function semMonday(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
 function semKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function semanasJanela(ref,nPast,nFut){ref=ref||new Date();var mon=semMonday(ref);var out=[];for(var i=-nPast;i<=nFut;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);out.push({ini:ini,fim:fim,key:semKey(ini)});}return out;}
 function semanasDoMes(ref){var y=ref.getFullYear(),m=ref.getMonth();var mon=semMonday(new Date(y,m,1));var out=[];for(var i=0;i<6;i++){var ini=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i*7);var fim=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()+6);if(fim.getMonth()===m&&fim.getFullYear()===y)out.push({ini:ini,fim:fim,key:semKey(ini)});if(ini>new Date(y,m+1,1))break;}return out;}
 async function renderSemanas(map,metas){
   var box=document.getElementById('sem-box');if(!box)return;map=map||{};metas=metas||{};
   var hj=agoraBR();hj=new Date(hj.getFullYear(),hj.getMonth(),hj.getDate());
-  var ws=semanasDoMes(hj).filter(function(w){return w.fim<hj;});
+  var ws=semanasJanela(hj,4,1).filter(function(w){return w.fim<hj;});
   if(!ws.length){box.style.display='none';box.innerHTML='';return;}
   var tots=await Promise.all(ws.map(function(w){
     var prox=new Date(w.fim.getTime());prox.setDate(prox.getDate()+1);
